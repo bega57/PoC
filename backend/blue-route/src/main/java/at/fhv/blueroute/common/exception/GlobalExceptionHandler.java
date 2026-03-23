@@ -1,6 +1,8 @@
 package at.fhv.blueroute.common.exception;
 
 import at.fhv.blueroute.player.application.exception.PlayerNotFoundException;
+import at.fhv.blueroute.session.application.exception.SessionFullException;
+import at.fhv.blueroute.session.application.exception.SessionNotFoundException;
 import jakarta.servlet.http.HttpServletRequest;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -63,5 +65,35 @@ public class GlobalExceptionHandler {
         );
 
         return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(response);
+    }
+
+    @ExceptionHandler(SessionNotFoundException.class)
+    public ResponseEntity<ErrorResponse> handleSessionNotFound(
+            SessionNotFoundException ex,
+            HttpServletRequest request
+    ) {
+        ErrorResponse response = new ErrorResponse(
+                ex.getMessage(),
+                HttpStatus.NOT_FOUND.value(),
+                request.getRequestURI(),
+                LocalDateTime.now()
+        );
+
+        return ResponseEntity.status(HttpStatus.NOT_FOUND).body(response);
+    }
+
+    @ExceptionHandler(SessionFullException.class)
+    public ResponseEntity<ErrorResponse> handleSessionFull(
+            SessionFullException ex,
+            HttpServletRequest request
+    ) {
+        ErrorResponse response = new ErrorResponse(
+                ex.getMessage(),
+                HttpStatus.CONFLICT.value(),
+                request.getRequestURI(),
+                LocalDateTime.now()
+        );
+
+        return ResponseEntity.status(HttpStatus.CONFLICT).body(response);
     }
 }
