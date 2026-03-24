@@ -3,6 +3,7 @@
   <component name="ProjectModuleManager">
     <modules>
       <module fileurl="file://$PROJECT_DIR$/.idea/PoC.iml" filepath="$PROJECT_DIR$/.idea/PoC.iml" />
+      <module fileurl="file://$PROJECT_DIR$/.idea/modules/blue-route.main.iml" filepath="$PROJECT_DIR$/.idea/modules/blue-route.main.iml" />
     </modules>
   </component>
 </project>
