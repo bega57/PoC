@@ -1,4 +1,14 @@
+import { useEffect } from "react";
+import { useNavigate } from "react-router-dom";
+
 function SessionDetails({ session }) {
+    const navigate = useNavigate();
+
+    useEffect(() => {
+        if (session && session.status === "RUNNING") {
+            navigate(`/game/${session.sessionCode}`);
+        }
+    }, [session, navigate]);
     if (!session) {
         return (
             <div>
