@@ -65,6 +65,12 @@ public class SessionService {
             session.addPlayer(player);
         }
 
+        if (session.isFull()) {
+            session.setStatus(SessionStatus.RUNNING);
+        } else {
+            session.setStatus(SessionStatus.WAITING);
+        }
+
         Session updatedSession = sessionRepository.save(session);
         return sessionMapper.toResponse(updatedSession);
     }

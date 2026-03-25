@@ -23,6 +23,11 @@ public class SessionMapper {
     }
 
     private PlayerSummaryResponse toPlayerSummary(Player player) {
-        return new PlayerSummaryResponse(player.getId(), player.getUsername());
+        return new PlayerSummaryResponse(
+                player.getId(),
+                player.getUsername(),
+                player.getCompanyName(),
+                player.getBalance()
+        );
     }
 }
