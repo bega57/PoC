@@ -27,13 +27,8 @@ public class Session {
     @Column(nullable = false)
     private int maxPlayers;
 
-    @ManyToMany
-    @JoinTable(
-            name = "session_players",
-            joinColumns = @JoinColumn(name = "session_id"),
-            inverseJoinColumns = @JoinColumn(name = "player_id")
-    )
-    private List<Player> players = new ArrayList<>();
+    @OneToMany(mappedBy = "session", cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<SessionPlayer> sessionPlayers = new ArrayList<>();
 
     public Session() {
     }
@@ -61,8 +56,20 @@ public class Session {
         return currentTick;
     }
 
-    public List<Player> getPlayers() {
-        return players;
+    public int getMaxPlayers() {
+        return maxPlayers;
+    }
+
+    public List<SessionPlayer> getSessionPlayers() {
+        return sessionPlayers;
+    }
+
+    public void setId(Long id) {
+        this.id = id;
+    }
+
+    public void setSessionCode(String sessionCode) {
+        this.sessionCode = sessionCode;
     }
 
     public void setStatus(SessionStatus status) {
@@ -73,19 +80,36 @@ public class Session {
         this.currentTick = currentTick;
     }
 
-    public void addPlayer(Player player) {
-        this.players.add(player);
+    public void setMaxPlayers(int maxPlayers) {
+        this.maxPlayers = maxPlayers;
+    }
+
+    public void setSessionPlayers(List<SessionPlayer> sessionPlayers) {
+        this.sessionPlayers = sessionPlayers;
+    }
+
+    public void addPlayer(Player player, boolean host) {
+        SessionPlayer sessionPlayer = new SessionPlayer(this, player, SessionPlayerStatus.ACTIVE, host);
+        this.sessionPlayers.add(sessionPlayer);
     }
 
     public boolean hasPlayer(Long playerId) {
-        return players.stream().anyMatch(player -> player.getId().equals(playerId));
+        return sessionPlayers.stream()
+                .anyMatch(sessionPlayer -> sessionPlayer.getPlayer().getId().equals(playerId));
     }
 
-    public int getMaxPlayers() {
-        return maxPlayers;
+    public SessionPlayer getSessionPlayerByPlayerId(Long playerId) {
+        return sessionPlayers.stream()
+                .filter(sessionPlayer -> sessionPlayer.getPlayer().getId().equals(playerId))
+                .findFirst()
+                .orElse(null);
+    }
+
+    public int getPlayerCount() {
+        return sessionPlayers.size();
     }
 
     public boolean isFull() {
-        return players.size() >= maxPlayers;
+        return sessionPlayers.size() >= maxPlayers;
     }
 }

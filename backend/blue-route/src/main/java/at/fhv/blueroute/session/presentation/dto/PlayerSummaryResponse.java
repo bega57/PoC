@@ -6,15 +6,17 @@ public class PlayerSummaryResponse {
     private String username;
     private String companyName;
     private Double balance;
+    private String status;
 
     public PlayerSummaryResponse() {
     }
 
-    public PlayerSummaryResponse(Long id, String username, String companyName, Double balance) {
+    public PlayerSummaryResponse(Long id, String username, String companyName, double balance, String status) {
         this.id = id;
         this.username = username;
         this.companyName = companyName;
         this.balance = balance;
+        this.status = status;
     }
 
     public Long getId() {
@@ -31,5 +33,9 @@ public class PlayerSummaryResponse {
 
     public Double getBalance() {
         return balance;
+    }
+
+    public String getStatus() {
+        return status;
     }
 }
