@@ -7,7 +7,7 @@ function CreateSessionButton({ player, onSessionCreated }) {
 
     const handleCreateSession = async () => {
         if (!player) {
-            setMessage("Create a player first");
+            setMessage("Player is required.");
             return;
         }
 
@@ -17,13 +17,9 @@ function CreateSessionButton({ player, onSessionCreated }) {
                 maxPlayers: maxPlayers,
             });
 
+            localStorage.setItem("activePlayerId", player.id);
             onSessionCreated(response.data);
-
-            if (maxPlayers === 1) {
-                setMessage(`Session created and started: ${response.data.sessionCode}`);
-            } else {
-                setMessage(`Session created: ${response.data.sessionCode}`);
-            }
+            setMessage("");
         } catch (error) {
             console.error(error);
             setMessage(error.response?.data?.message || "Failed to create session");
@@ -31,26 +27,35 @@ function CreateSessionButton({ player, onSessionCreated }) {
     };
 
     return (
-        <div>
+        <div className="form-card-content">
             <h2>Create Session</h2>
 
-            <p>Max Players:</p>
-            <select
-                value={maxPlayers}
-                onChange={(e) => setMaxPlayers(Number(e.target.value))}
-            >
-                <option value={1}>1</option>
-                <option value={2}>2</option>
-                <option value={3}>3</option>
-                <option value={4}>4</option>
-                <option value={5}>5</option>
-            </select>
+            <div className="top-section">
+                <p className="field-label">Choose player count:</p>
 
-            <br /><br />
+                <div className="player-count-selector five-options">
+                    {[1, 2, 3, 4, 5].map((count) => (
+                        <button
+                            key={count}
+                            type="button"
+                            className={`count-button ${maxPlayers === count ? "active" : ""}`}
+                            onClick={() => setMaxPlayers(count)}
+                        >
+                            {count}
+                        </button>
+                    ))}
+                </div>
 
-            <button onClick={handleCreateSession}>Create Session</button>
+                {message && (
+                    <p className="form-message" style={{ color: "#ff6b6b" }}>
+                        {message}
+                    </p>
+                )}
+            </div>
 
-            <p>{message}</p>
+            <button className="main-action-button" onClick={handleCreateSession}>
+                Create Session
+            </button>
         </div>
     );
 }

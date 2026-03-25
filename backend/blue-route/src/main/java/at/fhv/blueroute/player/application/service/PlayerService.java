@@ -37,6 +37,7 @@ public class PlayerService {
 
     public PlayerResponse createPlayer(PlayerRequest request) {
         Player player = playerMapper.toEntity(request);
+        player.setBalance(5000.0);
         Player savedPlayer = playerRepository.save(player);
         return playerMapper.toResponse(savedPlayer);
     }
