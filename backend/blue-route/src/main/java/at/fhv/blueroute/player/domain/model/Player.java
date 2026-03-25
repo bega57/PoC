@@ -16,6 +16,10 @@ public class Player {
 
     private String username;
 
+    private String companyName;
+
+    private Double balance;
+
     public Player() {
     }
 
@@ -33,5 +37,21 @@ public class Player {
 
     public void setUsername(String username) {
         this.username = username;
+    }
+
+    public String getCompanyName() {
+        return companyName;
+    }
+
+    public void setCompanyName(String companyName) {
+        this.companyName = companyName;
+    }
+
+    public Double getBalance() {
+        return balance;
+    }
+
+    public void setBalance(Double balance) {
+        this.balance = balance;
     }
 }

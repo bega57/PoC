@@ -13,6 +13,10 @@ public class PlayerMapper {
     }
 
     public PlayerResponse toResponse(Player player) {
-        return new PlayerResponse(player.getId(), player.getUsername());
+        return new PlayerResponse(
+                player.getId(),
+                player.getUsername(),
+                player.getCompanyName(),
+                player.getBalance());
     }
 }
