@@ -1,4 +1,5 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
+import api from "../api/api";
 import CreatePlayerForm from "../components/CreatePlayerForm";
 import JoinSessionForm from "../components/JoinSessionForm";
 import SessionDetails from "../components/SessionDetails";
@@ -19,6 +20,27 @@ function MainPage() {
             setToast({ message: "", type: "success" });
         }, 2500);
     };
+
+    const fetchSession = async () => {
+        if (!session?.sessionCode) return;
+
+        try {
+            const response = await api.get(`/sessions/${session.sessionCode}`);
+            setSession(response.data);
+        } catch (error) {
+            console.error("Failed to fetch session:", error);
+        }
+    };
+
+    useEffect(() => {
+        if (!session?.sessionCode) return;
+
+        const interval = setInterval(() => {
+            fetchSession();
+        }, 2000);
+
+        return () => clearInterval(interval);
+    }, [session?.sessionCode]);
 
     return (
         <div className="main-page">

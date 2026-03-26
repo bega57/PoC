@@ -1,10 +1,11 @@
 package at.fhv.blueroute.player.domain.model;
 
+import at.fhv.blueroute.ship.domain.model.Ship;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
-import jakarta.persistence.Entity;
-import jakarta.persistence.GeneratedValue;
-import jakarta.persistence.GenerationType;
-import jakarta.persistence.Id;
+import jakarta.persistence.*;
+
+import java.util.ArrayList;
+import java.util.List;
 
 @Entity
 @JsonIgnoreProperties({"hibernateLazyInitializer", "handler"})
@@ -19,6 +20,9 @@ public class Player {
     private String companyName;
 
     private Double balance;
+
+    @OneToMany(mappedBy = "owner")
+    private List<Ship> ships = new ArrayList<>();
 
     public Player() {
     }
@@ -53,5 +57,13 @@ public class Player {
 
     public void setBalance(Double balance) {
         this.balance = balance;
+    }
+
+    public List<Ship> getShips() {
+        return ships;
+    }
+
+    public void setShips(List<Ship> ships) {
+        this.ships = ships;
     }
 }

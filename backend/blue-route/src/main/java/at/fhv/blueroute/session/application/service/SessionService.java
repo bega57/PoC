@@ -7,6 +7,7 @@ import at.fhv.blueroute.session.application.exception.SessionFullException;
 import at.fhv.blueroute.session.application.exception.SessionNotFoundException;
 import at.fhv.blueroute.session.application.mapper.SessionMapper;
 import at.fhv.blueroute.session.domain.model.Session;
+import at.fhv.blueroute.session.domain.model.SessionPlayer;
 import at.fhv.blueroute.session.domain.model.SessionStatus;
 import at.fhv.blueroute.session.domain.repository.SessionRepository;
 import at.fhv.blueroute.session.presentation.dto.SessionResponse;
@@ -57,12 +58,15 @@ public class SessionService {
         Player player = playerRepository.findById(playerId)
                 .orElseThrow(() -> new PlayerNotFoundException(playerId));
 
-        if (session.isFull()) {
-            throw new SessionFullException(sessionCode);
-        }
+        SessionPlayer existingSessionPlayer = session.getSessionPlayerByPlayerId(playerId);
 
-        if (!session.hasPlayer(playerId)) {
-            session.addPlayer(player);
+        if (existingSessionPlayer != null) {
+            existingSessionPlayer.markActive();
+        } else {
+            if (session.isFull()) {
+                throw new SessionFullException(sessionCode);
+            }
+            session.addPlayer(player, false);
         }
 
         if (session.isFull()) {
@@ -73,6 +77,25 @@ public class SessionService {
 
         Session updatedSession = sessionRepository.save(session);
         return sessionMapper.toResponse(updatedSession);
+    }
+
+    public SessionResponse createSession(Long playerId, int maxPlayers) {
+        Player creator = playerRepository.findById(playerId)
+                .orElseThrow(() -> new PlayerNotFoundException(playerId));
+
+        SessionStatus status = maxPlayers == 1 ? SessionStatus.RUNNING : SessionStatus.WAITING;
+
+        Session session = new Session(
+                generateSessionCode(),
+                status,
+                0,
+                maxPlayers
+        );
+
+        session.addPlayer(creator, true);
+
+        Session savedSession = sessionRepository.save(session);
+        return sessionMapper.toResponse(savedSession);
     }
 
     private String generateSessionCode() {
@@ -91,22 +114,19 @@ public class SessionService {
         return sessionCode;
     }
 
-    public SessionResponse createSession(Long playerId, int maxPlayers) {
-        Player creator = playerRepository.findById(playerId)
-                .orElseThrow(() -> new PlayerNotFoundException(playerId));
+    public SessionResponse leaveSession(String sessionCode, Long playerId) {
+        Session session = sessionRepository.findBySessionCode(sessionCode)
+                .orElseThrow(() -> new SessionNotFoundException(sessionCode));
 
-        SessionStatus status = maxPlayers == 1 ? SessionStatus.RUNNING : SessionStatus.WAITING;
+        SessionPlayer sessionPlayer = session.getSessionPlayerByPlayerId(playerId);
 
-        Session session = new Session(
-                generateSessionCode(),
-                status,
-                0,
-                maxPlayers
-        );
+        if (sessionPlayer == null) {
+            throw new PlayerNotFoundException(playerId);
+        }
 
-        session.addPlayer(creator);
+        sessionPlayer.markDisconnected();
 
-        Session savedSession = sessionRepository.save(session);
-        return sessionMapper.toResponse(savedSession);
+        Session updatedSession = sessionRepository.save(session);
+        return sessionMapper.toResponse(updatedSession);
     }
 }

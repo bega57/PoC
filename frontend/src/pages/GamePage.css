@@ -92,38 +92,42 @@
     right: 0;
     top: 0;
     height: 100%;
-    z-index: 10;
+    width: 260px;
+
+    backdrop-filter: blur(12px);
+    background: rgba(10, 20, 40, 0.6);
+
+    border-left: 1px solid rgba(255, 255, 255, 0.1);
+
+    padding: 20px;
+    transition: transform 0.3s ease;
 }
 
 .sidebar.closed {
-    width: 60px;
-    padding: 10px;
+    transform: translateX(100%);
 }
-
 
 .toggle-btn {
     position: absolute;
-    top: 15px;
-    left: -15px; /* sitzt halb außerhalb */
+    top: 20px;
+    left: -50px;
 
     width: 40px;
     height: 40px;
-
     border-radius: 50%;
-    border: none;
 
-    background: linear-gradient(135deg, #2563eb, #0ea5e9);
+    background: linear-gradient(135deg, #163055, #38739e);
+    border: none;
     color: white;
+
+    cursor: pointer;
+    font-size: 18px;
 
     display: flex;
     align-items: center;
     justify-content: center;
 
-    cursor: pointer;
-
-    box-shadow: 0 0 15px rgba(56, 189, 248, 0.6);
-
-    transition: all 0.25s ease;
+    box-shadow: 0 4px 10px rgba(0,0,0,0.3);
 }
 
 .toggle-btn:hover {
@@ -135,9 +139,6 @@
     transform: scale(0.95);
 }
 
-.sidebar h2 {
-    color: #fff;
-}
 
 .sidebar-title {
     color: #e0f2fe;
@@ -184,4 +185,23 @@
     padding: 6px 10px;
     background: #2a2a2a;
     border-radius: 6px;
+}
+
+.sidebar {
+    display: flex;
+    flex-direction: column;
+}
+
+.leave-section {
+    margin-top: auto;
+    padding-top: 20px;
+}
+
+.leave-btn {
+    background: linear-gradient(135deg, #dc2626, #ef4444);
+    color: white;
+}
+
+.leave-btn:hover {
+    background: linear-gradient(135deg, #b91c1c, #dc2626);
 }

@@ -39,28 +39,9 @@ public class ShipService {
 
         ShipType shipType = ShipType.valueOf(request.getShipType().toUpperCase());
 
-        double price;
-        int capacity;
-        int speed;
-
-        switch (shipType) {
-            case CHEAP -> {
-                price = 1000.0;
-                capacity = 50;
-                speed = 10;
-            }
-            case MEDIUM -> {
-                price = 2500.0;
-                capacity = 100;
-                speed = 20;
-            }
-            case EXPENSIVE -> {
-                price = 4000.0;
-                capacity = 150;
-                speed = 30;
-            }
-            default -> throw new IllegalArgumentException("Invalid ship type.");
-        }
+        double price = shipType.getPrice();
+        int capacity = shipType.getCapacity();
+        int speed = shipType.getSpeed();
 
         if (player.getBalance() < price) {
             throw new InsufficientBalanceException(player.getId());

@@ -38,6 +38,20 @@ function GamePage() {
         return () => clearTimeout(timer);
     }, []);
 
+    const handleLeaveSession = async () => {
+        if (!storedPlayer?.id) return;
+
+        try {
+            await api.post(`/sessions/${sessionCode}/leave`, {
+                playerId: storedPlayer.id,
+            });
+
+            navigate("/");
+        } catch (error) {
+            console.error("Failed to leave session:", error);
+        }
+    };
+
     const ports = {
         London: { x: 520, y: 180 },
         "New York": { x: 220, y: 230 },
@@ -66,7 +80,9 @@ function GamePage() {
                     </div>
                 ))}
 
-                {session.players.map((p, i) => {
+                {session.players
+                    .filter((p) => p.status === "ACTIVE")
+                    .map((p, i) => {
                     const port = ports["London"];
 
                     return (
@@ -85,7 +101,6 @@ function GamePage() {
                 })}
             </div>
 
-            {/* SIDEBAR */}
             <div className={`sidebar ${sidebarOpen ? "open" : "closed"}`}>
 
                 <button
@@ -108,7 +123,7 @@ function GamePage() {
 
                         <button
                             className="action-btn"
-                            onClick={() => setSelectedAction("company")}
+                            onClick={() => navigate(`/company/${sessionCode}`)}
                         >
                             Company
                         </button>
@@ -120,39 +135,29 @@ function GamePage() {
                             Voyage
                         </button>
 
-                        <div className="action-panel">
-                            {selectedAction === "company" && (
-                                <>
-                                    <h3>Company</h3>
-                                    <p>View company and owned ships</p>
-                                </>
-                            )}
-
-                            {selectedAction === "voyage" && (
-                                <>
-                                    <h3>Voyage</h3>
-                                    <p>Select a port to travel</p>
-                                </>
-                            )}
-
-                            {!selectedAction && <p>Select an action...</p>}
-                        </div>
-
                         <div className="players-section">
                             <h3>Players</h3>
                             <div className="player-list">
                                 {session.players.map((p) => (
                                     <div key={p.id} className="player-item">
-                                        {p.username}
+                                        {p.username} {p.status === "DISCONNECTED" ? "(disconnected)" : "(active)"}
                                     </div>
                                 ))}
                             </div>
+                        </div>
+
+                        <div className="leave-section">
+                            <button
+                                className="action-btn leave-btn"
+                                onClick={handleLeaveSession}
+                            >
+                                Leave Session
+                            </button>
                         </div>
                     </>
                 )}
             </div>
 
-            {/* WELCOME POPUP */}
             {showWelcome && (
                 <div className="welcome-overlay">
                     <div className="welcome-modal">
@@ -166,9 +171,12 @@ function GamePage() {
                         }}>
                             Start Playing
                         </button>
+
                     </div>
                 </div>
+
             )}
+
         </div>
     );
 }

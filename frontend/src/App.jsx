@@ -2,6 +2,8 @@ import { Routes, Route } from "react-router-dom";
 import MainPage from "./pages/MainPage";
 import GamePage from "./pages/GamePage";
 import ShipMarketPage from "./pages/ShipMarketPage";
+import ShipMarketMenuPage from "./pages/ShipMarketMenuPage";
+import CompanyPage from "./pages/CompanyPage";
 
 import "./App.css";
 
@@ -10,7 +12,9 @@ function App() {
         <Routes>
             <Route path="/" element={<MainPage />} />
             <Route path="/game/:sessionCode" element={<GamePage />} />
-            <Route path="/market/:sessionCode" element={<ShipMarketPage />} />
+            <Route path="/market/:sessionCode" element={<ShipMarketMenuPage />} />
+            <Route path="/market/:sessionCode/buy" element={<ShipMarketPage />} />
+            <Route path="/company/:sessionCode" element={<CompanyPage />} />
         </Routes>
     );
 }
