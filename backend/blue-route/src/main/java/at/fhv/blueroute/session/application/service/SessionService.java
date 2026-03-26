@@ -113,4 +113,20 @@ public class SessionService {
 
         return sessionCode;
     }
+
+    public SessionResponse leaveSession(String sessionCode, Long playerId) {
+        Session session = sessionRepository.findBySessionCode(sessionCode)
+                .orElseThrow(() -> new SessionNotFoundException(sessionCode));
+
+        SessionPlayer sessionPlayer = session.getSessionPlayerByPlayerId(playerId);
+
+        if (sessionPlayer == null) {
+            throw new PlayerNotFoundException(playerId);
+        }
+
+        sessionPlayer.markDisconnected();
+
+        Session updatedSession = sessionRepository.save(session);
+        return sessionMapper.toResponse(updatedSession);
+    }
 }

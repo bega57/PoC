@@ -40,4 +40,10 @@ public class SessionController {
         return sessionService.joinSession(sessionCode, request.getPlayerId());
     }
 
+    @PostMapping("/{sessionCode}/leave")
+    public SessionResponse leaveSession(@PathVariable String sessionCode,
+                                        @Valid @RequestBody JoinSessionRequest request) {
+        return sessionService.leaveSession(sessionCode, request.getPlayerId());
+    }
+
 }

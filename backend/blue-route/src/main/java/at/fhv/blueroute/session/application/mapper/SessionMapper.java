@@ -5,10 +5,17 @@ import at.fhv.blueroute.session.domain.model.Session;
 import at.fhv.blueroute.session.presentation.dto.PlayerSummaryResponse;
 import at.fhv.blueroute.session.presentation.dto.SessionResponse;
 import at.fhv.blueroute.session.domain.model.SessionPlayer;
+import at.fhv.blueroute.ship.application.mapper.ShipMapper;
 import org.springframework.stereotype.Component;
 
 @Component
 public class SessionMapper {
+
+    private final ShipMapper shipMapper;
+
+    public SessionMapper(ShipMapper shipMapper) {
+        this.shipMapper = shipMapper;
+    }
 
     public SessionResponse toResponse(Session session) {
         return new SessionResponse(
@@ -31,7 +38,10 @@ public class SessionMapper {
                 player.getUsername(),
                 player.getCompanyName(),
                 player.getBalance(),
-                sessionPlayer.getStatus().name()
+                sessionPlayer.getStatus().name(),
+                player.getShips().stream()
+                        .map(shipMapper::toResponse)
+                        .toList()
         );
     }
 }
