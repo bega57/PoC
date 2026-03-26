@@ -3,6 +3,16 @@ import { useNavigate, useParams } from "react-router-dom";
 import api from "../api/api";
 import "./GamePage.css";
 
+import {
+    ComposableMap,
+    Geographies,
+    Geography,
+    Marker
+} from "react-simple-maps";
+
+const geoUrl =
+    "https://raw.githubusercontent.com/deldersveld/topojson/master/world-countries.json";
+
 function GamePage() {
     const { sessionCode } = useParams();
     const navigate = useNavigate();
@@ -52,11 +62,11 @@ function GamePage() {
         }
     };
 
-    const ports = {
-        London: { x: 520, y: 180 },
-        "New York": { x: 220, y: 230 },
-        "Cape Town": { x: 520, y: 430 },
-    };
+    const ports = [
+        { name: "London", coordinates: [-0.1276, 51.5072] },
+        { name: "New York", coordinates: [-74.006, 40.7128] },
+        { name: "Tokyo", coordinates: [139.6917, 35.6895] },
+    ];
 
     if (!session) {
         return <div style={{ color: "white", padding: "20px" }}>Loading game...</div>;
@@ -67,7 +77,32 @@ function GamePage() {
 
             {/* MAP */}
             <div className="map-container">
-                <img src="/world-map.png" alt="map" className="map-img" />
+                <ComposableMap>
+                    <Geographies geography={geoUrl}>
+                        {({ geographies }) =>
+                            geographies.map((geo) => (
+                                <Geography key={geo.rsmKey} geography={geo} />
+                            ))
+                        }
+                    </Geographies>
+
+                    {ports.map((port) => (
+                        <Marker
+                            key={port.name}
+                            coordinates={port.coordinates}
+                            onClick={() => {
+                                if (!confirmedPort && !showWelcome) {
+                                    setSelectedPort(port.name);
+                                }
+                            }}
+                        >
+                            <circle r={5} fill="red" />
+                            <text y={-10} style={{ fontSize: "10px", fill: "white" }}>
+                                {port.name}
+                            </text>
+                        </Marker>
+                    ))}
+                </ComposableMap>
 
                 {Object.entries(ports).map(([name, pos]) => (
                     <div
@@ -81,24 +116,22 @@ function GamePage() {
                 ))}
 
                 {session.players
-                    .filter((p) => p.status === "ACTIVE")
+                    .filter(p => p.status === "ACTIVE" && p.currentPort)
                     .map((p, i) => {
-                    const port = ports["London"];
+                        const port = ports.find(pt => pt.name === p.currentPort);
+                        if (!port) return null;
 
-                    return (
-                        <div
-                            key={p.id}
-                            className="ship"
-                            style={{
-                                left: port.x + i * 15,
-                                top: port.y + i * 15,
-                            }}
-                        >
-                            🚢
-                            <div className="ship-label">{p.username}</div>
-                        </div>
-                    );
-                })}
+                        return (
+                            <Marker
+                                key={p.id}
+                                coordinates={port.coordinates}
+                            >
+                                <text y={20} style={{ fill: "yellow", fontSize: "12px" }}>
+                                    {p.username} {p.ships.length > 0 && "🚢"}
+                                </text>
+                            </Marker>
+                        );
+                    })}
             </div>
 
             <div className={`sidebar ${sidebarOpen ? "open" : "closed"}`}>

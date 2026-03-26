@@ -30,7 +30,8 @@ public class PlayerMapper {
                 (player.getShips() == null ? List.<at.fhv.blueroute.ship.domain.model.Ship>of() : player.getShips())
                         .stream()
                         .map(shipMapper::toResponse)
-                        .toList()
+                        .toList(),
+                player.getCurrentPort()
         );
     }
 }
