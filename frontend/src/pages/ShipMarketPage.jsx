@@ -29,7 +29,6 @@ function ShipMarketPage() {
             price: 1000,
             speed: "Slow",
             capacity: "Low",
-            range: "Short",
             description: "A small starter vessel for short-distance trading."
         },
         {
@@ -40,7 +39,6 @@ function ShipMarketPage() {
             price: 2500,
             speed: "Medium",
             capacity: "Medium",
-            range: "Balanced",
             description: "A versatile mid-range ship with solid cargo capacity."
         },
         {
@@ -51,7 +49,6 @@ function ShipMarketPage() {
             price: 4000,
             speed: "Fast",
             capacity: "High",
-            range: "Long",
             description: "A powerful long-distance trading ship with high capacity."
         }
     ];
@@ -146,7 +143,11 @@ function ShipMarketPage() {
             showToast("Ship purchased successfully.");
         } catch (error) {
             console.error(error);
-            setMessage(error.response?.data?.message || "Failed to buy ship.");
+            setMessage(
+                error.response?.data?.message ||
+                error.response?.data?.error ||
+                "You do not have enough balance to buy this ship."
+            );
         } finally {
             setIsBuying(false);
         }
@@ -162,7 +163,7 @@ function ShipMarketPage() {
                 <div className="market-topbar">
                     <button
                         className="back-button"
-                        onClick={() => navigate(`/game/${sessionCode}`)}
+                        onClick={() => navigate(`/market/${sessionCode}`)}
                     >
                         ← Back
                     </button>
@@ -218,10 +219,6 @@ function ShipMarketPage() {
                                         <span className="stat-value">{ship.capacity}</span>
                                     </div>
 
-                                    <div className="stat-block">
-                                        <span className="stat-label">Range</span>
-                                        <span className="stat-value">{ship.range}</span>
-                                    </div>
                                 </div>
                             </div>
                         </button>

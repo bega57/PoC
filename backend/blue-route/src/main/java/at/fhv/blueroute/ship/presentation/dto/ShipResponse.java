@@ -9,11 +9,13 @@ public class ShipResponse {
     private Integer capacity;
     private Integer speed;
     private Long ownerId;
+    private Integer condition;
+    private Integer fuelLevel;
 
     public ShipResponse() {
     }
 
-    public ShipResponse(Long id, String name, String type, Double price, Integer capacity, Integer speed, Long ownerId) {
+    public ShipResponse(Long id, String name, String type, Double price, Integer capacity, Integer speed, Long ownerId, Integer condition, Integer fuelLevel) {
         this.id = id;
         this.name = name;
         this.type = type;
@@ -21,6 +23,8 @@ public class ShipResponse {
         this.capacity = capacity;
         this.speed = speed;
         this.ownerId = ownerId;
+        this.condition = condition;
+        this.fuelLevel = fuelLevel;
     }
 
     public Long getId() {
@@ -50,4 +54,8 @@ public class ShipResponse {
     public Long getOwnerId() {
         return ownerId;
     }
+
+    public Integer getCondition() { return condition; }
+
+    public Integer getFuelLevel() { return fuelLevel; }
 }

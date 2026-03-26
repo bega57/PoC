@@ -3,14 +3,17 @@ package at.fhv.blueroute.common.exception;
 import at.fhv.blueroute.player.application.exception.PlayerNotFoundException;
 import at.fhv.blueroute.session.application.exception.SessionFullException;
 import at.fhv.blueroute.session.application.exception.SessionNotFoundException;
+import at.fhv.blueroute.ship.application.exception.InsufficientBalanceException;
 import jakarta.servlet.http.HttpServletRequest;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
+import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 
 import java.time.LocalDateTime;
+import java.util.Map;
 
 @RestControllerAdvice
 public class GlobalExceptionHandler {
@@ -95,5 +98,11 @@ public class GlobalExceptionHandler {
         );
 
         return ResponseEntity.status(HttpStatus.CONFLICT).body(response);
+    }
+
+    @ExceptionHandler(InsufficientBalanceException.class)
+    @ResponseStatus(HttpStatus.BAD_REQUEST)
+    public Map<String, String> handleInsufficientBalance(InsufficientBalanceException ex) {
+        return Map.of("message", ex.getMessage());
     }
 }
