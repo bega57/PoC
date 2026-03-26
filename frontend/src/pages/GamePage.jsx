@@ -135,8 +135,20 @@ function GamePage() {
                             }}
                         >
                             <circle
-                                r={6}
-                                fill="red"
+                                r={
+                                    port.name === confirmedPort
+                                        ? 10
+                                        : port.name === selectedPort
+                                            ? 8
+                                            : 5
+                                }
+                                fill={
+                                    port.name === confirmedPort
+                                        ? "lime"
+                                        : port.name === selectedPort
+                                            ? "orange"
+                                            : "red"
+                                }
                                 style={{
                                     cursor: "pointer",
                                     transition: "0.2s"
@@ -145,30 +157,39 @@ function GamePage() {
                             <text
                                 y={-10}
                                 dx={5}
-                                style={{ fontSize: "10px", fill: "white", pointerEvents: "none" }}
+                                style={{
+                                    fontSize: "10px",
+                                    fill: "white",
+                                    pointerEvents: "none"
+                                }}
                             >
                                 {port.name}
                             </text>
                         </Marker>
                     ))}
 
-                {session.players
-                    .filter(p => p.status === "ACTIVE" && p.currentPort)
-                    .map((p, i) => {
-                        const port = ports.find(pt => pt.name === p.currentPort);
-                        if (!port) return null;
+                    {session.players
+                        .filter(p => p.status === "ACTIVE" && p.currentPort)
+                        .map((p) => {
+                            const port = ports.find(pt => pt.name === p.currentPort);
+                            if (!port) return null;
 
-                        return (
-                            <Marker
-                                key={p.id}
-                                coordinates={port.coordinates}
-                            >
-                                <text y={20} style={{ fill: "yellow", fontSize: "12px" }}>
-                                    {p.username} {p.ships.length > 0 && "🚢"}
-                                </text>
-                            </Marker>
-                        );
-                    })}
+                            return (
+                                <Marker key={p.id} coordinates={port.coordinates}>
+                                    <text
+                                        y={20}
+                                        style={{
+                                            fill: "yellow",
+                                            fontSize: "12px",
+                                            fontWeight: "bold"
+                                        }}
+                                    >
+                                        {p.username}
+                                        {p.ships.length > 0 && " 🚢"}
+                                    </text>
+                                </Marker>
+                            );
+                        })}
                 </ComposableMap>
             </div>
 
@@ -246,6 +267,32 @@ function GamePage() {
                     </div>
                 </div>
 
+            )}
+
+            {selectedPort && !confirmedPort && (
+                <div className="welcome-overlay">
+                    <div className="welcome-modal">
+                        <h2>Select {selectedPort} as your main port?</h2>
+
+                        <button className="confirm-btn"
+                            onClick={async () => {
+                                setConfirmedPort(selectedPort);
+
+                                await api.post(`/players/${storedPlayer.id}/select-port`, {
+                                    port: selectedPort
+                                });
+
+                                setSelectedPort(null);
+                            }}
+                        >
+                            Confirm
+                        </button>
+
+                        <button className="cancel-btn" onClick={() => setSelectedPort(null)}>
+                            Cancel
+                        </button>
+                    </div>
+                </div>
             )}
 
         </div>
