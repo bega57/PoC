@@ -41,7 +41,9 @@ public class SessionMapper {
                 sessionPlayer.getStatus().name(),
                 player.getShips().stream()
                         .map(shipMapper::toResponse)
-                        .toList()
+                        .toList(),
+                player.getCurrentPort()
+
         );
     }
 }

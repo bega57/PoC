@@ -31,7 +31,14 @@ function GamePage() {
     useEffect(() => {
         const fetchData = () => {
             api.get(`/sessions/${sessionCode}`)
-                .then((res) => setSession(res.data))
+                .then((res) => {
+                    setSession(res.data);
+
+                    const me = res.data.players.find(p => p.id === storedPlayer.id);
+                    if (me?.currentPort && confirmedPort !== me.currentPort) {
+                        setConfirmedPort(me.currentPort);
+                    }
+                })
                 .catch((err) => console.error(err));
         };
 
@@ -179,13 +186,14 @@ function GamePage() {
                                     <text
                                         y={20}
                                         style={{
-                                            fill: "yellow",
+                                            fill: "white",
                                             fontSize: "12px",
-                                            fontWeight: "bold"
+                                            fontWeight: "600",
+                                            textShadow: "0 0 6px rgba(0,0,0,0.9)"
                                         }}
                                     >
                                         {p.username}
-                                        {p.ships.length > 0 && " 🚢"}
+                                        {p.currentPort && p.ships?.length > 0 && " 🚢"}
                                     </text>
                                 </Marker>
                             );
@@ -275,15 +283,15 @@ function GamePage() {
                         <h2>Select {selectedPort} as your main port?</h2>
 
                         <button className="confirm-btn"
-                            onClick={async () => {
-                                setConfirmedPort(selectedPort);
+                                onClick={async () => {
+                                    const res = await api.post(`/players/select-port`, {
+                                        playerId: storedPlayer.id,
+                                        port: selectedPort
+                                    });
 
-                                await api.post(`/players/${storedPlayer.id}/select-port`, {
-                                    port: selectedPort
-                                });
-
-                                setSelectedPort(null);
-                            }}
+                                    setConfirmedPort(res.data.currentPort);
+                                    setSelectedPort(null);
+                                }}
                         >
                             Confirm
                         </button>
