@@ -10,8 +10,7 @@ import {
     Marker
 } from "react-simple-maps";
 
-const geoUrl =
-    "https://raw.githubusercontent.com/deldersveld/topojson/master/world-countries.json";
+const geoUrl = "/countries-110m.json";
 
 function GamePage() {
     const { sessionCode } = useParams();
@@ -25,6 +24,9 @@ function GamePage() {
         return sessionStorage.getItem("welcomeShown") !== "true";
     });
     const storedPlayer = JSON.parse(localStorage.getItem("player"));
+
+    const [selectedPort, setSelectedPort] = useState(null);
+    const [confirmedPort, setConfirmedPort] = useState(null);
 
     useEffect(() => {
         const fetchData = () => {
@@ -65,7 +67,27 @@ function GamePage() {
     const ports = [
         { name: "London", coordinates: [-0.1276, 51.5072] },
         { name: "New York", coordinates: [-74.006, 40.7128] },
+        { name: "Buenos Aires", coordinates: [-58.3816, -34.6037] },
+        { name: "Lima", coordinates: [-77.0428, -12.0464] },
+        { name: "Vancouver", coordinates: [-123.1207, 49.2827] },
         { name: "Tokyo", coordinates: [139.6917, 35.6895] },
+        { name: "Shanghai", coordinates: [121.4737, 31.2304] },
+        { name: "Bangkok", coordinates: [100.5018, 13.7563] },
+        { name: "Jakarta", coordinates: [106.8456, -6.2088] },
+        { name: "Istanbul", coordinates: [28.9784, 41.0082] },
+        { name: "Sydney", coordinates: [151.2093, -33.8688] },
+        { name: "Dubai", coordinates: [55.2708, 25.2048] },
+        { name: "Singapore", coordinates: [103.8198, 1.3521] },
+        { name: "Mumbai", coordinates: [72.8777, 19.076] },
+        { name: "Cape Town", coordinates: [18.4241, -33.9249] },
+        { name: "Lagos", coordinates: [3.3792, 6.5244] },
+        { name: "Mombasa", coordinates: [39.6682, -4.0435] },
+        { name: "Rio", coordinates: [-43.1729, -22.9068] },
+        { name: "Los Angeles", coordinates: [-118.2437, 34.0522] },
+        { name: "Hamburg", coordinates: [9.9937, 53.5511 + 1] },
+        { name: "Rotterdam", coordinates: [4.47917, 51.9225 - 1] },
+        { name: "Seoul", coordinates: [126.978, 37.5665] },
+        { name: "Honolulu", coordinates: [-157.8583, 21.3069] }
     ];
 
     if (!session) {
@@ -77,11 +99,27 @@ function GamePage() {
 
             {/* MAP */}
             <div className="map-container">
-                <ComposableMap>
+                <ComposableMap
+                    projection="geoEqualEarth"
+                    projectionConfig={{
+                        scale: 220
+                    }}
+                    style={{ width: "100%", height: "100%" }}
+                >
                     <Geographies geography={geoUrl}>
                         {({ geographies }) =>
                             geographies.map((geo) => (
-                                <Geography key={geo.rsmKey} geography={geo} />
+                                <Geography
+                                    key={geo.rsmKey}
+                                    geography={geo}
+                                    fill="#243447"
+                                    stroke="#1b2838"
+                                    style={{
+                                        default: { outline: "none" },
+                                        hover: { fill: "#2f4f6f", outline: "none" },
+                                        pressed: { outline: "none" }
+                                    }}
+                                />
                             ))
                         }
                     </Geographies>
@@ -96,24 +134,23 @@ function GamePage() {
                                 }
                             }}
                         >
-                            <circle r={5} fill="red" />
-                            <text y={-10} style={{ fontSize: "10px", fill: "white" }}>
+                            <circle
+                                r={6}
+                                fill="red"
+                                style={{
+                                    cursor: "pointer",
+                                    transition: "0.2s"
+                                }}
+                            />
+                            <text
+                                y={-10}
+                                dx={5}
+                                style={{ fontSize: "10px", fill: "white", pointerEvents: "none" }}
+                            >
                                 {port.name}
                             </text>
                         </Marker>
                     ))}
-                </ComposableMap>
-
-                {Object.entries(ports).map(([name, pos]) => (
-                    <div
-                        key={name}
-                        className="port"
-                        style={{ left: pos.x, top: pos.y }}
-                        title={name}
-                    >
-                        ⚓
-                    </div>
-                ))}
 
                 {session.players
                     .filter(p => p.status === "ACTIVE" && p.currentPort)
@@ -132,6 +169,7 @@ function GamePage() {
                             </Marker>
                         );
                     })}
+                </ComposableMap>
             </div>
 
             <div className={`sidebar ${sidebarOpen ? "open" : "closed"}`}>
