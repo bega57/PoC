@@ -9,17 +9,16 @@ public class PlayerResponse {
     private String username;
     private String companyName;
     private double balance;
+    private String currentPort;
     private List<ShipResponse> ships;
 
-    public PlayerResponse() {
-    }
-
-    public PlayerResponse(Long id, String username, String companyName, double balance, List<ShipResponse> ships) {
+    public PlayerResponse(Long id, String username, String companyName, double balance, List<ShipResponse> ships, String currentPort) {
         this.id = id;
         this.username = username;
         this.companyName = companyName;
         this.balance = balance;
         this.ships = ships;
+        this.currentPort = currentPort;
     }
 
     public Long getId() {
@@ -52,6 +51,9 @@ public class PlayerResponse {
 
     public void setId(Long id) {
         this.id = id;
+    }
+    public String getCurrentPort() {
+        return currentPort;
     }
 
     public List<ShipResponse> getShips() {

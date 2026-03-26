@@ -21,6 +21,8 @@ public class Player {
 
     private Double balance;
 
+    private String currentPort;
+
     @OneToMany(mappedBy = "owner")
     private List<Ship> ships = new ArrayList<>();
 
@@ -57,6 +59,14 @@ public class Player {
 
     public void setBalance(Double balance) {
         this.balance = balance;
+    }
+
+    public String getCurrentPort() {
+        return currentPort;
+    }
+
+    public void setCurrentPort(String currentPort) {
+        this.currentPort = currentPort;
     }
 
     public List<Ship> getShips() {

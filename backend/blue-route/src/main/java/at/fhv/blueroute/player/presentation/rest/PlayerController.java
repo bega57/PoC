@@ -3,6 +3,7 @@ package at.fhv.blueroute.player.presentation.rest;
 import at.fhv.blueroute.player.application.service.PlayerService;
 import at.fhv.blueroute.player.presentation.dto.PlayerRequest;
 import at.fhv.blueroute.player.presentation.dto.PlayerResponse;
+import at.fhv.blueroute.player.presentation.dto.SelectPortRequest;
 import jakarta.validation.Valid;
 import org.springframework.web.bind.annotation.*;
 
@@ -31,5 +32,11 @@ public class PlayerController {
     @PostMapping
     public PlayerResponse createPlayer(@Valid @RequestBody PlayerRequest request) {
         return playerService.createPlayer(request);
+    }
+
+    @PostMapping("/select-port")
+    public PlayerResponse selectPort(@RequestBody SelectPortRequest request) {
+        playerService.selectPort(request.getPlayerId(), request.getPort());
+        return playerService.getPlayerById(request.getPlayerId());
     }
 }
