@@ -21,8 +21,9 @@ function GamePage() {
     const [sidebarOpen, setSidebarOpen] = useState(true);
 
     const [showWelcome, setShowWelcome] = useState(() => {
-        return sessionStorage.getItem("welcomeShown") !== "true";
+        return sessionStorage.getItem(`welcomeShown-${sessionCode}`) !== "true";
     });
+
     const storedPlayer = JSON.parse(localStorage.getItem("player"));
 
     const [selectedPort, setSelectedPort] = useState(null);
@@ -51,7 +52,7 @@ function GamePage() {
     useEffect(() => {
         const timer = setTimeout(() => {
             setShowWelcome(false);
-            sessionStorage.setItem("welcomeShown", "true");
+            sessionStorage.setItem(`welcomeShown-${sessionCode}`, "true");
         }, 60000);
 
         return () => clearTimeout(timer);
@@ -267,7 +268,7 @@ function GamePage() {
 
                         <button onClick={() => {
                             setShowWelcome(false);
-                            sessionStorage.setItem("welcomeShown", "true");
+                            sessionStorage.setItem(`welcomeShown-${sessionCode}`, "true");
                         }}>
                             Start Playing
                         </button>
