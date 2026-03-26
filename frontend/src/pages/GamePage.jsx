@@ -123,8 +123,8 @@ function GamePage() {
                                     fill="#243447"
                                     stroke="#1b2838"
                                     style={{
-                                        default: { outline: "none" },
-                                        hover: { fill: "#2f4f6f", outline: "none" },
+                                        default: { fill: "#243447", outline: "none" },
+                                        hover: { fill: "#243447", outline: "none" },
                                         pressed: { outline: "none" }
                                     }}
                                 />
