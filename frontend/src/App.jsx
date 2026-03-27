@@ -4,6 +4,7 @@ import GamePage from "./pages/GamePage";
 import ShipMarketPage from "./pages/ShipMarketPage";
 import ShipMarketMenuPage from "./pages/ShipMarketMenuPage";
 import CompanyPage from "./pages/CompanyPage";
+import VoyagePage from "./pages/VoyagePage";
 
 import "./App.css";
 
@@ -15,6 +16,7 @@ function App() {
             <Route path="/market/:sessionCode" element={<ShipMarketMenuPage />} />
             <Route path="/market/:sessionCode/buy" element={<ShipMarketPage />} />
             <Route path="/company/:sessionCode" element={<CompanyPage />} />
+            <Route path="/voyage/:sessionCode" element={<VoyagePage />} />
         </Routes>
     );
 }

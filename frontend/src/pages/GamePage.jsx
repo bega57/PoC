@@ -130,7 +130,7 @@ function GamePage() {
 
                         <button
                             className="action-btn"
-                            onClick={() => setSelectedAction("voyage")}
+                            onClick={() => navigate(`/voyage/${sessionCode}`)}
                         >
                             Voyage
                         </button>

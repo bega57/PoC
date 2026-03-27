@@ -205,3 +205,15 @@
 .leave-btn:hover {
     background: linear-gradient(135deg, #b91c1c, #dc2626);
 }
+
+.voyage-panel {
+    position: fixed;
+    bottom: 20px;
+    left: 20px;
+    background: rgba(0,0,0,0.9);
+    padding: 20px;
+    border-radius: 12px;
+    color: white;
+    width: 260px;
+    z-index: 1000;
+}
