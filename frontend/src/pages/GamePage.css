@@ -10,6 +10,10 @@
 }
 
 .welcome-modal {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+
     background: rgba(10, 21, 38, 0.95);
     border: 1px solid rgba(96, 165, 250, 0.3);
     padding: 40px;
@@ -54,15 +58,9 @@
 }
 
 .map-container {
-    position: absolute;
-    inset: 0;
-}
-
-.map-img {
     width: 100%;
-    height: 100%;
-    object-fit: cover;
-    display: block;
+    height: 100vh;
+    position: relative;
 }
 
 .port {
@@ -216,4 +214,28 @@
     color: white;
     width: 260px;
     z-index: 1000;
+}
+
+.cancel-btn {
+    background: rgba(30, 41, 59, 0.8);
+    border: 1px solid rgba(96, 165, 250, 0.2);
+    color: #cbd5f5;
+    transition: 0.2s;
+}
+
+.cancel-btn:hover {
+    background: linear-gradient(135deg, #dc2626, #ef4444);
+    color: white;
+}
+
+.confirm-btn {
+    background: rgba(30, 41, 59, 0.8);
+    border: 1px solid rgba(96, 165, 250, 0.2);
+    color: #cbd5f5;
+    transition: 0.2s;
+}
+
+.confirm-btn:hover {
+    background: linear-gradient(90deg, #16a34a, #22c55e);
+    color: white;
 }

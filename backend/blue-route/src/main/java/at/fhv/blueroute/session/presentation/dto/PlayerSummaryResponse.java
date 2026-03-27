@@ -12,17 +12,20 @@ public class PlayerSummaryResponse {
     private Double balance;
     private String status;
     private List<ShipResponse> ships;
+    private String currentPort;
 
     public PlayerSummaryResponse() {
     }
 
-    public PlayerSummaryResponse(Long id, String username, String companyName, double balance, String status, List<ShipResponse> ships) {
+    public PlayerSummaryResponse(Long id, String username, String companyName, double balance, String status, List<ShipResponse> ships,
+                                 String currentPort) {
         this.id = id;
         this.username = username;
         this.companyName = companyName;
         this.balance = balance;
         this.status = status;
         this.ships = ships;
+        this.currentPort = currentPort;
     }
 
     public Long getId() {
@@ -47,5 +50,9 @@ public class PlayerSummaryResponse {
 
     public List<ShipResponse> getShips() {
         return ships;
+    }
+
+    public String getCurrentPort() {
+        return currentPort;
     }
 }
