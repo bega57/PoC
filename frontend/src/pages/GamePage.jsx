@@ -29,6 +29,8 @@ function GamePage() {
     const [selectedPort, setSelectedPort] = useState(null);
     const [confirmedPort, setConfirmedPort] = useState(null);
 
+    const [showPortInstruction, setShowPortInstruction] = useState(false);
+
     useEffect(() => {
         const fetchData = () => {
             api.get(`/sessions/${sessionCode}`)
@@ -106,7 +108,7 @@ function GamePage() {
         <div className="game-container">
 
             {/* MAP */}
-            <div className="map-container">
+            <div className={`map-container ${!confirmedPort ? "highlight" : ""}`}>
                 <ComposableMap
                     projection="geoEqualEarth"
                     projectionConfig={{
@@ -137,7 +139,7 @@ function GamePage() {
                             key={port.name}
                             coordinates={port.coordinates}
                             onClick={() => {
-                                if (!confirmedPort && !showWelcome) {
+                                if (!confirmedPort && !showWelcome && !showPortInstruction) {
                                     setSelectedPort(port.name);
                                 }
                             }}
@@ -201,6 +203,12 @@ function GamePage() {
                         })}
                 </ComposableMap>
             </div>
+
+            {!confirmedPort && !showWelcome && !showPortInstruction && (
+                <div className="top-hint">
+                    👉 Select your main port by clicking on the map
+                </div>
+            )}
 
             <div className={`sidebar ${sidebarOpen ? "open" : "closed"}`}>
 
@@ -268,6 +276,7 @@ function GamePage() {
 
                         <button onClick={() => {
                             setShowWelcome(false);
+                            setShowPortInstruction(true);
                             sessionStorage.setItem(`welcomeShown-${sessionCode}`, "true");
                         }}>
                             Start Playing
@@ -299,6 +308,21 @@ function GamePage() {
 
                         <button className="cancel-btn" onClick={() => setSelectedPort(null)}>
                             Cancel
+                        </button>
+                    </div>
+                </div>
+            )}
+
+            {showPortInstruction && !confirmedPort && (
+                <div className="welcome-overlay">
+                    <div className="welcome-modal">
+                        <h2>🌍 Choose your main port</h2>
+                        <p>
+                            Click on any red port on the map to select your starting location.
+                        </p>
+
+                        <button onClick={() => setShowPortInstruction(false)}>
+                            Got it
                         </button>
                     </div>
                 </div>
