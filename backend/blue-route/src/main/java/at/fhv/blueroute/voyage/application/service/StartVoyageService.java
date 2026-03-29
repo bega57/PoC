@@ -1,5 +1,7 @@
 package at.fhv.blueroute.voyage.application.service;
 
+import at.fhv.blueroute.cargo.domain.model.Cargo;
+import at.fhv.blueroute.cargo.infrastructure.persistence.JpaCargoRepository;
 import at.fhv.blueroute.ship.domain.model.Ship;
 import at.fhv.blueroute.ship.infrastructure.persistence.JpaShipRepository;
 import at.fhv.blueroute.voyage.domain.model.Voyage;
@@ -14,43 +16,51 @@ public class StartVoyageService {
 
     private final JpaVoyageRepository voyageRepository;
     private final JpaShipRepository shipRepository;
+    private final JpaCargoRepository cargoRepository;
 
-    public StartVoyageService(JpaVoyageRepository voyageRepository,
-                              JpaShipRepository shipRepository) {
+    public StartVoyageService(
+            JpaVoyageRepository voyageRepository,
+            JpaShipRepository shipRepository,
+            JpaCargoRepository cargoRepository
+    ) {
         this.voyageRepository = voyageRepository;
         this.shipRepository = shipRepository;
+        this.cargoRepository = cargoRepository;
     }
 
-    public Voyage startVoyage(Long shipId, String origin, String destination) {
+    public Voyage startVoyage(Long shipId, Long cargoId) {
+        try {
 
-        LocalDateTime now = LocalDateTime.now();
+            Cargo cargo = cargoRepository.findById(cargoId)
+                    .orElseThrow(() -> new RuntimeException("Cargo not found"));
 
-        LocalDateTime arrival = now.plusSeconds(20);
+            Ship ship = shipRepository.findById(shipId)
+                    .orElseThrow(() -> new RuntimeException("Ship not found"));
 
-        Voyage voyage = new Voyage();
-        voyage.setShipId(shipId);
-        voyage.setOriginPort(origin);
-        voyage.setDestinationPort(destination);
-        voyage.setStatus(VoyageStatus.RUNNING);
+            if (ship.isTraveling()) {
+                throw new RuntimeException("Ship is already traveling");
+            }
 
-        voyage.setStartTime(now);
-        voyage.setArrivalTime(arrival);
+            LocalDateTime now = LocalDateTime.now();
+            LocalDateTime arrival = now.plusSeconds(20);
 
-        Ship ship = shipRepository.findById(shipId)
-                .orElseThrow(() -> new RuntimeException("Ship not found"));
+            Voyage voyage = new Voyage();
+            voyage.setShipId(shipId);
+            voyage.setOriginPort(cargo.getOriginPort().getName());
+            voyage.setDestinationPort(cargo.getDestinationPort().getName());
+            voyage.setStatus(VoyageStatus.RUNNING);
+            voyage.setStartTime(now);
+            voyage.setArrivalTime(arrival);
 
-        if (ship.isTraveling()) {
-            throw new RuntimeException("Ship is already traveling");
+            ship.setTraveling(true);
+            ship.setCurrentPort(null);
+            shipRepository.save(ship);
+
+            return voyageRepository.save(voyage);
+
+        } catch (Exception e) {
+            e.printStackTrace();
+            throw e;
         }
-
-        ship.setTraveling(true);
-
-        shipRepository.save(ship);
-
-
-        return voyageRepository.save(voyage);
-
-
-
     }
 }

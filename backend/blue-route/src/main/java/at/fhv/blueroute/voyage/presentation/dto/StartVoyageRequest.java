@@ -3,18 +3,21 @@ package at.fhv.blueroute.voyage.presentation.dto;
 public class StartVoyageRequest {
 
     private Long shipId;
-    private String originPort;
-    private String destinationPort;
+    private Long cargoId;
 
     public Long getShipId() {
         return shipId;
     }
 
-    public String getOriginPort() {
-        return originPort;
+    public Long getCargoId() {
+        return cargoId;
     }
 
-    public String getDestinationPort() {
-        return destinationPort;
+    public void setShipId(Long shipId) {
+        this.shipId = shipId;
+    }
+
+    public void setCargoId(Long cargoId) {
+        this.cargoId = cargoId;
     }
 }

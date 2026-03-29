@@ -8,16 +8,24 @@ export default function VoyagePage() {
     const navigate = useNavigate();
 
     const [origin, setOrigin] = useState("");
-    const [destination, setDestination] = useState("");
 
     const [ships, setShips] = useState([]);
     const [selectedShip, setSelectedShip] = useState(null);
 
-    const ports = ["Hamburg", "Dubai", "Singapore"];
+    const [cargoList, setCargoList] = useState([]);
+    const [selectedCargo, setSelectedCargo] = useState(null);
 
 
     useEffect(() => {
         const player = JSON.parse(localStorage.getItem("player"));
+        const port = localStorage.getItem("currentPort");
+
+        if (port) {
+            setOrigin(port);
+        } else {
+            alert("Please select a port on the map first.");
+            navigate(`/game/${sessionCode}`);
+        }
 
         if (!player?.id) return;
 
@@ -32,17 +40,30 @@ export default function VoyagePage() {
             .catch(err => console.error(err));
     }, []);
 
+
+    useEffect(() => {
+        if (!origin) return;
+
+        fetch(`http://localhost:8080/cargo?portName=${origin}`)
+            .then(res => res.json())
+            .then(data => {
+                console.log("CARGO:", data);
+                setCargoList(data);
+            })
+            .catch(err => console.error("Cargo error:", err));
+    }, [origin]);
+
+
     const handleStartVoyage = async () => {
-        if (!selectedShip || !origin || !destination) {
-            alert("Please select ship and route.");
+        if (!selectedShip || !selectedCargo) {
+            alert("Please select a ship and cargo.");
             return;
         }
 
         try {
             await api.post("/voyages/start", {
                 shipId: selectedShip.id,
-                originPort: origin,
-                destinationPort: destination,
+                cargoId: selectedCargo.id
             });
 
             navigate(`/game/${sessionCode}`);
@@ -68,10 +89,11 @@ export default function VoyagePage() {
 
                 <header className="voyage-header">
                     <h1>Voyage Planning</h1>
-                    <p>Select a ship and define your route.</p>
+                    <p>Select a ship and choose a cargo.</p>
                 </header>
 
                 <div className="voyage-cards">
+
 
                     <div className="voyage-card">
                         <h2>Ship</h2>
@@ -103,63 +125,57 @@ export default function VoyagePage() {
                         )}
                     </div>
 
+
                     <div className="voyage-card">
-                        <h2>Route</h2>
+                        <h2>Available Cargo</h2>
 
-                        <div className="voyage-row">
+                        {cargoList.length === 0 ? (
+                            <p>No cargo available</p>
+                        ) : (
+                            cargoList.map(cargo => (
+                                <div key={cargo.id} className="cargo-card">
+                                    <p>
+                                        {cargo.originPort.name} → {cargo.destinationPort.name}
+                                    </p>
+                                    <p> {cargo.price}€</p>
 
-                            <div className="voyage-field">
-                                <label>Origin</label>
-                                <select
-                                    value={origin}
-                                    onChange={(e) => setOrigin(e.target.value)}
-                                >
-                                    <option value="">Select</option>
-                                    {ports.map(p => (
-                                        <option key={p}>{p}</option>
-                                    ))}
-                                </select>
-                            </div>
+                                    <button onClick={() => setSelectedCargo(cargo)}>
+                                        Accept
+                                    </button>
+                                </div>
+                            ))
+                        )}
+                    </div>
 
-                            <div className="voyage-field">
-                                <label>Destination</label>
-                                <select
-                                    value={destination}
-                                    onChange={(e) => setDestination(e.target.value)}
-                                >
-                                    <option value="">Select</option>
-                                    {ports.map(p => (
-                                        <option key={p}>{p}</option>
-                                    ))}
-                                </select>
-                            </div>
+                </div>
 
+
+                {selectedCargo && (
+                    <div className="voyage-action-panel">
+                        <div>
+                            <h3>Selected Route</h3>
+                            <p className="route-text">
+                                <span>{selectedCargo.originPort.name}</span>
+                                <span className="arrow">→</span>
+                                <span>{selectedCargo.destinationPort.name}</span>
+                            </p>
                         </div>
+
+                        <button
+                            className="voyage-start-btn"
+                            onClick={handleStartVoyage}
+                            disabled={!selectedCargo || selectedShip?.traveling}
+                        >
+                            Start Voyage
+                        </button>
+
+                        {selectedShip?.traveling && (
+                            <p style={{ color: "orange", marginTop: "10px" }}>
+                                🚢 Ship is already traveling
+                            </p>
+                        )}
                     </div>
-
-                </div>
-
-                <div className="voyage-action-panel">
-                    <div>
-                        <h3>Route</h3>
-                        <p className="route-text">
-                            {origin && destination ? (
-                                <>
-                                    <span>{origin}</span>
-                                    <span className="arrow">→</span>
-                                    <span>{destination}</span>
-                                </>
-                            ) : "No route selected"}
-                        </p>
-                    </div>
-
-                    <button
-                        className="voyage-start-btn"
-                        onClick={handleStartVoyage}
-                    >
-                        Start Voyage
-                    </button>
-                </div>
+                )}
 
             </div>
         </div>

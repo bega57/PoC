@@ -69,6 +69,8 @@ public class ShipService {
                 player
         );
 
+        ship.setCurrentPort(player.getCurrentPort());
+
         playerRepository.save(player);
         Ship savedShip = shipRepository.save(ship);
 
