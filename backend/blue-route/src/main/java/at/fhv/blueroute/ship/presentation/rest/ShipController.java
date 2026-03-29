@@ -2,6 +2,7 @@ package at.fhv.blueroute.ship.presentation.rest;
 
 import at.fhv.blueroute.ship.application.service.ShipService;
 import at.fhv.blueroute.ship.presentation.dto.BuyShipRequest;
+import at.fhv.blueroute.ship.presentation.dto.SellShipRequest;
 import at.fhv.blueroute.ship.presentation.dto.ShipResponse;
 import org.springframework.web.bind.annotation.*;
 
@@ -26,5 +27,10 @@ public class ShipController {
     @GetMapping("/player/{playerId}")
     public List<ShipResponse> getShipsByPlayer(@PathVariable Long playerId) {
         return shipService.getShipsByPlayer(playerId);
+    }
+
+    @PostMapping("/sell")
+    public ShipResponse sellShip(@RequestBody SellShipRequest request) {
+        return shipService.sellShip(request);
     }
 }

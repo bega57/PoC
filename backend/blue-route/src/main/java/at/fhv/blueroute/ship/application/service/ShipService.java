@@ -10,6 +10,7 @@ import at.fhv.blueroute.ship.domain.model.ShipType;
 import at.fhv.blueroute.ship.domain.repository.ShipRepository;
 import at.fhv.blueroute.ship.infrastructure.persistence.JpaShipRepository;
 import at.fhv.blueroute.ship.presentation.dto.BuyShipRequest;
+import at.fhv.blueroute.ship.presentation.dto.SellShipRequest;
 import at.fhv.blueroute.ship.presentation.dto.ShipResponse;
 import org.springframework.stereotype.Service;
 
@@ -48,13 +49,13 @@ public class ShipService {
             throw new InsufficientBalanceException(player.getId());
         }
 
-        boolean firstShip = shipRepository.findByOwnerId(player.getId()).isEmpty();
+        boolean hasCompanyName = player.getCompanyName() != null && !player.getCompanyName().isBlank();
 
-        if (firstShip && (request.getCompanyName() == null || request.getCompanyName().isBlank())) {
-            throw new IllegalArgumentException("Company name is required for the first ship.");
+        if (!hasCompanyName && (request.getCompanyName() == null || request.getCompanyName().isBlank())) {
+            throw new IllegalArgumentException("Company name is required.");
         }
 
-        if (firstShip) {
+        if (!hasCompanyName) {
             player.setCompanyName(request.getCompanyName().trim());
         }
 
@@ -82,5 +83,27 @@ public class ShipService {
                 .stream()
                 .map(shipMapper::toResponse)
                 .toList();
+    }
+
+    public ShipResponse sellShip(SellShipRequest request) {
+        Player player = playerRepository.findById(request.getPlayerId())
+                .orElseThrow(() -> new PlayerNotFoundException(request.getPlayerId()));
+
+        Ship ship = shipRepository.findById(request.getShipId())
+                .orElseThrow(() -> new IllegalArgumentException("Ship not found."));
+
+        if (!ship.getOwner().getId().equals(player.getId())) {
+            throw new IllegalArgumentException("This ship does not belong to the player.");
+        }
+
+        double basePrice = ship.getType().getPrice();
+        double sellPrice = basePrice * (ship.getCondition() / 100.0);
+
+        player.setBalance(player.getBalance() + sellPrice);
+
+        shipRepository.delete(ship);
+        playerRepository.save(player);
+
+        return shipMapper.toResponse(ship);
     }
 }
