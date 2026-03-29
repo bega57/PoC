@@ -8,6 +8,7 @@ import at.fhv.blueroute.ship.application.mapper.ShipMapper;
 import at.fhv.blueroute.ship.domain.model.Ship;
 import at.fhv.blueroute.ship.domain.model.ShipType;
 import at.fhv.blueroute.ship.domain.repository.ShipRepository;
+import at.fhv.blueroute.ship.infrastructure.persistence.JpaShipRepository;
 import at.fhv.blueroute.ship.presentation.dto.BuyShipRequest;
 import at.fhv.blueroute.ship.presentation.dto.SellShipRequest;
 import at.fhv.blueroute.ship.presentation.dto.ShipResponse;
@@ -18,11 +19,11 @@ import java.util.List;
 @Service
 public class ShipService {
 
-    private final ShipRepository shipRepository;
+    private final JpaShipRepository shipRepository;
     private final PlayerRepository playerRepository;
     private final ShipMapper shipMapper;
 
-    public ShipService(ShipRepository shipRepository,
+    public ShipService(JpaShipRepository shipRepository,
                        PlayerRepository playerRepository,
                        ShipMapper shipMapper) {
         this.shipRepository = shipRepository;
@@ -68,6 +69,8 @@ public class ShipService {
                 speed,
                 player
         );
+
+        ship.setCurrentPort(player.getCurrentPort());
 
         playerRepository.save(player);
         Ship savedShip = shipRepository.save(ship);

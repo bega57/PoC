@@ -40,6 +40,8 @@ function GamePage() {
                     const me = res.data.players.find(p => p.id === storedPlayer.id);
                     if (me?.currentPort && confirmedPort !== me.currentPort) {
                         setConfirmedPort(me.currentPort);
+
+                        localStorage.setItem("currentPort", me.currentPort);
                     }
                 })
                 .catch((err) => console.error(err));
@@ -239,7 +241,7 @@ function GamePage() {
 
                         <button
                             className="action-btn"
-                            onClick={() => setSelectedAction("voyage")}
+                            onClick={() => navigate(`/voyage/${sessionCode}`)}
                         >
                             Voyage
                         </button>
@@ -300,6 +302,8 @@ function GamePage() {
                                     });
 
                                     setConfirmedPort(res.data.currentPort);
+
+                                    localStorage.setItem("currentPort", res.data.currentPort);
                                     setSelectedPort(null);
                                 }}
                         >

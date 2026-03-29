@@ -204,6 +204,18 @@
     background: linear-gradient(135deg, #b91c1c, #dc2626);
 }
 
+.voyage-panel {
+    position: fixed;
+    bottom: 20px;
+    left: 20px;
+    background: rgba(0,0,0,0.9);
+    padding: 20px;
+    border-radius: 12px;
+    color: white;
+    width: 260px;
+    z-index: 1000;
+}
+
 .cancel-btn {
     background: rgba(30, 41, 59, 0.8);
     border: 1px solid rgba(96, 165, 250, 0.2);

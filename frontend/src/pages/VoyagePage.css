@@ -1,0 +1,241 @@
+* {
+    box-sizing: border-box;
+}
+
+/* PAGE BACKGROUND */
+.voyage-page {
+    min-height: 100vh;
+    position: relative;
+    overflow: hidden;
+    padding: 28px 20px 40px;
+    background:
+            radial-gradient(circle at top left, rgba(59, 130, 246, 0.22), transparent 30%),
+            radial-gradient(circle at top right, rgba(14, 165, 233, 0.16), transparent 25%),
+            linear-gradient(180deg, #06101f 0%, #09182b 45%, #07111d 100%);
+    color: #e8f1ff;
+    font-family: Arial, sans-serif;
+}
+
+/* GRID OVERLAY */
+.voyage-overlay {
+    position: absolute;
+    inset: 0;
+    background:
+            linear-gradient(rgba(255, 255, 255, 0.02) 1px, transparent 1px),
+            linear-gradient(90deg, rgba(255, 255, 255, 0.02) 1px, transparent 1px);
+    background-size: 40px 40px;
+    pointer-events: none;
+    opacity: 0.35;
+}
+
+/* MAIN CONTENT */
+.voyage-content {
+    position: relative;
+    z-index: 1;
+    width: 100%;
+    max-width: 1100px;
+    margin: 0 auto;
+    padding: 0 20px;
+}
+
+/* TOPBAR */
+.voyage-topbar {
+    width: 100%;
+    max-width: none;
+    padding: 0 40px;
+    margin-bottom: 18px;
+}
+
+/* REUSE BACK BUTTON STYLE */
+.back-button {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    padding: 5px 10px;
+    font-size: 13px;
+    color: #93c5fd;
+    background: transparent;
+    border: 1px solid rgba(96, 165, 250, 0.25);
+    border-radius: 6px;
+    cursor: pointer;
+    transition: 0.15s ease;
+}
+
+.back-button:hover {
+    color: #bfdbfe;
+    border-color: rgba(96, 165, 250, 0.5);
+    background: rgba(59, 130, 246, 0.08);
+}
+
+/* HEADER */
+.voyage-header {
+    text-align: center;
+    margin-bottom: 28px;
+}
+
+.voyage-header h1 {
+    margin-bottom: 30px;
+    font-size: 52px;
+    color: #ffffff;
+    text-shadow: 0 0 20px rgba(59, 130, 246, 0.18);
+}
+
+.voyage-header p {
+    margin-top: 0;   /* statt extra margin oben */
+    color: #b7c9e6;
+    font-size: 17px;
+}
+
+/* CARDS WRAPPER */
+.voyage-cards {
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+}
+
+/* CARD */
+.voyage-card {
+    padding: 22px;
+    border-radius: 22px;
+    border: 1px solid rgba(96, 165, 250, 0.16);
+    background: rgba(10, 21, 38, 0.88);
+    box-shadow:
+            0 10px 30px rgba(0, 0, 0, 0.25),
+            inset 0 1px 0 rgba(255, 255, 255, 0.04);
+}
+
+.voyage-card h2 {
+    margin-bottom: 14px;
+    font-size: 24px;
+    color: #ffffff;
+}
+
+/* INPUT ROW */
+.voyage-row {
+    display: flex;
+    gap: 16px;
+}
+
+/* FIELD */
+.voyage-field {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+}
+
+.voyage-field label {
+    font-size: 13px;
+    color: #8ca3c2;
+}
+
+/* SELECT STYLE */
+select {
+    padding: 12px;
+    border-radius: 12px;
+    border: 1px solid rgba(96, 165, 250, 0.2);
+    background: rgba(15, 23, 42, 0.92);
+    color: #f8fbff;
+    font: inherit;
+    outline: none;
+}
+
+select:focus {
+    border-color: rgba(96, 165, 250, 0.6);
+}
+
+/* INFO TEXT */
+.voyage-info {
+    margin-top: 10px;
+    font-size: 14px;
+    color: #93c5fd;
+}
+
+/* ACTION PANEL */
+.voyage-action-panel {
+    margin-top: 28px;
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 16px;
+    padding: 22px;
+    border-radius: 20px;
+    background: rgba(10, 21, 38, 0.9);
+    border: 1px solid rgba(96, 165, 250, 0.2);
+}
+
+/* ACTION TEXT */
+.voyage-action-panel h3 {
+    margin: 0;
+    font-size: 22px;
+    color: #ffffff;
+}
+
+.voyage-action-panel p {
+    margin: 4px 0 0;
+    font-size: 14px;
+    color: #93c5fd;
+}
+
+/* BUTTON */
+.voyage-start-btn {
+    padding: 10px 18px;
+    border-radius: 10px;
+    border: none;
+    background: linear-gradient(135deg, #2563eb 0%, #0ea5e9 100%);
+    color: white;
+    font-weight: 700;
+    font-size: 15px;
+    min-width: 220px;
+    cursor: pointer;
+    box-shadow: 0 10px 24px rgba(37, 99, 235, 0.28);
+    transition: 0.2s ease;
+    align-self: center;
+}
+
+.voyage-start-btn:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 14px 28px rgba(37, 99, 235, 0.34);
+}
+
+/* RESPONSIVE */
+@media (max-width: 768px) {
+    .voyage-header h1 {
+        font-size: 36px;
+    }
+
+    .voyage-row {
+        flex-direction: column;
+    }
+
+    .voyage-action-panel {
+        margin-top: 28px;
+        display: flex;
+        flex-direction: column;
+        gap: 16px;
+        padding: 22px;
+        border-radius: 20px;
+
+    }
+
+    .voyage-start-btn {
+        width: 100%;
+    }
+}
+
+.route-text {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+
+    font-size: 60px;
+    font-weight: 500;
+
+    color: #e0f2fe;
+}
+
+
+.arrow {
+    opacity: 0.7;
+    font-size: 20px;
+}

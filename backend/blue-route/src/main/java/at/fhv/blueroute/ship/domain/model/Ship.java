@@ -31,6 +31,10 @@ public class Ship {
     @JoinColumn(name = "owner_id")
     private Player owner;
 
+    private String currentPort;
+
+    private boolean traveling;
+
     public Ship() {
     }
 
@@ -113,4 +117,12 @@ public class Ship {
     public void setFuelLevel(Integer fuelLevel) {
         this.fuelLevel = fuelLevel;
     }
+
+    public String getCurrentPort() { return currentPort; }
+
+    public void setCurrentPort(String currentPort) { this.currentPort = currentPort; }
+
+    public boolean isTraveling() { return traveling; }
+
+    public void setTraveling(boolean traveling) { this.traveling = traveling; }
 }
