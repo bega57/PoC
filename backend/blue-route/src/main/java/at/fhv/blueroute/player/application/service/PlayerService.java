@@ -41,4 +41,13 @@ public class PlayerService {
         Player savedPlayer = playerRepository.save(player);
         return playerMapper.toResponse(savedPlayer);
     }
+
+    public void selectPort(Long playerId, String port) {
+        Player player = playerRepository.findById(playerId)
+                .orElseThrow(() -> new PlayerNotFoundException(playerId));
+
+        player.setCurrentPort(port);
+
+        playerRepository.save(player);
+    }
 }

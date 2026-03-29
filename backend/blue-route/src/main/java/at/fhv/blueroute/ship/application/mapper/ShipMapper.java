@@ -17,7 +17,9 @@ public class ShipMapper {
                 ship.getSpeed(),
                 ship.getOwner().getId(),
                 ship.getCondition(),
-                ship.getFuelLevel()
+                ship.getFuelLevel(),
+                ship.getCurrentPort(),
+                ship.isTraveling()
         );
     }
 }
