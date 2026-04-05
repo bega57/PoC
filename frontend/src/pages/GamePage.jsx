@@ -2,6 +2,10 @@ import { useEffect, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import api from "../api/api";
 import "./GamePage.css";
+import "leaflet/dist/leaflet.css";
+import cheapShip from "../assets/ships/cheapSide.png";
+import middleShip from "../assets/ships/middleSide.png";
+import expensiveShip from "../assets/ships/expensiveSide.png";
 
 import {
     ComposableMap,
@@ -9,6 +13,8 @@ import {
     Geography,
     Marker
 } from "react-simple-maps";
+
+
 
 const geoUrl = "/countries-110m.json";
 
@@ -27,9 +33,78 @@ function GamePage() {
     const storedPlayer = JSON.parse(localStorage.getItem("player"));
 
     const [selectedPort, setSelectedPort] = useState(null);
-    const [confirmedPort, setConfirmedPort] = useState(null);
 
     const [showPortInstruction, setShowPortInstruction] = useState(false);
+
+    const [tick, setTick] = useState(0);
+
+    const [voyages, setVoyages] = useState([]);
+
+    const [goods, setGoods] = useState([]);
+    const [selectedShip, setSelectedShip] = useState(null);
+
+    const [selectedDestination, setSelectedDestination] = useState(null);
+
+    const [ports, setPorts] = useState([]);
+
+    const savedPort = localStorage.getItem(`currentPort-${sessionCode}`);
+
+    const currentPort =
+        selectedShip?.currentPort ||
+        savedPort ||
+        null;
+
+    useEffect(() => {
+        if (!session || !storedPlayer) return;
+
+        const me = session.players.find(p => p.id === storedPlayer.id);
+        if (!me?.ships?.length) return;
+
+        const backendShip = me.ships[0];
+        const savedPort = localStorage.getItem(`currentPort-${sessionCode}`)
+
+        setSelectedShip(prev => {
+            if (prev?.id === backendShip.id) {
+                return {
+                    ...prev,
+                    currentPort: backendShip.currentPort || prev.currentPort || savedPort
+                };
+            }
+
+            return {
+                ...backendShip,
+                currentPort: backendShip.currentPort || savedPort
+            };
+        });
+    }, [session]);
+
+    const handleLoadCargo = async (good, quantity) => {
+        const player = JSON.parse(localStorage.getItem("player"));
+        const portObj = ports.find(
+            p => p.name === selectedShip.currentPort
+        );
+
+        if (!selectedShip) {
+            alert("Select a ship first");
+            return;
+        }
+
+        try {
+            await api.post("/cargo/load", {
+                playerId: player.id,
+                shipId: selectedShip.id,
+                portId: portObj.id,
+                goodId: good.goodId,
+                quantity: quantity
+            });
+
+            alert("Cargo loaded 🚢");
+
+        } catch (err) {
+            console.error(err);
+            alert(err.response?.data || "Failed to load cargo");
+        }
+    };
 
     useEffect(() => {
         const fetchData = () => {
@@ -38,20 +113,44 @@ function GamePage() {
                     setSession(res.data);
 
                     const me = res.data.players.find(p => p.id === storedPlayer.id);
-                    if (me?.currentPort && confirmedPort !== me.currentPort) {
-                        setConfirmedPort(me.currentPort);
-
-                        localStorage.setItem("currentPort", me.currentPort);
+                    if (me?.currentPort) {
                     }
                 })
                 .catch((err) => console.error(err));
+
+            api.get("/voyages")
+                .then(res => setVoyages(res.data))
+                .catch(err => console.error(err));
         };
 
         fetchData();
-        const interval = setInterval(fetchData, 2000);
+        const interval = setInterval(() => {
+            fetchData();
+            setTick(prev => prev + 1);
+        }, 2000);
 
         return () => clearInterval(interval);
     }, [sessionCode]);
+
+
+    useEffect(() => {
+        if (!selectedShip || ports.length === 0) return;
+
+        const portObj = ports.find(p => p.name === currentPort);
+
+        console.log("PORT OBJ:", portObj); // 👈 debug
+        console.log("CURRENT PORT:", currentPort);
+
+        if (!portObj?.id) return; // 🛑 STOP wenn undefined
+
+        api.get(`/port-goods/${portObj.id}`)
+            .then(res => {
+                console.log("GOODS:", res.data);
+                setGoods(res.data);
+            })
+            .catch(err => console.error(err));
+
+    }, [selectedShip, ports, currentPort]);
 
     useEffect(() => {
         const timer = setTimeout(() => {
@@ -60,6 +159,20 @@ function GamePage() {
         }, 60000);
 
         return () => clearTimeout(timer);
+    }, []);
+
+    useEffect(() => {
+        api.get("/ports")
+            .then(res => setPorts(res.data))
+            .catch(err => console.error(err));
+    }, []);
+
+    useEffect(() => {
+        const savedPort = localStorage.getItem(`currentPort-${sessionCode}`)
+
+        if (savedPort) {
+            setShowPortInstruction(false);
+        }
     }, []);
 
     const handleLeaveSession = async () => {
@@ -76,42 +189,41 @@ function GamePage() {
         }
     };
 
-    const ports = [
-        { name: "London", coordinates: [-0.1276, 51.5072] },
-        { name: "New York", coordinates: [-74.006, 40.7128] },
-        { name: "Buenos Aires", coordinates: [-58.3816, -34.6037] },
-        { name: "Lima", coordinates: [-77.0428, -12.0464] },
-        { name: "Vancouver", coordinates: [-123.1207, 49.2827] },
-        { name: "Tokyo", coordinates: [139.6917, 35.6895] },
-        { name: "Shanghai", coordinates: [121.4737, 31.2304] },
-        { name: "Bangkok", coordinates: [100.5018, 13.7563] },
-        { name: "Jakarta", coordinates: [106.8456, -6.2088] },
-        { name: "Istanbul", coordinates: [28.9784, 41.0082] },
-        { name: "Sydney", coordinates: [151.2093, -33.8688] },
-        { name: "Dubai", coordinates: [55.2708, 25.2048] },
-        { name: "Singapore", coordinates: [103.8198, 1.3521] },
-        { name: "Mumbai", coordinates: [72.8777, 19.076] },
-        { name: "Cape Town", coordinates: [18.4241, -33.9249] },
-        { name: "Lagos", coordinates: [3.3792, 6.5244] },
-        { name: "Mombasa", coordinates: [39.6682, -4.0435] },
-        { name: "Rio", coordinates: [-43.1729, -22.9068] },
-        { name: "Los Angeles", coordinates: [-118.2437, 34.0522] },
-        { name: "Hamburg", coordinates: [9.9937, 53.5511 + 1] },
-        { name: "Rotterdam", coordinates: [4.47917, 51.9225 - 1] },
-        { name: "Seoul", coordinates: [126.978, 37.5665] },
-        { name: "Honolulu", coordinates: [-157.8583, 21.3069] }
-    ];
+
+    const getShipImage = (ship) => {
+        switch (ship.type) {
+            case "CHEAP":
+                return cheapShip;
+            case "MIDDLE":
+                return middleShip;
+            case "EXPENSIVE":
+                return expensiveShip;
+            default:
+                return cheapShip;
+        }
+    };
 
     if (!session) {
         return <div style={{ color: "white", padding: "20px" }}>Loading game...</div>;
     }
 
+    const myShips = session.players
+        .find(p => p.id === storedPlayer.id)?.ships || [];
+
+
+    const myShipIds = myShips.map(s => s.id);
+
+    const myActiveVoyage = voyages.find(
+        v => myShipIds.includes(v.shipId) && v.status === "RUNNING"
+    );
+
     return (
         <div className="game-container">
 
             {/* MAP */}
-            <div className={`map-container ${!confirmedPort ? "highlight" : ""}`}>
+            <div className="map-container">
                 <ComposableMap
+                    key={sessionCode}
                     projection="geoEqualEarth"
                     projectionConfig={{
                         scale: 220
@@ -139,40 +251,54 @@ function GamePage() {
                     {ports.map((port) => (
                         <Marker
                             key={port.name}
-                            coordinates={port.coordinates}
+                            coordinates={[port.longitude, port.latitude]}
                             onClick={() => {
-                                if (!confirmedPort && !showWelcome && !showPortInstruction) {
+                                if (!showWelcome && !showPortInstruction) {
                                     setSelectedPort(port.name);
+                                } else {
+                                    setSelectedDestination(port.name);
+                                    setActiveTab("voyage");
                                 }
                             }}
                         >
-                            <circle
-                                r={
-                                    port.name === confirmedPort
-                                        ? 10
-                                        : port.name === selectedPort
-                                            ? 8
-                                            : 5
-                                }
-                                fill={
-                                    port.name === confirmedPort
-                                        ? "lime"
-                                        : port.name === selectedPort
-                                            ? "orange"
-                                            : "red"
-                                }
-                                style={{
-                                    cursor: "pointer",
-                                    transition: "0.2s"
-                                }}
-                            />
+
+                            <>
+                                {/* glow */}
+                                {port.name === currentPort && (
+                                    <circle
+                                        r={12}
+                                        fill="rgba(34,211,238,0.2)" // cyan glow
+                                    />
+                                )}
+
+                                {/* punkt */}
+                                <circle
+                                    r={port.name === currentPort ? 6 : 5}
+                                    fill={
+                                        port.name === currentPort
+                                            ? "#22d3ee" // current port
+                                            : voyages.some(
+                                                v =>
+                                                    myShipIds.includes(v.shipId) &&
+                                                    v.destinationPort === port.name &&
+                                                    v.status === "FINISHED"
+                                            )
+                                                ? "#22c55e"
+                                                : "#ef4444"
+                                    }
+                                />
+                            </>
+
+
                             <text
-                                y={-10}
-                                dx={5}
+                                x={port.name === "London" ? -8 : 10}
+                                y={3}
+                                textAnchor={port.name === "London" ? "end" : "start"}
                                 style={{
-                                    fontSize: "10px",
-                                    fill: "white",
-                                    pointerEvents: "none"
+                                    fontSize: "11px",
+                                    fill: "#e2e8f0",
+                                    fontWeight: "600",
+                                    letterSpacing: "0.3px"
                                 }}
                             >
                                 {port.name}
@@ -180,33 +306,125 @@ function GamePage() {
                         </Marker>
                     ))}
 
-                    {session.players
-                        .filter(p => p.status === "ACTIVE" && p.currentPort)
-                        .map((p) => {
-                            const port = ports.find(pt => pt.name === p.currentPort);
-                            if (!port) return null;
+                    {session.players.flatMap(p =>
+                        (p.ships || []).map(ship => ({ ship, player: p }))
+                        ).map(({ ship, player }) => {
+                                const voyage = voyages.find(
+                                    v => v.shipId === ship.id && v.status !== "FINISHED"
+                                );
 
-                            return (
-                                <Marker key={p.id} coordinates={port.coordinates}>
-                                    <text
-                                        y={20}
-                                        style={{
-                                            fill: "white",
-                                            fontSize: "12px",
-                                            fontWeight: "600",
-                                            textShadow: "0 0 6px rgba(0,0,0,0.9)"
-                                        }}
-                                    >
-                                        {p.username}
-                                        {p.currentPort && p.ships?.length > 0 && " 🚢"}
-                                    </text>
-                                </Marker>
-                            );
-                        })}
+                                // 🟢 FALL 1: ship ist im port
+                                if (!voyage && ship.currentPort) {
+                                    const port = ports.find(pt => pt.name === ship.currentPort);
+                                    if (!port) return null;
+
+                                    return (
+                                        <Marker key={ship.id} coordinates={[port.longitude, port.latitude]}>
+                                            <>
+                                                <image
+                                                    href={getShipImage(ship)}
+                                                    width={36}
+                                                    height={36}
+                                                    x={-18}
+                                                    y={-18}
+                                                />
+
+                                                {player.ships?.length > 0 && (
+                                                    <text
+                                                        y={16}
+                                                        textAnchor="middle"
+                                                        style={{
+                                                            fill: "#cfe8ff",
+                                                            fontSize: "11px",
+                                                            fontWeight: "600",
+                                                            textShadow: "0 0 4px rgba(0,0,0,0.8)"
+                                                        }}
+                                                    >
+                                                        {player.username}
+                                                    </text>
+                                                )}
+                                            </>
+                                        </Marker>
+                                    );
+                                }
+
+                                // 🔵 FALL 2: ship ist unterwegs → zwischen ports anzeigen
+                                if (voyage) {
+                                    const origin = ports.find(p => p.name === voyage.originPort);
+                                    const dest = ports.find(p => p.name === voyage.destinationPort);
+                                    if (!origin || !dest) return null;
+
+                                    const start = new Date(voyage.startTime).getTime();
+                                    const now = Date.now();
+
+                                    let progress = 0;
+
+                                    if (!voyage.arrivalTime) {
+                                        progress = Math.min((now - start) / 20000, 1); // 20 sek travel fake
+                                    } else {
+                                        const end = new Date(voyage.arrivalTime).getTime();
+                                        progress = Math.min((now - start) / (end - start), 1);
+                                    }
+
+                                    const lat =
+                                        origin.latitude +
+                                        (dest.latitude - origin.latitude) * progress;
+
+                                    const lon =
+                                        origin.longitude +
+                                        (dest.longitude - origin.longitude) * progress;
+
+                                    return (
+                                        <Marker key={ship.id} coordinates={[lon, lat]}>
+                                            <>
+                                                <image
+                                                    href={getShipImage(ship)}
+                                                    width={24}
+                                                    height={24}
+                                                    x={-12}
+                                                    y={-12}
+                                                />
+
+                                                {player.ships?.length > 0 && (
+                                                    <text
+                                                        y={16}
+                                                        textAnchor="middle"
+                                                        style={{
+                                                            fill: "#cfe8ff",
+                                                            fontSize: "10px",
+                                                            fontWeight: "600",
+                                                            textShadow: "0 0 4px rgba(0,0,0,0.8)"
+                                                        }}
+                                                    >
+                                                        {player.username}
+                                                    </text>
+                                                )}
+                                            </>
+                                        </Marker>
+                                    );
+                                }
+
+                                return null;
+                            })}
                 </ComposableMap>
             </div>
 
-            {!confirmedPort && !showWelcome && !showPortInstruction && (
+            <div className="status-bar">
+                <p>
+                    🚢 Ship: {selectedShip?.name || "None"} |
+                    📍 {selectedShip?.currentPort || "No Port"} |
+                    💰 Balance: {storedPlayer?.balance || "?"}
+                </p>
+
+                {myActiveVoyage && (
+                    <p>
+                        ⏳ Traveling {myActiveVoyage.originPort} → {myActiveVoyage.destinationPort}
+                    </p>
+                )}
+            </div>
+
+
+            {!showWelcome && !currentPort && (
                 <div className="top-hint">
                     👉 Select your main port by clicking on the map
                 </div>
@@ -274,7 +492,7 @@ function GamePage() {
                     <div className="welcome-modal">
                         <h2>⚓ Welcome aboard, {storedPlayer?.username}!</h2>
                         <p>You start with:</p>
-                        <h1>$5000</h1>
+                        <h1>40.000 Coins</h1>
 
                         <button onClick={() => {
                             setShowWelcome(false);
@@ -289,7 +507,7 @@ function GamePage() {
 
             )}
 
-            {selectedPort && !confirmedPort && (
+            {selectedPort && (
                 <div className="welcome-overlay">
                     <div className="welcome-modal">
                         <h2>Select {selectedPort} as your main port?</h2>
@@ -301,9 +519,12 @@ function GamePage() {
                                         port: selectedPort
                                     });
 
-                                    setConfirmedPort(res.data.currentPort);
+                                    setSelectedShip(prev => ({
+                                        ...(prev || {}),
+                                        currentPort: res.data.currentPort
+                                    }));
 
-                                    localStorage.setItem("currentPort", res.data.currentPort);
+                                    localStorage.setItem(`currentPort-${sessionCode}`, res.data.currentPort);
                                     setSelectedPort(null);
                                 }}
                         >
@@ -317,7 +538,7 @@ function GamePage() {
                 </div>
             )}
 
-            {showPortInstruction && !confirmedPort && (
+            {showPortInstruction && (
                 <div className="welcome-overlay">
                     <div className="welcome-modal">
                         <h2>🌍 Choose your main port</h2>
