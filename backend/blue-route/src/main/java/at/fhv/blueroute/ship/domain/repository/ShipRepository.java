@@ -9,6 +9,4 @@ public interface ShipRepository {
     //Ship save(Ship ship);
     List<Ship> findByOwnerId(Long ownerId);
 
-    Optional<Ship> findById(Long id);
-    void delete(Ship ship);
 }
