@@ -22,17 +22,22 @@ public class FinishVoyageService {
     public void finishVoyage(Long voyageId) {
 
         Voyage voyage = voyageRepository.findById(voyageId)
-                .orElseThrow();
+                .orElseThrow(() -> new RuntimeException("Voyage not found"));
+
+        if (voyage.getStatus() == VoyageStatus.FINISHED) {
+            return;
+        }
 
         Ship ship = shipRepository.findById(voyage.getShipId())
-                .orElseThrow();
+                .orElseThrow(() -> new RuntimeException("Ship not found"));
+
 
         ship.setTraveling(false);
         ship.setCurrentPort(voyage.getDestinationPort());
+        shipRepository.save(ship);
+
 
         voyage.setStatus(VoyageStatus.FINISHED);
-
-        shipRepository.save(ship);
         voyageRepository.save(voyage);
     }
 }

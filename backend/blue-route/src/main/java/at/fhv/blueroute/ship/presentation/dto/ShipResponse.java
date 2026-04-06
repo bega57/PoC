@@ -6,29 +6,31 @@ public class ShipResponse {
     private String name;
     private String type;
     private Double price;
-    private Integer capacity;
     private Integer speed;
     private Long ownerId;
     private Integer condition;
     private Integer fuelLevel;
     private boolean traveling;
     private String currentPort;
+    private double cargoCapacity;
+
 
     public ShipResponse() {
     }
 
-    public ShipResponse(Long id, String name, String type, Double price, Integer capacity, Integer speed, Long ownerId, Integer condition, Integer fuelLevel, String currentPort, boolean traveling) {
+
+    public ShipResponse(Long id, String name, String type, Double price, Integer speed, Long ownerId, Integer condition, Integer fuelLevel, String currentPort, boolean traveling, double cargoCapacity) {
         this.id = id;
         this.name = name;
         this.type = type;
         this.price = price;
-        this.capacity = capacity;
         this.speed = speed;
         this.ownerId = ownerId;
         this.condition = condition;
         this.fuelLevel = fuelLevel;
         this.currentPort = currentPort;
         this.traveling = traveling;
+        this.cargoCapacity = cargoCapacity;
     }
 
     public Long getId() {
@@ -47,10 +49,6 @@ public class ShipResponse {
         return price;
     }
 
-    public Integer getCapacity() {
-        return capacity;
-    }
-
     public Integer getSpeed() {
         return speed;
     }
@@ -67,6 +65,10 @@ public class ShipResponse {
         return currentPort;
     }
 
+    public double getCargoCapacity() {
+        return cargoCapacity;
+    }
+
     public void setCurrentPort(String currentPort) {
         this.currentPort = currentPort;
     }
@@ -78,4 +80,9 @@ public class ShipResponse {
     public void setTraveling(boolean traveling) {
         this.traveling = traveling;
     }
+
+    public void setCargoCapacity(double cargoCapacity) {
+        this.cargoCapacity = cargoCapacity;
+    }
+
 }

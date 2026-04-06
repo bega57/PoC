@@ -65,11 +65,11 @@ public class ShipService {
                 request.getShipName().trim(),
                 shipType,
                 price,
-                capacity,
                 speed,
                 player
         );
 
+        ship.setCargoCapacity(shipType.getCapacity());
         ship.setCurrentPort(player.getCurrentPort());
 
         playerRepository.save(player);

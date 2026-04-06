@@ -5,6 +5,7 @@ import at.fhv.blueroute.voyage.application.service.GetVoyagesService;
 import at.fhv.blueroute.voyage.application.service.StartVoyageService;
 import at.fhv.blueroute.voyage.domain.model.Voyage;
 import at.fhv.blueroute.voyage.presentation.dto.StartVoyageRequest;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -25,11 +26,17 @@ public class VoyageController {
     }
 
     @PostMapping("/start")
-    public Voyage startVoyage(@RequestBody StartVoyageRequest request) {
-        return startVoyageService.startVoyage(
-                request.getShipId(),
-                request.getCargoId()
-        );
+    public ResponseEntity<?> startVoyage(@RequestBody StartVoyageRequest request) {
+        try {
+            Voyage voyage = startVoyageService.startVoyage(
+                    request.getShipId(),
+                    request.getCargoId()
+            );
+            return ResponseEntity.ok(voyage);
+
+        } catch (IllegalStateException e) {
+            return ResponseEntity.badRequest().body(e.getMessage());
+        }
     }
 
     @PostMapping("/{id}/finish")
