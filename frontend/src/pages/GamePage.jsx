@@ -424,12 +424,6 @@ function GamePage() {
             </div>
 
 
-            {!showWelcome && !currentPort && (
-                <div className="top-hint">
-                    👉 Select your main port by clicking on the map
-                </div>
-            )}
-
             <div className={`sidebar ${sidebarOpen ? "open" : "closed"}`}>
 
                 <button

@@ -205,7 +205,7 @@ export default function VoyagePage() {
                 </header>
 
                 <p style={{ opacity: 0.7 }}>
-                    📍 Current Port: {origin}
+                    Main Port: {origin}
                 </p>
 
                 <div className="voyage-cards">
@@ -334,7 +334,7 @@ export default function VoyagePage() {
                         onClick={handleStartVoyage}
                         disabled={isShipBusy(selectedShip?.id)}
                     >
-                        🚀 Start Voyage
+                        Start Voyage
                     </button>
                 </div>
 

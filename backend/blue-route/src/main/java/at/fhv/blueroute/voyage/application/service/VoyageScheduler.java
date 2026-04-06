@@ -21,10 +21,10 @@ public class VoyageScheduler {
         this.finishVoyageService = finishVoyageService;
     }
 
-    @Scheduled(fixedRate = 1000)
+    @Scheduled(fixedRate = 10000)
     public void updateVoyages() {
 
-        List<Voyage> voyages = voyageRepository.findAll();
+        List<Voyage> voyages = voyageRepository.findByStatus(VoyageStatus.RUNNING);
 
         for (Voyage voyage : voyages) {
 
