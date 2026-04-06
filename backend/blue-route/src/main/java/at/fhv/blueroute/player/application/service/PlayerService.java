@@ -6,6 +6,8 @@ import at.fhv.blueroute.player.domain.model.Player;
 import at.fhv.blueroute.player.domain.repository.PlayerRepository;
 import at.fhv.blueroute.player.presentation.dto.PlayerRequest;
 import at.fhv.blueroute.player.presentation.dto.PlayerResponse;
+import at.fhv.blueroute.ship.domain.model.Ship;
+import at.fhv.blueroute.ship.infrastructure.persistence.JpaShipRepository;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
@@ -15,10 +17,14 @@ public class PlayerService {
 
     private final PlayerRepository playerRepository;
     private final PlayerMapper playerMapper;
+    private final JpaShipRepository shipRepository;
 
-    public PlayerService(PlayerRepository playerRepository, PlayerMapper playerMapper) {
+    public PlayerService(PlayerRepository playerRepository,
+                         PlayerMapper playerMapper,
+                         JpaShipRepository shipRepository) {
         this.playerRepository = playerRepository;
         this.playerMapper = playerMapper;
+        this.shipRepository = shipRepository;
     }
 
     public List<PlayerResponse> getAllPlayers() {
@@ -47,7 +53,20 @@ public class PlayerService {
                 .orElseThrow(() -> new PlayerNotFoundException(playerId));
 
         player.setCurrentPort(port);
-
         playerRepository.save(player);
+
+        List<Ship> ships = shipRepository.findByOwnerId(playerId);
+
+        for (Ship ship : ships) {
+            String currentPort = ship.getCurrentPort();
+
+            if (currentPort == null ||
+                    currentPort.isBlank() ||
+                    currentPort.equalsIgnoreCase("Unknown")) {
+                ship.setCurrentPort(port);
+            }
+        }
+
+        shipRepository.saveAll(ships);
     }
 }

@@ -1,6 +1,7 @@
 package at.fhv.blueroute.config;
 
 import at.fhv.blueroute.cargo.domain.model.Cargo;
+import at.fhv.blueroute.cargo.domain.model.RiskLevel;
 import at.fhv.blueroute.cargo.infrastructure.persistence.JpaCargoRepository;
 import at.fhv.blueroute.port.domain.model.Port;
 import at.fhv.blueroute.port.infrastructure.persistence.JpaPortRepository;
@@ -8,7 +9,6 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
 import java.util.List;
-import java.util.stream.Collectors;
 
 @Configuration
 public class CargoDataLoader {
@@ -20,7 +20,20 @@ public class CargoDataLoader {
     ) {
         return args -> {
 
-            if (cargoRepo.count() > 0) return;
+            List<Cargo> existingCargos = cargoRepo.findAll();
+            if (!existingCargos.isEmpty()) {
+
+                for (Cargo cargo : existingCargos) {
+                    if (cargo.getReward() == 0) {
+                        cargo.setReward(cargo.getPrice() * 1.2);
+                        cargo.setRequiredCapacity(100);
+                        cargo.setRiskLevel(RiskLevel.LOW);
+                    }
+                }
+                cargoRepo.saveAll(existingCargos);
+                System.out.println("Existing cargos updated with rewards");
+                return;
+            }
 
             Port rio = portRepo.findByName("Rio").orElse(null);
             Port newYork = portRepo.findByName("New York").orElse(null);
@@ -48,42 +61,36 @@ public class CargoDataLoader {
 
             cargoRepo.saveAll(List.of(
 
-                    // EUROPE
-                    create(london, hamburg, 3000),
-                    create(hamburg, rotterdam, 2000),
-                    create(rotterdam, istanbul, 7000),
+                    create(london, hamburg, 3000, 4200, 30, RiskLevel.LOW),
+                    create(hamburg, rotterdam, 2000, 2800, 25, RiskLevel.LOW),
+                    create(rotterdam, istanbul, 7000, 9800, 80, RiskLevel.MEDIUM),
 
-                    // AFRICA
-                    create(lagos, capeTown, 7000),
-                    create(capeTown, mombasa, 5000),
+                    create(lagos, capeTown, 7000, 11000, 90, RiskLevel.MEDIUM),
+                    create(capeTown, mombasa, 5000, 7600, 70, RiskLevel.MEDIUM),
 
-                    // ASIA
-                    create(dubai, mumbai, 4000),
-                    create(mumbai, singapore, 6000),
-                    create(singapore, tokyo, 9000),
-                    create(tokyo, seoul, 4000),
+                    create(dubai, mumbai, 4000, 5600, 40, RiskLevel.LOW),
+                    create(mumbai, singapore, 6000, 9000, 80, RiskLevel.MEDIUM),
+                    create(singapore, tokyo, 9000, 14000, 120, RiskLevel.HIGH),
+                    create(tokyo, seoul, 4000, 6000, 50, RiskLevel.LOW),
 
-                    // AMERICA
-                    create(newYork, losAngeles, 9000),
-                    create(losAngeles, vancouver, 5000),
-                    create(vancouver, lima, 6000),
-                    create(lima, buenosAires, 4000),
-                    create(buenosAires, rio, 4000),
+                    create(newYork, losAngeles, 9000, 15000, 150, RiskLevel.HIGH),
+                    create(losAngeles, vancouver, 5000, 7600, 70, RiskLevel.MEDIUM),
+                    create(vancouver, lima, 6000, 9000, 80, RiskLevel.MEDIUM),
+                    create(lima, buenosAires, 4000, 6000, 50, RiskLevel.LOW),
+                    create(buenosAires, rio, 4000, 6000, 50, RiskLevel.LOW),
 
-                    // GLOBAL LINKS 🔥 (wichtig!)
-                    create(rio, lagos, 7000),
-                    create(lagos, london, 8000),
-                    create(london, newYork, 9000),
-                    create(newYork, tokyo, 12000),
-                    create(tokyo, sydney, 11000),
-                    create(sydney, singapore, 8000),
-                    create(singapore, dubai, 7000),
-                    create(dubai, istanbul, 6000),
+                    create(rio, lagos, 7000, 11000, 100, RiskLevel.MEDIUM),
+                    create(lagos, london, 8000, 13000, 120, RiskLevel.HIGH),
+                    create(london, newYork, 9000, 15000, 140, RiskLevel.HIGH),
+                    create(newYork, tokyo, 12000, 20000, 180, RiskLevel.HIGH),
+                    create(tokyo, sydney, 11000, 18000, 160, RiskLevel.HIGH),
+                    create(sydney, singapore, 8000, 12000, 100, RiskLevel.MEDIUM),
+                    create(singapore, dubai, 7000, 10500, 90, RiskLevel.MEDIUM),
+                    create(dubai, istanbul, 6000, 9000, 80, RiskLevel.MEDIUM),
 
-                    // BONUS ROUTES
-                    create(honolulu, losAngeles, 7000),
-                    create(jakarta, singapore, 3000),
-                    create(shanghai, bangkok, 5000)
+                    create(honolulu, losAngeles, 7000, 11000, 100, RiskLevel.MEDIUM),
+                    create(jakarta, singapore, 3000, 4200, 35, RiskLevel.LOW),
+                    create(shanghai, bangkok, 5000, 7600, 70, RiskLevel.MEDIUM)
 
             ));
 
@@ -91,13 +98,16 @@ public class CargoDataLoader {
         };
     }
 
-    private Cargo create(Port origin, Port dest, double price) {
+    private Cargo create(Port origin, Port dest, double price, double reward, int capacity, RiskLevel risk) {
         if (origin == null || dest == null) return null;
 
         Cargo c = new Cargo();
         c.setOriginPort(origin);
         c.setDestinationPort(dest);
         c.setPrice(price);
+        c.setReward(reward);
+        c.setRequiredCapacity(capacity);
+        c.setRiskLevel(risk);
         return c;
     }
 }

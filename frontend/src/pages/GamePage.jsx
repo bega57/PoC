@@ -23,7 +23,6 @@ function GamePage() {
     const navigate = useNavigate();
 
     const [session, setSession] = useState(null);
-    const [selectedAction, setSelectedAction] = useState(null);
     const [sidebarOpen, setSidebarOpen] = useState(true);
 
     const [showWelcome, setShowWelcome] = useState(() => {
@@ -31,28 +30,61 @@ function GamePage() {
     });
 
     const storedPlayer = JSON.parse(localStorage.getItem("player"));
+    const currentPlayer = session?.players?.find(p => p.id === storedPlayer?.id) || null;
 
     const [selectedPort, setSelectedPort] = useState(null);
 
     const [showPortInstruction, setShowPortInstruction] = useState(false);
 
-    const [tick, setTick] = useState(0);
-
     const [voyages, setVoyages] = useState([]);
 
-    const [goods, setGoods] = useState([]);
     const [selectedShip, setSelectedShip] = useState(null);
-
-    const [selectedDestination, setSelectedDestination] = useState(null);
 
     const [ports, setPorts] = useState([]);
 
     const savedPort = localStorage.getItem(`currentPort-${sessionCode}`);
 
+    const [showRewardPopup, setShowRewardPopup] = useState(false);
+
+    const [rewardAmount, setRewardAmount] = useState(0);
+
+    const [lastFinishedVoyageId, setLastFinishedVoyageId] = useState(() => {
+        const saved = sessionStorage.getItem(`lastFinishedVoyageId-${sessionCode}`);
+        return saved ? Number(saved) : null;
+    });
+
     const currentPort =
         selectedShip?.currentPort ||
         savedPort ||
         null;
+
+    useEffect(() => {
+        if (!session || !storedPlayer) return;
+
+        const myShips = session.players.find(p => p.id === storedPlayer.id)?.ships || [];
+        const myShipIds = myShips.map(s => s.id);
+
+        const newestFinishedVoyage = [...voyages]
+            .filter(v =>
+                myShipIds.includes(v.shipId) &&
+                v.status === "FINISHED"
+            )
+            .sort((a, b) => b.id - a.id)[0];
+
+        if (!newestFinishedVoyage) return;
+
+        if (newestFinishedVoyage.id === lastFinishedVoyageId) return;
+
+        console.log("FINISHED VOYAGE FOUND:", newestFinishedVoyage);
+
+        setRewardAmount(newestFinishedVoyage.reward || 0);
+        setLastFinishedVoyageId(newestFinishedVoyage.id);
+        sessionStorage.setItem(
+            `lastFinishedVoyageId-${sessionCode}`,
+            String(newestFinishedVoyage.id)
+        );
+        setShowRewardPopup(true);
+    }, [voyages, session, sessionCode, storedPlayer, lastFinishedVoyageId]);
 
     useEffect(() => {
         if (!session || !storedPlayer) return;
@@ -78,33 +110,6 @@ function GamePage() {
         });
     }, [session]);
 
-    const handleLoadCargo = async (good, quantity) => {
-        const player = JSON.parse(localStorage.getItem("player"));
-        const portObj = ports.find(
-            p => p.name === selectedShip.currentPort
-        );
-
-        if (!selectedShip) {
-            alert("Select a ship first");
-            return;
-        }
-
-        try {
-            await api.post("/cargo/load", {
-                playerId: player.id,
-                shipId: selectedShip.id,
-                portId: portObj.id,
-                goodId: good.goodId,
-                quantity: quantity
-            });
-
-            alert("Cargo loaded 🚢");
-
-        } catch (err) {
-            console.error(err);
-            alert(err.response?.data || "Failed to load cargo");
-        }
-    };
 
     useEffect(() => {
         const fetchData = () => {
@@ -112,9 +117,6 @@ function GamePage() {
                 .then((res) => {
                     setSession(res.data);
 
-                    const me = res.data.players.find(p => p.id === storedPlayer.id);
-                    if (me?.currentPort) {
-                    }
                 })
                 .catch((err) => console.error(err));
 
@@ -126,31 +128,11 @@ function GamePage() {
         fetchData();
         const interval = setInterval(() => {
             fetchData();
-            setTick(prev => prev + 1);
         }, 2000);
 
         return () => clearInterval(interval);
     }, [sessionCode]);
 
-
-    useEffect(() => {
-        if (!selectedShip || ports.length === 0) return;
-
-        const portObj = ports.find(p => p.name === currentPort);
-
-        console.log("PORT OBJ:", portObj); // 👈 debug
-        console.log("CURRENT PORT:", currentPort);
-
-        if (!portObj?.id) return; // 🛑 STOP wenn undefined
-
-        api.get(`/port-goods/${portObj.id}`)
-            .then(res => {
-                console.log("GOODS:", res.data);
-                setGoods(res.data);
-            })
-            .catch(err => console.error(err));
-
-    }, [selectedShip, ports, currentPort]);
 
     useEffect(() => {
         const timer = setTimeout(() => {
@@ -255,9 +237,6 @@ function GamePage() {
                             onClick={() => {
                                 if (!showWelcome && !showPortInstruction) {
                                     setSelectedPort(port.name);
-                                } else {
-                                    setSelectedDestination(port.name);
-                                    setActiveTab("voyage");
                                 }
                             }}
                         >
@@ -413,7 +392,7 @@ function GamePage() {
                 <p>
                     🚢 Ship: {selectedShip?.name || "None"} |
                     📍 {selectedShip?.currentPort || "No Port"} |
-                    💰 Balance: {storedPlayer?.balance || "?"}
+                    💰 Balance: {currentPlayer?.balance ?? "?"}
                 </p>
 
                 {myActiveVoyage && (
@@ -484,7 +463,7 @@ function GamePage() {
             {showWelcome && (
                 <div className="welcome-overlay">
                     <div className="welcome-modal">
-                        <h2>⚓ Welcome aboard, {storedPlayer?.username}!</h2>
+                        <h2>⚓ Welcome aboard, {currentPlayer?.username || storedPlayer?.username}!</h2>
                         <p>You start with:</p>
                         <h1>40.000 Coins</h1>
 
@@ -519,6 +498,12 @@ function GamePage() {
                                     }));
 
                                     localStorage.setItem(`currentPort-${sessionCode}`, res.data.currentPort);
+                                    if (currentPlayer) {
+                                        localStorage.setItem("player", JSON.stringify({
+                                            ...currentPlayer,
+                                            currentPort: res.data.currentPort
+                                        }));
+                                    }
                                     setSelectedPort(null);
                                 }}
                         >
@@ -542,6 +527,20 @@ function GamePage() {
 
                         <button onClick={() => setShowPortInstruction(false)}>
                             Got it
+                        </button>
+                    </div>
+                </div>
+            )}
+
+            {showRewardPopup && (
+                <div className="welcome-overlay">
+                    <div className="welcome-modal">
+                        <h2>Voyage completed</h2>
+                        <p>You successfully completed your transport order.</p>
+                        <h1>+{rewardAmount} Coins</h1>
+
+                        <button onClick={() => setShowRewardPopup(false)}>
+                            Nice
                         </button>
                     </div>
                 </div>

@@ -10,19 +10,12 @@ import java.util.List;
 public class GetVoyagesService {
 
     private final JpaVoyageRepository voyageRepository;
-    private final VoyageStatusService voyageStatusService;
 
-    public GetVoyagesService(JpaVoyageRepository voyageRepository,
-                             VoyageStatusService voyageStatusService) {
+    public GetVoyagesService(JpaVoyageRepository voyageRepository) {
         this.voyageRepository = voyageRepository;
-        this.voyageStatusService = voyageStatusService;
     }
 
     public List<Voyage> getAllVoyages() {
-        List<Voyage> voyages = voyageRepository.findAll();
-
-        voyages.forEach(voyageStatusService::updateStatus);
-
-        return voyages;
+        return voyageRepository.findAll();
     }
 }

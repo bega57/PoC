@@ -11,20 +11,30 @@ function CompanyPage() {
     const navigate = useNavigate();
 
     const [session, setSession] = useState(null);
+    const [voyages, setVoyages] = useState([]);
 
     const storedPlayer = JSON.parse(localStorage.getItem("player"));
 
     useEffect(() => {
-        const fetchSession = async () => {
+        const fetchData = async () => {
             try {
-                const response = await api.get(`/sessions/${sessionCode}`);
-                setSession(response.data);
+                const [sessionResponse, voyagesResponse] = await Promise.all([
+                    api.get(`/sessions/${sessionCode}`),
+                    api.get("/voyages")
+                ]);
+
+                setSession(sessionResponse.data);
+                setVoyages(voyagesResponse.data);
             } catch (error) {
                 console.error("Failed to fetch company data:", error);
             }
         };
 
-        fetchSession();
+        fetchData();
+
+        const interval = setInterval(fetchData, 5000);
+
+        return () => clearInterval(interval);
     }, [sessionCode]);
 
     const currentPlayer = session?.players?.find(
@@ -50,6 +60,33 @@ function CompanyPage() {
         if (type === "MEDIUM") return "Brigantine";
         if (type === "EXPENSIVE") return "Galleon";
         return type;
+    };
+
+    const getRunningVoyageForShip = (shipId) => {
+        return voyages.find(
+            (voyage) => voyage.shipId === shipId && voyage.status === "RUNNING"
+        );
+    };
+
+    const getShipLocationText = (ship) => {
+        const runningVoyage = getRunningVoyageForShip(ship.id);
+
+        if (runningVoyage) {
+            const origin =
+                runningVoyage.originPort?.name ||
+                runningVoyage.originPort ||
+                ship.currentPort ||
+                "Unknown";
+
+            const destination =
+                runningVoyage.destinationPort?.name ||
+                runningVoyage.destinationPort ||
+                "Unknown";
+
+            return `${origin} → ${destination}`;
+        }
+
+        return ship.currentPort || "Unknown";
     };
 
     return (
@@ -99,6 +136,7 @@ function CompanyPage() {
                                     <div className="fleet-info">
                                         <h3>{ship.name}</h3>
                                         <p>Type: {getShipDisplayName(ship.type)}</p>
+                                        <p>Location: {getShipLocationText(ship)}</p>
                                         <p>Condition: {ship.condition}%</p>
                                         <p>Fuel: {ship.fuelLevel}%</p>
                                         <p>Capacity: {ship.capacity}</p>

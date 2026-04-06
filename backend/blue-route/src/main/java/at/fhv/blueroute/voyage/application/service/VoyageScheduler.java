@@ -23,14 +23,11 @@ public class VoyageScheduler {
 
     @Scheduled(fixedRate = 10000)
     public void updateVoyages() {
-
         List<Voyage> voyages = voyageRepository.findByStatus(VoyageStatus.RUNNING);
 
         for (Voyage voyage : voyages) {
-
-            if (voyage.getStatus() == VoyageStatus.RUNNING &&
-                    voyage.getArrivalTime().isBefore(LocalDateTime.now())) {
-
+            if (voyage.getArrivalTime() != null &&
+                    !voyage.getArrivalTime().isAfter(LocalDateTime.now())) {
                 finishVoyageService.finishVoyage(voyage.getId());
             }
         }
