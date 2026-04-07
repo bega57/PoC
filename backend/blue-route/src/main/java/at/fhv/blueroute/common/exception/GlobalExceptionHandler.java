@@ -4,6 +4,7 @@ import at.fhv.blueroute.player.application.exception.PlayerNotFoundException;
 import at.fhv.blueroute.session.application.exception.SessionFullException;
 import at.fhv.blueroute.session.application.exception.SessionNotFoundException;
 import at.fhv.blueroute.ship.application.exception.InsufficientBalanceException;
+import at.fhv.blueroute.voyage.application.exception.VoyageException;
 import jakarta.servlet.http.HttpServletRequest;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -104,5 +105,20 @@ public class GlobalExceptionHandler {
     @ResponseStatus(HttpStatus.BAD_REQUEST)
     public Map<String, String> handleInsufficientBalance(InsufficientBalanceException ex) {
         return Map.of("message", ex.getMessage());
+    }
+
+    @ExceptionHandler(VoyageException.class)
+    public ResponseEntity<ErrorResponse> handleVoyageException(
+            VoyageException ex,
+            HttpServletRequest request
+    ) {
+        ErrorResponse response = new ErrorResponse(
+                ex.getMessage(),
+                HttpStatus.BAD_REQUEST.value(),
+                request.getRequestURI(),
+                LocalDateTime.now()
+        );
+
+        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(response);
     }
 }

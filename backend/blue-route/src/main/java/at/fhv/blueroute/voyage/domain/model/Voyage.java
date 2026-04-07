@@ -12,6 +12,8 @@ public class Voyage {
 
     private Long shipId;
 
+    private Long cargoId;
+
     private String originPort;
 
     private String destinationPort;
@@ -20,8 +22,11 @@ public class Voyage {
     private VoyageStatus status;
 
     private LocalDateTime startTime;
-        private LocalDateTime arrivalTime;
+    private LocalDateTime arrivalTime;
 
+    private double reward;
+
+    private boolean rewardGranted;
 
     public Long getId() {
         return id;
@@ -33,6 +38,14 @@ public class Voyage {
 
     public void setShipId(Long shipId) {
         this.shipId = shipId;
+    }
+
+    public Long getCargoId() {
+        return cargoId;
+    }
+
+    public void setCargoId(Long cargoId) {
+        this.cargoId = cargoId;
     }
 
     public String getOriginPort() {
@@ -73,5 +86,21 @@ public class Voyage {
 
     public void setArrivalTime(LocalDateTime arrivalTime) {
         this.arrivalTime = arrivalTime;
+    }
+
+    public double getReward() {
+        return reward;
+    }
+
+    public void setReward(double reward) {
+        this.reward = reward;
+    }
+
+    public boolean isRewardGranted() {
+        return rewardGranted;
+    }
+
+    public void setRewardGranted(boolean rewardGranted) {
+        this.rewardGranted = rewardGranted;
     }
 }
