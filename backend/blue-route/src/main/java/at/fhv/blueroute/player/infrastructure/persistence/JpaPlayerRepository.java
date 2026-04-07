@@ -7,4 +7,5 @@ import org.springframework.stereotype.Repository;
 
 @Repository
 public interface JpaPlayerRepository extends JpaRepository<Player, Long>, PlayerRepository {
+
 }

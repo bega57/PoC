@@ -20,14 +20,64 @@ public class Cargo {
 
     private double price;
 
+    private double reward;
+
+    private int requiredCapacity;
+
+    @Enumerated(EnumType.STRING)
+    private RiskLevel riskLevel;
+
     public Cargo() {}
 
-    public Long getId() { return id; }
-    public Port getOriginPort() { return originPort; }
-    public Port getDestinationPort() { return destinationPort; }
-    public double getPrice() { return price; }
+    public Long getId() {
+        return id;
+    }
 
-    public void setOriginPort(Port originPort) { this.originPort = originPort; }
-    public void setDestinationPort(Port destinationPort) { this.destinationPort = destinationPort; }
-    public void setPrice(double price) { this.price = price; }
+    public Port getOriginPort() {
+        return originPort;
+    }
+
+    public Port getDestinationPort() {
+        return destinationPort;
+    }
+
+    public double getPrice() {
+        return price;
+    }
+
+    public double getReward() {
+        return reward;
+    }
+
+    public int getRequiredCapacity() {
+        return requiredCapacity;
+    }
+
+    public RiskLevel getRiskLevel() {
+        return riskLevel;
+    }
+
+    public void setOriginPort(Port originPort) {
+        this.originPort = originPort;
+    }
+
+    public void setDestinationPort(Port destinationPort) {
+        this.destinationPort = destinationPort;
+    }
+
+    public void setPrice(double price) {
+        this.price = price;
+    }
+
+    public void setReward(double reward) {
+        this.reward = reward;
+    }
+
+    public void setRequiredCapacity(int requiredCapacity) {
+        this.requiredCapacity = requiredCapacity;
+    }
+
+    public void setRiskLevel(RiskLevel riskLevel) {
+        this.riskLevel = riskLevel;
+    }
 }

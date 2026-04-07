@@ -19,7 +19,9 @@ public class Ship {
 
     private Double price;
 
-    private Integer capacity;
+
+    @Column(name = "cargo_capacity")
+    private double cargoCapacity;
 
     private Integer speed;
 
@@ -38,11 +40,10 @@ public class Ship {
     public Ship() {
     }
 
-    public Ship(String name, ShipType type, Double price, Integer capacity, Integer speed, Player owner) {
+    public Ship(String name, ShipType type, Double price, Integer speed, Player owner) {
         this.name = name;
         this.type = type;
         this.price = price;
-        this.capacity = capacity;
         this.speed = speed;
         this.owner = owner;
 
@@ -66,10 +67,6 @@ public class Ship {
         return price;
     }
 
-    public Integer getCapacity() {
-        return capacity;
-    }
-
     public Integer getSpeed() {
         return speed;
     }
@@ -77,6 +74,8 @@ public class Ship {
     public Player getOwner() {
         return owner;
     }
+
+    public double getCargoCapacity() { return cargoCapacity;}
 
     public void setName(String name) {
         this.name = name;
@@ -88,10 +87,6 @@ public class Ship {
 
     public void setPrice(Double price) {
         this.price = price;
-    }
-
-    public void setCapacity(Integer capacity) {
-        this.capacity = capacity;
     }
 
     public void setSpeed(Integer speed) {
@@ -125,4 +120,6 @@ public class Ship {
     public boolean isTraveling() { return traveling; }
 
     public void setTraveling(boolean traveling) { this.traveling = traveling; }
+
+    public void setCargoCapacity(double cargoCapacity) { this.cargoCapacity = cargoCapacity;}
 }

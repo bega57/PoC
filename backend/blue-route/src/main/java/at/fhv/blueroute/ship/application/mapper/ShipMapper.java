@@ -13,13 +13,13 @@ public class ShipMapper {
                 ship.getName(),
                 ship.getType().name(),
                 ship.getPrice(),
-                ship.getCapacity(),
                 ship.getSpeed(),
                 ship.getOwner().getId(),
                 ship.getCondition(),
                 ship.getFuelLevel(),
                 ship.getCurrentPort(),
-                ship.isTraveling()
+                ship.isTraveling(),
+                ship.getCargoCapacity()
         );
     }
 }

@@ -1,8 +1,10 @@
-POST http://localhost:8080/voyages/start
+POST http://localhost:8080/cargo/load
 Content-Type: application/json
 
 {
-  "shipId": 11,
-  "originPort": "Dubai",
-  "destinationPort": "Singapore"
+  "playerId": 28,
+  "shipId": 25,
+  "portId": 1,
+  "goodId": 1,
+  "quantity": 5
 }

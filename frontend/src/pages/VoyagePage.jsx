@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import api from "../api/api";
 import "./VoyagePage.css";
@@ -7,27 +7,26 @@ export default function VoyagePage() {
     const { sessionCode } = useParams();
     const navigate = useNavigate();
 
-    const [origin, setOrigin] = useState("");
-
     const [ships, setShips] = useState([]);
     const [selectedShip, setSelectedShip] = useState(null);
 
-    const [cargoList, setCargoList] = useState([]);
-    const [selectedCargo, setSelectedCargo] = useState(null);
+    const [allCargo, setAllCargo] = useState([]);
+    const [selectedDestination, setSelectedDestination] = useState("");
+    const [selectedCargoId, setSelectedCargoId] = useState("");
 
+    const [voyages, setVoyages] = useState([]);
+
+    const [showVoyageStartedPopup, setShowVoyageStartedPopup] = useState(false);
+    const [startedVoyageInfo, setStartedVoyageInfo] = useState(null);
 
     useEffect(() => {
         const player = JSON.parse(localStorage.getItem("player"));
-        const port = localStorage.getItem("currentPort");
 
-        if (port) {
-            setOrigin(port);
-        } else {
-            alert("Please select a port on the map first.");
+        if (!player?.id) {
+            alert("No active player found.");
             navigate(`/game/${sessionCode}`);
+            return;
         }
-
-        if (!player?.id) return;
 
         api.get(`/ships/player/${player.id}`)
             .then(res => {
@@ -38,37 +37,99 @@ export default function VoyagePage() {
                 }
             })
             .catch(err => console.error(err));
-    }, []);
 
+        api.get("/voyages")
+            .then(res => setVoyages(res.data))
+            .catch(err => console.error(err));
+    }, [sessionCode, navigate]);
 
     useEffect(() => {
-        if (!origin) return;
+        if (!selectedShip?.currentPort) {
+            setAllCargo([]);
+            setSelectedDestination("");
+            setSelectedCargoId("");
+            return;
+        }
 
-        fetch(`http://localhost:8080/cargo?portName=${origin}`)
-            .then(res => res.json())
-            .then(data => {
-                console.log("CARGO:", data);
-                setCargoList(data);
+        api.get(`/cargo?portName=${encodeURIComponent(selectedShip.currentPort)}`)
+            .then(res => {
+                setAllCargo(res.data || []);
+                setSelectedDestination("");
+                setSelectedCargoId("");
             })
-            .catch(err => console.error("Cargo error:", err));
-    }, [origin]);
+            .catch(err => {
+                console.error(err);
+                setAllCargo([]);
+                setSelectedDestination("");
+                setSelectedCargoId("");
+            });
+    }, [selectedShip]);
 
+    const isShipBusy = (shipId) => {
+        return voyages.some(
+            v => v.shipId === shipId && v.status === "RUNNING"
+        );
+    };
+
+    const availableDestinations = useMemo(() => {
+        const names = allCargo
+            .map(item => item.destinationPort?.name)
+            .filter(Boolean);
+
+        return [...new Set(names)].sort((a, b) => a.localeCompare(b));
+    }, [allCargo]);
+
+    const filteredCargo = useMemo(() => {
+        if (!selectedDestination) return [];
+
+        return allCargo.filter(
+            item => item.destinationPort?.name === selectedDestination
+        );
+    }, [allCargo, selectedDestination]);
+
+    const selectedCargo = useMemo(() => {
+        return filteredCargo.find(item => item.id === Number(selectedCargoId)) || null;
+    }, [filteredCargo, selectedCargoId]);
 
     const handleStartVoyage = async () => {
-        if (!selectedShip || !selectedCargo) {
-            alert("Please select a ship and cargo.");
+        if (!selectedShip) {
+            alert("Select a ship");
+            return;
+        }
+
+        if (isShipBusy(selectedShip.id)) {
+            alert("This ship is already traveling");
+            return;
+        }
+
+        if (!selectedDestination) {
+            alert("Select a destination");
+            return;
+        }
+
+        if (!selectedCargoId) {
+            alert("Select a cargo order");
             return;
         }
 
         try {
             await api.post("/voyages/start", {
                 shipId: selectedShip.id,
-                cargoId: selectedCargo.id
+                cargoId: Number(selectedCargoId)
             });
 
-            navigate(`/game/${sessionCode}`);
+            setStartedVoyageInfo({
+                shipName: selectedShip.name,
+                origin: selectedShip.currentPort,
+                destination: selectedCargo?.destinationPort?.name,
+                price: selectedCargo?.price,
+                reward: selectedCargo?.reward
+            });
+
+            setShowVoyageStartedPopup(true);
         } catch (err) {
             console.error(err);
+            alert(err.response?.data?.message || "Failed to start voyage");
         }
     };
 
@@ -86,15 +147,12 @@ export default function VoyagePage() {
             </div>
 
             <div className="voyage-content">
-
                 <header className="voyage-header">
                     <h1>Voyage Planning</h1>
-                    <p>Select a ship and choose a cargo.</p>
+                    <p>Select a ship, destination and cargo order.</p>
                 </header>
 
                 <div className="voyage-cards">
-
-
                     <div className="voyage-card">
                         <h2>Ship</h2>
 
@@ -104,80 +162,184 @@ export default function VoyagePage() {
                                 const ship = ships.find(
                                     s => s.id === Number(e.target.value)
                                 );
-                                setSelectedShip(ship);
+                                setSelectedShip(ship || null);
                             }}
                         >
                             {ships.length === 0 ? (
-                                <option disabled>No ships available</option>
+                                <option value="">No ships available</option>
                             ) : (
                                 ships.map(ship => (
-                                    <option key={ship.id} value={ship.id}>
-                                        {ship.name}
+                                    <option
+                                        key={ship.id}
+                                        value={ship.id}
+                                        disabled={isShipBusy(ship.id)}
+                                    >
+                                        {ship.name} {isShipBusy(ship.id) ? "🚫 (busy)" : ""}
                                     </option>
                                 ))
                             )}
                         </select>
 
                         {selectedShip && (
-                            <p className="voyage-info">
-                                Selected: {selectedShip.name}
-                            </p>
+                            <div className="voyage-info">
+                                <p>Ship: {selectedShip.name}</p>
+                                <p>Current Port: {selectedShip?.currentPort || "Unknown"}</p>
+                                <p>Capacity: {selectedShip.cargoCapacity}</p>
+                                <p>Fuel: {selectedShip.fuelLevel}</p>
+                                <p>Condition: {selectedShip.condition}</p>
+                            </div>
                         )}
                     </div>
-
 
                     <div className="voyage-card">
-                        <h2>Available Cargo</h2>
+                        <h2>Destination</h2>
 
-                        {cargoList.length === 0 ? (
-                            <p>No cargo available</p>
+                        {!selectedShip ? (
+                            <p>Select a ship first</p>
+                        ) : availableDestinations.length === 0 ? (
+                            <p>No destinations available from {selectedShip?.currentPort || "Unknown"}</p>
                         ) : (
-                            cargoList.map(cargo => (
-                                <div key={cargo.id} className="cargo-card">
-                                    <p>
-                                        {cargo.originPort.name} → {cargo.destinationPort.name}
-                                    </p>
-                                    <p> {cargo.price}€</p>
+                            <>
+                                <select
+                                    value={selectedDestination}
+                                    onChange={(e) => {
+                                        setSelectedDestination(e.target.value);
+                                        setSelectedCargoId("");
+                                    }}
+                                >
+                                    <option value="">Select destination</option>
+                                    {availableDestinations.map(destination => (
+                                        <option key={destination} value={destination}>
+                                            {destination}
+                                        </option>
+                                    ))}
+                                </select>
 
-                                    <button onClick={() => setSelectedCargo(cargo)}>
-                                        Accept
-                                    </button>
-                                </div>
-                            ))
+                                {selectedDestination && (
+                                    <p className="voyage-info">
+                                        Selected destination: {selectedDestination}
+                                    </p>
+                                )}
+                            </>
                         )}
                     </div>
 
+                    <div className="voyage-card">
+                        <h2>Cargo Orders</h2>
+
+                        {!selectedDestination ? (
+                            <p>Select a destination first</p>
+                        ) : filteredCargo.length === 0 ? (
+                            <p>No cargo orders available for this destination</p>
+                        ) : (
+                            <>
+                                <select
+                                    value={selectedCargoId}
+                                    onChange={(e) => setSelectedCargoId(e.target.value)}
+                                >
+                                    <option value="">Select cargo order</option>
+                                    {filteredCargo.map(item => (
+                                        <option key={item.id} value={item.id}>
+                                            Order #{item.id} - {item.originPort?.name} → {item.destinationPort?.name} - Price: {item.price} - Reward: {item.reward}
+                                        </option>
+                                    ))}
+                                </select>
+
+                                <div style={{ marginTop: "15px" }}>
+                                    {filteredCargo.map(item => (
+                                        <div
+                                            key={item.id}
+                                            className="cargo-card"
+                                            style={{
+                                                border: item.id === Number(selectedCargoId)
+                                                    ? "2px solid white"
+                                                    : undefined,
+                                                cursor: "pointer"
+                                            }}
+                                            onClick={() => setSelectedCargoId(String(item.id))}
+                                        >
+                                            <p>Order #{item.id}</p>
+                                            <p>From: {item.originPort?.name}</p>
+                                            <p>To: {item.destinationPort?.name}</p>
+                                            <p>Price: {item.price} Talers</p>
+                                            <p>Reward: {item.reward} Talers</p>
+                                            <p>Required Capacity: {item.requiredCapacity}</p>
+                                            <p>Risk: {item.riskLevel}</p>
+                                        </div>
+                                    ))}
+                                </div>
+                            </>
+                        )}
+                    </div>
+
+                    <div className="voyage-card">
+                        <h2>Summary</h2>
+
+                        {!selectedShip || !selectedCargo ? (
+                            <p>Select ship, destination and cargo order</p>
+                        ) : (
+                            <div className="voyage-info">
+                                <p>Ship: {selectedShip.name}</p>
+                                <p>From: {selectedShip?.currentPort || "Unknown"}</p>
+                                <p>To: {selectedCargo.destinationPort?.name}</p>
+                                <p>Cargo Order: #{selectedCargo.id}</p>
+                                <p>Price: {selectedCargo.price} Talers</p>
+                                <p>Reward: {selectedCargo.reward} Talers</p>
+                                <p>Required Capacity: {selectedCargo.requiredCapacity}</p>
+                                <p>Risk: {selectedCargo.riskLevel}</p>
+                                <p>Expected Profit: {selectedCargo.reward - selectedCargo.price} Talers</p>
+
+                                {selectedShip && selectedCargo && selectedShip.cargoCapacity < selectedCargo.requiredCapacity && (
+                                    <p style={{ color: "#f87171", marginTop: "10px" }}>
+                                        This ship does not have enough cargo capacity for the selected order.
+                                    </p>
+                                )}
+                            </div>
+                        )}
+                    </div>
                 </div>
 
+                <div style={{ marginTop: "30px", textAlign: "center" }}>
+                    <button
+                        className="start-button"
+                        onClick={handleStartVoyage}
+                        disabled={
+                            !selectedShip ||
+                            !selectedDestination ||
+                            !selectedCargoId ||
+                            isShipBusy(selectedShip?.id) ||
+                            (selectedShip && selectedCargo && selectedShip.cargoCapacity < selectedCargo.requiredCapacity)
+                        }
+                    >
+                        Start Voyage
+                    </button>
+                </div>
+            </div>
 
-                {selectedCargo && (
-                    <div className="voyage-action-panel">
-                        <div>
-                            <h3>Selected Route</h3>
-                            <p className="route-text">
-                                <span>{selectedCargo.originPort.name}</span>
-                                <span className="arrow">→</span>
-                                <span>{selectedCargo.destinationPort.name}</span>
-                            </p>
-                        </div>
+            {showVoyageStartedPopup && (
+                <div className="welcome-overlay">
+                    <div className="welcome-modal">
+                        <h2>Voyage started</h2>
+                        <p>Your ship is now on its way.</p>
+
+                        {startedVoyageInfo && (
+                            <>
+                                <p>Ship: {startedVoyageInfo.shipName}</p>
+                                <p>Route: {startedVoyageInfo.origin} → {startedVoyageInfo.destination}</p>
+                                <p>Paid: {startedVoyageInfo.price} Talers</p>
+                                <p>Potential Reward: {startedVoyageInfo.reward} Talers</p>
+                            </>
+                        )}
 
                         <button
-                            className="voyage-start-btn"
-                            onClick={handleStartVoyage}
-                            disabled={!selectedCargo || selectedShip?.traveling}
+                            onClick={() => navigate(`/game/${sessionCode}`)}
                         >
-                            Start Voyage
+                            Back to Game
                         </button>
-
-                        {selectedShip?.traveling && (
-                            <p style={{ color: "orange", marginTop: "10px" }}>
-                                🚢 Ship is already traveling
-                            </p>
-                        )}
                     </div>
-                )}
+                </div>
+            )}
 
-            </div>
         </div>
     );
 }

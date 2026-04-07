@@ -21,6 +21,7 @@ public class Player {
 
     private Double balance;
 
+    // currentPort = player's home/main port
     private String currentPort;
 
     @OneToMany(mappedBy = "owner")
