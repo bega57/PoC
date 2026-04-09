@@ -481,8 +481,9 @@ function GamePage() {
 
             <div className="status-bar">
                 <p>
+                    🕒 Game Day: {session.currentTick} |
                     🚢 Ship: {selectedShip?.name || "None"} |
-                    📍 {selectedShip?.currentPort || "No Port"} |
+                    📍 {currentPlayer?.currentPort || "No Port"} |
                     💰 Balance: {currentPlayer?.balance ?? "?"}
                 </p>
 
