@@ -42,6 +42,10 @@ function GamePage() {
 
     const [ports, setPorts] = useState([]);
 
+    const [hoveredPort, setHoveredPort] = useState(null);
+    const [portCargo, setPortCargo] = useState([]);
+    const [cargoCache, setCargoCache] = useState({});
+
     const savedPort = localStorage.getItem(`currentPort-${sessionCode}`);
 
     const [showRewardPopup, setShowRewardPopup] = useState(false);
@@ -149,6 +153,28 @@ function GamePage() {
             .catch(err => console.error(err));
     }, []);
 
+    const handlePortHover = async (portName) => {
+        setHoveredPort(portName);
+
+        if (cargoCache[portName]) {
+            setPortCargo(cargoCache[portName]);
+            return;
+        }
+
+        try {
+            const res = await api.get(`/cargo?portName=${portName}`);
+            setPortCargo(res.data);
+
+            setCargoCache(prev => ({
+                ...prev,
+                [portName]: res.data
+            }));
+        } catch (err) {
+            console.error(err);
+            setPortCargo([]);
+        }
+    };
+
     useEffect(() => {
         const savedPort = localStorage.getItem(`currentPort-${sessionCode}`)
 
@@ -199,6 +225,19 @@ function GamePage() {
         v => myShipIds.includes(v.shipId) && v.status === "RUNNING"
     );
 
+    let highestRisk = "LOW";
+
+    if (portCargo.some(c => c.riskLevel === "HIGH")) {
+        highestRisk = "HIGH";
+    } else if (portCargo.some(c => c.riskLevel === "MEDIUM")) {
+        highestRisk = "MEDIUM";
+    }
+
+    const riskColor =
+        highestRisk === "HIGH" ? "#ef4444" :
+            highestRisk === "MEDIUM" ? "#f59e0b" :
+                "#22c55e";
+
     return (
         <div className="game-container">
 
@@ -234,6 +273,8 @@ function GamePage() {
                         <Marker
                             key={port.name}
                             coordinates={[port.longitude, port.latitude]}
+                            onMouseEnter={() => handlePortHover(port.name)}
+                            onMouseLeave={() => setHoveredPort(null)}
                             onClick={() => {
                                 if (!showWelcome && !showPortInstruction) {
                                     setSelectedPort(port.name);
@@ -268,6 +309,43 @@ function GamePage() {
                                 />
                             </>
 
+                            {hoveredPort === port.name && (
+                                <g transform="translate(10, 15)">
+                                    <rect
+                                        width={170}
+                                        height={90}
+                                        fill="#0f172a"
+                                        stroke="#475569"
+                                        strokeWidth={1}
+                                        rx={10}
+                                    />
+
+                                    {/* Titel */}
+                                    <text x={10} y={18} fill="#e2e8f0" fontSize="11" fontWeight="600">
+                                        {port.name}
+                                    </text>
+
+                                    {/* Linie */}
+                                    <line x1={10} y1={24} x2={160} y2={24} stroke="#334155" />
+
+                                    {/* Cargo */}
+                                    <text x={10} y={40} fill="#cbd5f5" fontSize="10">
+                                        📦 {portCargo.length} cargos
+                                    </text>
+
+                                    {/* Reward */}
+                                    <text x={10} y={55} fill="#cbd5f5" fontSize="10">
+                                        💰 {portCargo.length > 0
+                                        ? Math.max(...portCargo.map(c => c.reward))
+                                        : 0}
+                                    </text>
+
+                                    {/* Risk */}
+                                    <text x={10} y={70} fill={riskColor} fontSize="10">
+                                        ⚠️ {highestRisk}
+                                    </text>
+                                </g>
+                            )}
 
                             <text
                                 x={port.name === "London" ? -8 : 10}
