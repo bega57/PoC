@@ -22,7 +22,7 @@ function ShipMarketMenuPage() {
         fetchSession();
     }, [sessionCode]);
 
-    const activePlayerId = Number(localStorage.getItem("activePlayerId"));
+    const activePlayerId = Number(sessionStorage.getItem(`activePlayerId-${sessionCode}`));
 
     const currentPlayer = session?.players?.find(
         (player) => player.id === activePlayerId

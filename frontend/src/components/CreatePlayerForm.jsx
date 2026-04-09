@@ -14,8 +14,8 @@ function CreatePlayerForm({ onPlayerCreated }) {
         try {
             const response = await api.post("/players", { username });
             onPlayerCreated(response.data);
-            localStorage.setItem("player", JSON.stringify(response.data));
-            localStorage.setItem("activePlayerId", response.data.id);
+            localStorage.setItem("player-global", JSON.stringify(response.data));
+            localStorage.setItem("activePlayerId-global", response.data.id);
             setMessage(`Player created: ${response.data.username} (ID: ${response.data.id})`);
             setUsername("");
         } catch (error) {

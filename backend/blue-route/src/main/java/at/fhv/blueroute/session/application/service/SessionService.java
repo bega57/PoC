@@ -116,10 +116,17 @@ public class SessionService {
     }
 
     public SessionResponse leaveSession(String sessionCode, Long playerId) {
+        System.out.println("leaveSession called with sessionCode=" + sessionCode + ", playerId=" + playerId);
+
         Session session = sessionRepository.findBySessionCode(sessionCode)
                 .orElseThrow(() -> new SessionNotFoundException(sessionCode));
 
+        System.out.println("session found: " + session.getSessionCode());
+        System.out.println("session players: " + session.getSessionPlayers().size());
+
         SessionPlayer sessionPlayer = session.getSessionPlayerByPlayerId(playerId);
+
+        System.out.println("sessionPlayer found? " + (sessionPlayer != null));
 
         if (sessionPlayer == null) {
             throw new PlayerNotFoundException(playerId);

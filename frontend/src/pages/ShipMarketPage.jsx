@@ -84,7 +84,7 @@ function ShipMarketPage() {
         return <div style={{ color: "white", padding: "20px" }}>Loading market...</div>;
     }
 
-    const activePlayerId = Number(localStorage.getItem("activePlayerId"));
+    const activePlayerId = Number(sessionStorage.getItem(`activePlayerId-${sessionCode}`));
 
     const currentPlayer = session?.players?.find(
         (player) => player.id === activePlayerId
