@@ -153,8 +153,10 @@ function GamePage() {
             .catch(err => console.error(err));
     }, []);
 
-    const handlePortHover = async (portName) => {
-        setHoveredPort(portName);
+    const handlePortHover = async (port) => {
+        setHoveredPort(port);
+
+        const portName = port.name;
 
         if (cargoCache[portName]) {
             setPortCargo(cargoCache[portName]);
@@ -248,6 +250,9 @@ function GamePage() {
 
     const boxWidth = portCargo.length > 1 ? 150 : 130;
 
+    const offsetX = 15;
+    const offsetY = hoveredPort?.latitude > 0 ? 20 : -100;
+
     return (
         <div className="game-container">
 
@@ -283,8 +288,10 @@ function GamePage() {
                         <Marker
                             key={port.name}
                             coordinates={[port.longitude, port.latitude]}
-                            onMouseEnter={() => handlePortHover(port.name)}
-                            onMouseLeave={() => setHoveredPort(null)}
+                            onMouseEnter={() => handlePortHover(port)}
+                            onMouseLeave={() => {
+                                setTimeout(() => setHoveredPort(null), 80);
+                            }}
                             onClick={() => {
                                 if (!showWelcome && !showPortInstruction) {
                                     setSelectedPort(port.name);
@@ -319,41 +326,6 @@ function GamePage() {
                                 />
                             </>
 
-                            {hoveredPort === port.name && (
-                                <g transform="translate(10, 15)">
-                                    <rect
-                                        width={boxWidth}
-                                        height={90}
-                                        fill="#0f172a"
-                                        stroke="#475569"
-                                        strokeWidth={1}
-                                        rx={10}
-                                    />
-
-                                    {/* Titel */}
-                                    <text x={10} y={18} fill="#e2e8f0" fontSize="11" fontWeight="600">
-                                        Port Info
-                                    </text>
-
-                                    {/* Linie */}
-                                    <line x1={10} y1={24} x2={boxWidth - 10} y2={24} stroke="#334155" />
-
-                                    {/* Cargo */}
-                                    <text x={10} y={40} fill="#cbd5f5" fontSize="10">
-                                        📦 {portCargo.length} cargos
-                                    </text>
-
-                                    {/* Reward & Risk */}
-                                    <text x={10} y={55} fill="#cbd5f5" fontSize="10">
-                                        💰 {minReward === maxReward ? minReward : `${minReward} | ${maxReward}`}
-                                    </text>
-
-                                    <text x={10} y={70} fill={riskColor} fontSize="10">
-                                        ⚠️ {minRisk === maxRisk ? minRisk : `${minRisk} | ${maxRisk}`}
-                                    </text>
-                                </g>
-                            )}
-
                             <text
                                 x={port.name === "London" ? -8 : 10}
                                 y={3}
@@ -369,6 +341,40 @@ function GamePage() {
                             </text>
                         </Marker>
                     ))}
+
+                    {hoveredPort && (
+                        <Marker
+                            coordinates={[hoveredPort.longitude, hoveredPort.latitude]}
+                        >
+                            <g transform={`translate(${offsetX}, ${offsetY})`}>
+                                <rect
+                                    width={boxWidth}
+                                    height={90}
+                                    fill="#0f172a"
+                                    stroke="#475569"
+                                    rx={10}
+                                />
+
+                                <text x={10} y={18} fill="#e2e8f0" fontSize="11" fontWeight="600">
+                                    Port Info
+                                </text>
+
+                                <line x1={10} y1={24} x2={boxWidth - 10} y2={24} stroke="#334155" />
+
+                                <text x={10} y={40} fill="#cbd5f5" fontSize="10">
+                                    📦 {portCargo.length} cargos
+                                </text>
+
+                                <text x={10} y={55} fill="#cbd5f5" fontSize="10">
+                                    💰 {minReward === maxReward ? minReward : `${minReward} | ${maxReward}`}
+                                </text>
+
+                                <text x={10} y={70} fill={riskColor} fontSize="10">
+                                    ⚠️ {minRisk === maxRisk ? minRisk : `${minRisk} | ${maxRisk}`}
+                                </text>
+                            </g>
+                        </Marker>
+                    )}
 
                     {session.players.flatMap(p =>
                         (p.ships || []).map(ship => ({ ship, player: p }))
