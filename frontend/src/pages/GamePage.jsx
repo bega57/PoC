@@ -225,18 +225,28 @@ function GamePage() {
         v => myShipIds.includes(v.shipId) && v.status === "RUNNING"
     );
 
-    let highestRisk = "LOW";
+    const rewards = portCargo.map(c => c.reward);
+    const minReward = rewards.length > 0 ? Math.min(...rewards) : 0;
+    const maxReward = rewards.length > 0 ? Math.max(...rewards) : 0;
 
-    if (portCargo.some(c => c.riskLevel === "HIGH")) {
-        highestRisk = "HIGH";
-    } else if (portCargo.some(c => c.riskLevel === "MEDIUM")) {
-        highestRisk = "MEDIUM";
-    }
+    const riskLevels = portCargo.map(c => c.riskLevel);
+
+    const riskOrder = ["LOW", "MEDIUM", "HIGH"];
+
+    const minRisk = riskLevels.length > 0
+        ? riskOrder[Math.min(...riskLevels.map(r => riskOrder.indexOf(r)))]
+        : "LOW";
+
+    const maxRisk = riskLevels.length > 0
+        ? riskOrder[Math.max(...riskLevels.map(r => riskOrder.indexOf(r)))]
+        : "LOW";
 
     const riskColor =
-        highestRisk === "HIGH" ? "#ef4444" :
-            highestRisk === "MEDIUM" ? "#f59e0b" :
+        maxRisk === "HIGH" ? "#ef4444" :
+            maxRisk === "MEDIUM" ? "#f59e0b" :
                 "#22c55e";
+
+    const boxWidth = portCargo.length > 1 ? 150 : 130;
 
     return (
         <div className="game-container">
@@ -312,7 +322,7 @@ function GamePage() {
                             {hoveredPort === port.name && (
                                 <g transform="translate(10, 15)">
                                     <rect
-                                        width={170}
+                                        width={boxWidth}
                                         height={90}
                                         fill="#0f172a"
                                         stroke="#475569"
@@ -322,27 +332,24 @@ function GamePage() {
 
                                     {/* Titel */}
                                     <text x={10} y={18} fill="#e2e8f0" fontSize="11" fontWeight="600">
-                                        {port.name}
+                                        Port Info
                                     </text>
 
                                     {/* Linie */}
-                                    <line x1={10} y1={24} x2={160} y2={24} stroke="#334155" />
+                                    <line x1={10} y1={24} x2={boxWidth - 10} y2={24} stroke="#334155" />
 
                                     {/* Cargo */}
                                     <text x={10} y={40} fill="#cbd5f5" fontSize="10">
                                         📦 {portCargo.length} cargos
                                     </text>
 
-                                    {/* Reward */}
+                                    {/* Reward & Risk */}
                                     <text x={10} y={55} fill="#cbd5f5" fontSize="10">
-                                        💰 {portCargo.length > 0
-                                        ? Math.max(...portCargo.map(c => c.reward))
-                                        : 0}
+                                        💰 {minReward === maxReward ? minReward : `${minReward} | ${maxReward}`}
                                     </text>
 
-                                    {/* Risk */}
                                     <text x={10} y={70} fill={riskColor} fontSize="10">
-                                        ⚠️ {highestRisk}
+                                        ⚠️ {minRisk === maxRisk ? minRisk : `${minRisk} | ${maxRisk}`}
                                     </text>
                                 </g>
                             )}
