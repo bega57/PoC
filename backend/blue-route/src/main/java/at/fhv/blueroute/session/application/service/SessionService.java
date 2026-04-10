@@ -8,6 +8,7 @@ import at.fhv.blueroute.session.application.exception.SessionNotFoundException;
 import at.fhv.blueroute.session.application.mapper.SessionMapper;
 import at.fhv.blueroute.session.domain.model.Session;
 import at.fhv.blueroute.session.domain.model.SessionPlayer;
+import at.fhv.blueroute.session.domain.model.SessionPlayerStatus;
 import at.fhv.blueroute.session.domain.model.SessionStatus;
 import at.fhv.blueroute.session.domain.repository.SessionRepository;
 import at.fhv.blueroute.session.presentation.dto.SessionResponse;
@@ -69,10 +70,10 @@ public class SessionService {
             session.addPlayer(player, false);
         }
 
-        if (session.isFull()) {
+        if (session.getSessionPlayers().stream().anyMatch(sp -> sp.getStatus() == SessionPlayerStatus.ACTIVE)) {
             session.setStatus(SessionStatus.RUNNING);
         } else {
-            session.setStatus(SessionStatus.WAITING);
+            session.setStatus(SessionStatus.PAUSED);
         }
 
         Session updatedSession = sessionRepository.save(session);
@@ -115,16 +116,30 @@ public class SessionService {
     }
 
     public SessionResponse leaveSession(String sessionCode, Long playerId) {
+        System.out.println("leaveSession called with sessionCode=" + sessionCode + ", playerId=" + playerId);
+
         Session session = sessionRepository.findBySessionCode(sessionCode)
                 .orElseThrow(() -> new SessionNotFoundException(sessionCode));
 
+        System.out.println("session found: " + session.getSessionCode());
+        System.out.println("session players: " + session.getSessionPlayers().size());
+
         SessionPlayer sessionPlayer = session.getSessionPlayerByPlayerId(playerId);
+
+        System.out.println("sessionPlayer found? " + (sessionPlayer != null));
 
         if (sessionPlayer == null) {
             throw new PlayerNotFoundException(playerId);
         }
 
         sessionPlayer.markDisconnected();
+
+        boolean hasActivePlayers = session.getSessionPlayers().stream()
+                .anyMatch(sp -> sp.getStatus() == SessionPlayerStatus.ACTIVE);
+
+        if (!hasActivePlayers) {
+            session.setStatus(SessionStatus.PAUSED);
+        }
 
         Session updatedSession = sessionRepository.save(session);
         return sessionMapper.toResponse(updatedSession);

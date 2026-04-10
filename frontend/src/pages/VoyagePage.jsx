@@ -20,7 +20,7 @@ export default function VoyagePage() {
     const [startedVoyageInfo, setStartedVoyageInfo] = useState(null);
 
     useEffect(() => {
-        const player = JSON.parse(localStorage.getItem("player"));
+        const player = JSON.parse(sessionStorage.getItem(`player-${sessionCode}`));
 
         if (!player?.id) {
             alert("No active player found.");

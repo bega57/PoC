@@ -13,7 +13,7 @@ function CompanyPage() {
     const [session, setSession] = useState(null);
     const [voyages, setVoyages] = useState([]);
 
-    const storedPlayer = JSON.parse(localStorage.getItem("player"));
+    const storedPlayer = JSON.parse(sessionStorage.getItem(`player-${sessionCode}`));
 
     useEffect(() => {
         const fetchData = async () => {

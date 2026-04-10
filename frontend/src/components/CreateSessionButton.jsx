@@ -17,7 +17,9 @@ function CreateSessionButton({ player, onSessionCreated }) {
                 maxPlayers: maxPlayers,
             });
 
-            localStorage.setItem("activePlayerId", player.id);
+            sessionStorage.setItem(`activePlayerId-${response.data.sessionCode}`, player.id);
+            sessionStorage.setItem(`player-${response.data.sessionCode}`, JSON.stringify(player));
+
             onSessionCreated(response.data);
             setMessage("");
         } catch (error) {
