@@ -28,6 +28,16 @@ public class Voyage {
 
     private boolean rewardGranted;
 
+    @Column(nullable = false)
+    private int startTick;
+
+    @Column(nullable = false)
+    private int arrivalTick;
+
+    @Column(nullable = false)
+    private Long sessionId;
+
+
     public Long getId() {
         return id;
     }
@@ -103,4 +113,32 @@ public class Voyage {
     public void setRewardGranted(boolean rewardGranted) {
         this.rewardGranted = rewardGranted;
     }
+
+
+    public int getArrivalTick() {
+        return arrivalTick;
+    }
+
+    public void setArrivalTick(int arrivalTick) {
+        this.arrivalTick = arrivalTick;
+    }
+
+    public int getStartTick() {
+        return startTick;
+    }
+
+    public void setStartTick(int startTick) {
+        this.startTick = startTick;
+    }
+
+    public Long getSessionId() {
+        return sessionId;
+    }
+
+    public void setSessionId(Long sessionId) {
+        this.sessionId = sessionId;
+    }
+
+
+
 }

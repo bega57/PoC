@@ -11,4 +11,6 @@ public interface JpaVoyageRepository extends JpaRepository<Voyage, Long> {
     boolean existsByShipIdAndStatusNot(Long shipId, VoyageStatus status);
 
     List<Voyage> findByStatus(VoyageStatus status);
+
+    List<Voyage> findBySessionId(Long sessionId);
 }

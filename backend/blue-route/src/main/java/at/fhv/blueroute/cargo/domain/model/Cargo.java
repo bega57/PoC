@@ -27,6 +27,9 @@ public class Cargo {
     @Enumerated(EnumType.STRING)
     private RiskLevel riskLevel;
 
+    @Column(nullable = false)
+    private int requiredTicks;
+
     public Cargo() {}
 
     public Long getId() {
@@ -57,6 +60,10 @@ public class Cargo {
         return riskLevel;
     }
 
+    public int getRequiredTicks() {
+        return requiredTicks;
+    }
+
     public void setOriginPort(Port originPort) {
         this.originPort = originPort;
     }
@@ -79,5 +86,9 @@ public class Cargo {
 
     public void setRiskLevel(RiskLevel riskLevel) {
         this.riskLevel = riskLevel;
+    }
+
+    public void setRequiredTicks(int requiredTicks) {
+        this.requiredTicks = requiredTicks;
     }
 }

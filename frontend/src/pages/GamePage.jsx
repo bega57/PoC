@@ -55,10 +55,7 @@ function GamePage() {
         return saved ? Number(saved) : null;
     });
 
-    const currentPort =
-        selectedShip?.currentPort ||
-        savedPort ||
-        null;
+
 
     useEffect(() => {
         if (!session || !storedPlayer) return;
@@ -97,21 +94,12 @@ function GamePage() {
         if (!me?.ships?.length) return;
 
         const backendShip = me.ships[0];
-        const savedPort = localStorage.getItem(`currentPort-${sessionCode}`)
 
-        setSelectedShip(prev => {
-            if (prev?.id === backendShip.id) {
-                return {
-                    ...prev,
-                    currentPort: backendShip.currentPort || prev.currentPort || savedPort
-                };
-            }
-
-            return {
-                ...backendShip,
-                currentPort: backendShip.currentPort || savedPort
-            };
+        setSelectedShip({
+            ...backendShip,
+            currentPort: backendShip.currentPort // 👈 IMMER backend truth
         });
+
     }, [session]);
 
 
@@ -124,7 +112,7 @@ function GamePage() {
                 })
                 .catch((err) => console.error(err));
 
-            api.get("/voyages")
+            api.get(`/voyages?sessionId=${session?.id}`)
                 .then(res => setVoyages(res.data))
                 .catch(err => console.error(err));
         };
@@ -178,7 +166,6 @@ function GamePage() {
     };
 
     useEffect(() => {
-        const savedPort = localStorage.getItem(`currentPort-${sessionCode}`)
 
         if (savedPort) {
             setShowPortInstruction(false);
@@ -221,6 +208,13 @@ function GamePage() {
 
 
     const myShipIds = myShips.map(s => s.id);
+
+    const mainPort = savedPort;
+    const shipPorts = myShips
+        .map(ship => ship.currentPort)
+        .filter(Boolean);
+
+    const now = Date.now();
 
     const myActiveVoyage = voyages.find(
         v => myShipIds.includes(v.shipId) && v.status === "RUNNING"
@@ -265,7 +259,8 @@ function GamePage() {
                 showWelcome={showWelcome}
                 showPortInstruction={showPortInstruction}
                 setSelectedPort={setSelectedPort}
-                currentPort={currentPort}
+                mainPort={mainPort}
+                shipPorts={shipPorts}
                 myShipIds={myShipIds}
                 portCargo={portCargo}
                 minReward={minReward}

@@ -3,6 +3,9 @@ package at.fhv.blueroute.voyage.application.service;
 import at.fhv.blueroute.cargo.domain.model.Cargo;
 import at.fhv.blueroute.cargo.infrastructure.persistence.JpaCargoRepository;
 import at.fhv.blueroute.player.domain.repository.PlayerRepository;
+import at.fhv.blueroute.session.domain.model.Session;
+import at.fhv.blueroute.session.domain.model.SessionStatus;
+import at.fhv.blueroute.session.infrastructure.persistence.JpaSessionRepository;
 import at.fhv.blueroute.ship.domain.model.Ship;
 import at.fhv.blueroute.ship.infrastructure.persistence.JpaShipRepository;
 import at.fhv.blueroute.voyage.application.exception.VoyageException;
@@ -22,20 +25,23 @@ public class StartVoyageService {
     private final JpaShipRepository shipRepository;
     private final JpaCargoRepository cargoRepository;
     private final PlayerRepository playerRepository;
+    private final JpaSessionRepository sessionRepository;
 
     public StartVoyageService(
             JpaVoyageRepository voyageRepository,
             JpaShipRepository shipRepository,
             JpaCargoRepository cargoRepository,
-            PlayerRepository playerRepository
+            PlayerRepository playerRepository,
+            JpaSessionRepository sessionRepository
     ) {
         this.voyageRepository = voyageRepository;
         this.shipRepository = shipRepository;
         this.cargoRepository = cargoRepository;
         this.playerRepository = playerRepository;
+        this.sessionRepository = sessionRepository;
     }
 
-    public Voyage startVoyage(Long shipId, Long cargoId) {
+    public Voyage startVoyage(Long shipId, Long cargoId, String sessionCode) {
 
         Ship ship = shipRepository.findById(shipId)
                 .orElseThrow(() -> new RuntimeException("Ship not found"));
@@ -81,7 +87,6 @@ public class StartVoyageService {
         playerRepository.save(ship.getOwner());
 
         LocalDateTime now = LocalDateTime.now();
-        LocalDateTime arrival = now.plusSeconds(15);
 
         Voyage voyage = new Voyage();
         voyage.setShipId(shipId);
@@ -90,7 +95,30 @@ public class StartVoyageService {
         voyage.setDestinationPort(cargo.getDestinationPort().getName());
         voyage.setStatus(VoyageStatus.RUNNING);
         voyage.setStartTime(now);
-        voyage.setArrivalTime(arrival);
+
+        Session session = sessionRepository
+                .findBySessionCode(sessionCode)
+                .orElseThrow(() -> new VoyageException("Session not found"));
+
+        voyage.setSessionId(session.getId());
+
+        int currentTick = session.getCurrentTick();
+        int requiredTicks = cargo.getRequiredTicks();
+        int speed = ship.getSpeed();
+
+        System.out.println("---- VOYAGE DEBUG ----");
+        System.out.println("CurrentTick: " + currentTick);
+        System.out.println("RequiredTicks (Cargo): " + requiredTicks);
+        System.out.println("Ship Speed: " + speed);
+
+        int adjustedTicks = requiredTicks;
+
+        voyage.setStartTick(currentTick);
+        voyage.setArrivalTick(currentTick + adjustedTicks);
+
+        System.out.println("SET StartTick: " + voyage.getStartTick());
+        System.out.println("SET ArrivalTick: " + voyage.getArrivalTick());
+
         voyage.setReward(cargo.getReward());
         voyage.setRewardGranted(false);
 
@@ -100,4 +128,5 @@ public class StartVoyageService {
 
         return voyageRepository.save(voyage);
     }
+
 }

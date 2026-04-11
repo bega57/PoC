@@ -24,14 +24,25 @@ public class CargoDataLoader {
             if (!existingCargos.isEmpty()) {
 
                 for (Cargo cargo : existingCargos) {
+
+                    if (cargo.getRequiredTicks() == 0) {
+                        int distance = DistanceCalculator.calculate(
+                                cargo.getOriginPort(),
+                                cargo.getDestinationPort()
+                        );
+                        int ticks = Math.max(1, distance / 10);
+                        cargo.setRequiredTicks(ticks);
+                    }
+
                     if (cargo.getReward() == 0) {
                         cargo.setReward(cargo.getPrice() * 1.2);
                         cargo.setRequiredCapacity(100);
                         cargo.setRiskLevel(RiskLevel.LOW);
                     }
                 }
+
                 cargoRepo.saveAll(existingCargos);
-                System.out.println("Existing cargos updated with rewards");
+                System.out.println("Existing cargos fixed");
                 return;
             }
 
@@ -59,7 +70,8 @@ public class CargoDataLoader {
             Port lima = portRepo.findByName("Lima").orElse(null);
             Port vancouver = portRepo.findByName("Vancouver").orElse(null);
 
-            cargoRepo.saveAll(List.of(
+            cargoRepo.saveAll
+                    (List.of(
 
                     create(london, hamburg, 3000, 4200, 30, RiskLevel.LOW),
                     create(hamburg, rotterdam, 2000, 2800, 25, RiskLevel.LOW),
@@ -92,7 +104,8 @@ public class CargoDataLoader {
                     create(jakarta, singapore, 3000, 4200, 35, RiskLevel.LOW),
                     create(shanghai, bangkok, 5000, 7600, 70, RiskLevel.MEDIUM)
 
-            ));
+            ).stream().filter(c -> c != null).toList()
+                    );
 
             System.out.println("Cargo loaded safely");
         };
@@ -108,6 +121,21 @@ public class CargoDataLoader {
         c.setReward(reward);
         c.setRequiredCapacity(capacity);
         c.setRiskLevel(risk);
+
+        int distance = DistanceCalculator.calculate(origin, dest);
+        int requiredTicks = Math.max(1, distance / 10);
+        c.setRequiredTicks(requiredTicks);
+
         return c;
     }
+
+    public class DistanceCalculator {
+
+        public static int calculate(Port a, Port b) {
+            double dx = a.getLatitude() - b.getLatitude();
+            double dy = a.getLongitude() - b.getLongitude();
+            return (int) Math.sqrt(dx * dx + dy * dy);
+        }
+    }
+
 }
