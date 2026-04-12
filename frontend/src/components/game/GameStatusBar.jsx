@@ -1,10 +1,17 @@
-function GameStatusBar({ session, selectedShip, currentPlayer, myActiveVoyage }) {
+import GameDay from "../ui/GameDay.jsx";
+
+function GameStatusBar({ session, selectedShip, currentPlayer, myActiveVoyage, voyageProgress }) {
     return (
         <div className="status-bar">
             <p>
-                🕒 Game Day: {session.currentTick} |
+                <GameDay tick={session.currentTick} /> |
+
+                {voyageProgress && (
+                    <> 🗓️ Day {voyageProgress.current} / {voyageProgress.total} |</>
+                )}
+
                 🚢 Ship: {selectedShip?.name || "None"} |
-                📍 {currentPlayer?.currentPort || "No Port"} |
+                📍 {selectedShip?.currentPort || "At Sea"}
                 💰 Balance: {currentPlayer?.balance ?? "?"}
             </p>
 

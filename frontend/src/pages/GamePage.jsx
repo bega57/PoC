@@ -59,8 +59,6 @@ function GamePage() {
         return saved ? Number(saved) : null;
     });
 
-
-
     useEffect(() => {
         if (!session || !storedPlayer) return;
 
@@ -108,23 +106,23 @@ function GamePage() {
 
 
     useEffect(() => {
-        const fetchData = () => {
-            api.get(`/sessions/${sessionCode}`)
-                .then((res) => {
-                    setSession(res.data);
+        const fetchData = async () => {
+            try {
+                const sessionRes = await api.get(`/sessions/${sessionCode}`);
+                const sessionData = sessionRes.data;
 
-                })
-                .catch((err) => console.error(err));
+                setSession(sessionData);
 
-            api.get(`/voyages?sessionId=${session?.id}`)
-                .then(res => setVoyages(res.data))
-                .catch(err => console.error(err));
+                const voyagesRes = await api.get(`/voyages?sessionId=${sessionData.id}`);
+                setVoyages(voyagesRes.data);
+
+            } catch (err) {
+                console.error(err);
+            }
         };
 
         fetchData();
-        const interval = setInterval(() => {
-            fetchData();
-        }, 2000);
+        const interval = setInterval(fetchData, 500);
 
         return () => clearInterval(interval);
     }, [sessionCode]);
@@ -217,6 +215,15 @@ function GamePage() {
         v => myShipIds.includes(v.shipId) && v.status === "RUNNING"
     );
 
+    let voyageProgress = null;
+
+    if (myActiveVoyage) {
+        voyageProgress = {
+            current: myActiveVoyage.currentDay,
+            total: myActiveVoyage.duration
+        };
+    }
+
     const rewards = portCargo.map(c => c.reward);
     const minReward = rewards.length > 0 ? Math.min(...rewards) : 0;
     const maxReward = rewards.length > 0 ? Math.max(...rewards) : 0;
@@ -278,6 +285,7 @@ function GamePage() {
                 selectedShip={selectedShip}
                 currentPlayer={currentPlayer}
                 myActiveVoyage={myActiveVoyage}
+                voyageProgress={voyageProgress}
             />
 
             <GameSidebar

@@ -208,23 +208,7 @@ function GameMap({
                         const dest = ports.find(p => p.name === voyage.destinationPort);
                         if (!origin || !dest) return null;
 
-                        const startTick = voyage.startTick;
-                        const arrivalTick = voyage.arrivalTick;
-
-
-                        const currentTick = session.currentTick;
-
-                        const totalTicks = arrivalTick - startTick;
-                        const passedTicks = currentTick - startTick;
-
-                        let progress = passedTicks / totalTicks;
-
-                        progress = Math.max(0, Math.min(1, progress));
-
-
-                        if (currentTick >= arrivalTick) {
-                            progress = 1;
-                        }
+                        const progress = voyage.progress ?? 0;
 
                         const lat =
                             origin.latitude +
