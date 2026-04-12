@@ -5,8 +5,8 @@ function GameModals({
                         setShowWelcome,
                         selectedPort,
                         setSelectedPort,
-                        showPortInstruction,
-                        setShowPortInstruction,
+                        showPortInstructionModal,
+                        setShowPortInstructionModal,
                         showRewardPopup,
                         setShowRewardPopup,
                         rewardAmount,
@@ -28,7 +28,7 @@ function GameModals({
                         <button
                             onClick={() => {
                                 setShowWelcome(false);
-                                setShowPortInstruction(true);
+                                setShowPortInstructionModal(true);
                                 sessionStorage.setItem(`welcomeShown-${sessionCode}`, "true");
                             }}
                         >
@@ -46,6 +46,13 @@ function GameModals({
                         <button
                             className="confirm-btn"
                             onClick={async () => {
+                                const existing = localStorage.getItem(`currentPort-${sessionCode}`);
+
+                                if (existing) {
+                                    setSelectedPort(null);
+                                    return;
+                                }
+
                                 const res = await api.post(`/players/select-port`, {
                                     playerId: storedPlayer.id,
                                     port: selectedPort
@@ -84,7 +91,7 @@ function GameModals({
                 </div>
             )}
 
-            {showPortInstruction && (
+            {showPortInstructionModal && (
                 <div className="welcome-overlay">
                     <div className="welcome-modal">
                         <h2>🌍 Choose your main port</h2>
@@ -92,7 +99,7 @@ function GameModals({
                             Click on any red port on the map to select your starting location.
                         </p>
 
-                        <button onClick={() => setShowPortInstruction(false)}>
+                        <button onClick={() => setShowPortInstructionModal(false)}>
                             Got it
                         </button>
                     </div>

@@ -32,7 +32,7 @@ function GamePage() {
 
     const [selectedPort, setSelectedPort] = useState(null);
 
-    const [showPortInstruction, setShowPortInstruction] = useState(false);
+    const [showPortInstructionModal, setShowPortInstructionModal] = useState(false);
 
     const [voyages, setVoyages] = useState([]);
 
@@ -45,6 +45,10 @@ function GamePage() {
     const [cargoCache, setCargoCache] = useState({});
 
     const savedPort = localStorage.getItem(`currentPort-${sessionCode}`);
+    const shouldShowBanner =
+        !showWelcome &&
+        !showPortInstructionModal &&
+        !savedPort;
 
     const [showRewardPopup, setShowRewardPopup] = useState(false);
 
@@ -97,7 +101,7 @@ function GamePage() {
 
         setSelectedShip({
             ...backendShip,
-            currentPort: backendShip.currentPort // 👈 IMMER backend truth
+            currentPort: backendShip.currentPort
         });
 
     }, [session]);
@@ -164,13 +168,6 @@ function GamePage() {
             setPortCargo([]);
         }
     };
-
-    useEffect(() => {
-
-        if (savedPort) {
-            setShowPortInstruction(false);
-        }
-    }, [sessionCode]);
 
     const handleLeaveSession = async () => {
         if (!storedPlayer?.id) return;
@@ -257,7 +254,8 @@ function GamePage() {
                 setHoveredPort={setHoveredPort}
                 handlePortHover={handlePortHover}
                 showWelcome={showWelcome}
-                showPortInstruction={showPortInstruction}
+                showPortInstruction={shouldShowBanner}
+                showPortInstructionModal={showPortInstructionModal}
                 setSelectedPort={setSelectedPort}
                 mainPort={mainPort}
                 shipPorts={shipPorts}
@@ -296,8 +294,10 @@ function GamePage() {
                 setShowWelcome={setShowWelcome}
                 selectedPort={selectedPort}
                 setSelectedPort={setSelectedPort}
-                showPortInstruction={showPortInstruction}
-                setShowPortInstruction={setShowPortInstruction}
+
+                showPortInstructionModal={showPortInstructionModal}
+                setShowPortInstructionModal={setShowPortInstructionModal}
+
                 showRewardPopup={showRewardPopup}
                 setShowRewardPopup={setShowRewardPopup}
                 rewardAmount={rewardAmount}
