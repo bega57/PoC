@@ -15,7 +15,9 @@ function GameMap({
                      showWelcome,
                      showPortInstruction,
                      setSelectedPort,
-                     currentPort,
+                     mainPort,
+                     shipPorts,
+                     finishedPorts,
                      myShipIds,
                      portCargo,
                      minReward,
@@ -73,7 +75,7 @@ function GameMap({
                     >
 
                         <>
-                            {port.name === currentPort && (
+                            {port.name === mainPort && (
                                 <circle
                                     r={12}
                                     fill="rgba(34,211,238,0.2)"
@@ -81,16 +83,11 @@ function GameMap({
                             )}
 
                             <circle
-                                r={port.name === currentPort ? 6 : 5}
+                                r={port.name === mainPort ? 6 : 5}
                                 fill={
-                                    port.name === currentPort
+                                    port.name === mainPort
                                         ? "#22d3ee"
-                                        : voyages.some(
-                                            v =>
-                                                myShipIds.includes(v.shipId) &&
-                                                v.destinationPort === port.name &&
-                                                v.status === "FINISHED"
-                                        )
+                                        : shipPorts.includes(port.name)
                                             ? "#22c55e"
                                             : "#ef4444"
                                 }
@@ -201,16 +198,22 @@ function GameMap({
                         const dest = ports.find(p => p.name === voyage.destinationPort);
                         if (!origin || !dest) return null;
 
-                        const start = new Date(voyage.startTime).getTime();
-                        const now = Date.now();
+                        const startTick = voyage.startTick;
+                        const arrivalTick = voyage.arrivalTick;
 
-                        let progress = 0;
 
-                        if (!voyage.arrivalTime) {
-                            progress = Math.min((now - start) / 20000, 1);
-                        } else {
-                            const end = new Date(voyage.arrivalTime).getTime();
-                            progress = Math.min((now - start) / (end - start), 1);
+                        const currentTick = session.currentTick;
+
+                        const totalTicks = arrivalTick - startTick;
+                        const passedTicks = currentTick - startTick;
+
+                        let progress = passedTicks / totalTicks;
+
+                        progress = Math.max(0, Math.min(1, progress));
+
+
+                        if (currentTick >= arrivalTick) {
+                            progress = 1;
                         }
 
                         const lat =

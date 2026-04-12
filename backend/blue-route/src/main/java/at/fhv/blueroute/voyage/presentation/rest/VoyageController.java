@@ -30,7 +30,8 @@ public class VoyageController {
         try {
             Voyage voyage = startVoyageService.startVoyage(
                     request.getShipId(),
-                    request.getCargoId()
+                    request.getCargoId(),
+                    request.getSessionCode()
             );
             return ResponseEntity.ok(voyage);
 

@@ -115,7 +115,8 @@ export default function VoyagePage() {
         try {
             await api.post("/voyages/start", {
                 shipId: selectedShip.id,
-                cargoId: Number(selectedCargoId)
+                cargoId: Number(selectedCargoId),
+                sessionCode: sessionCode
             });
 
             setStartedVoyageInfo({
