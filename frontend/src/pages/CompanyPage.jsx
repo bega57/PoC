@@ -18,12 +18,12 @@ function CompanyPage() {
     useEffect(() => {
         const fetchData = async () => {
             try {
-                const [sessionResponse, voyagesResponse] = await Promise.all([
-                    api.get(`/sessions/${sessionCode}`),
-                    api.get("/voyages")
-                ]);
+                const sessionResponse = await api.get(`/sessions/${sessionCode}`);
+                const sessionData = sessionResponse.data;
 
-                setSession(sessionResponse.data);
+                const voyagesResponse = await api.get(`/voyages?sessionId=${sessionData.id}`);
+
+                setSession(sessionData);
                 setVoyages(voyagesResponse.data);
             } catch (error) {
                 console.error("Failed to fetch company data:", error);
@@ -32,7 +32,7 @@ function CompanyPage() {
 
         fetchData();
 
-        const interval = setInterval(fetchData, 5000);
+        const interval = setInterval(fetchData, 2000);
 
         return () => clearInterval(interval);
     }, [sessionCode]);
@@ -66,6 +66,15 @@ function CompanyPage() {
         return voyages.find(
             (voyage) => voyage.shipId === shipId && voyage.status === "RUNNING"
         );
+    };
+
+    const getVoyageProgress = (voyage) => {
+        if (!voyage) return null;
+
+        return {
+            current: voyage.currentDay,
+            total: voyage.duration
+        };
     };
 
     const getShipLocationText = (ship) => {
@@ -137,6 +146,23 @@ function CompanyPage() {
                                         <h3>{ship.name}</h3>
                                         <p>Type: {getShipDisplayName(ship.type)}</p>
                                         <p>Location: {getShipLocationText(ship)}</p>
+
+                                        {(() => {
+                                            const voyage = getRunningVoyageForShip(ship.id);
+                                            const progress = getVoyageProgress(voyage);
+
+                                            if (!progress) return null;
+
+                                            return (
+                                                <p style={{
+                                                    color: "#22c55e",
+                                                    fontWeight: "600",
+                                                    marginTop: "4px"
+                                                }}>
+                                                    🗓️ Day {progress.current} / {progress.total}
+                                                </p>
+                                            );
+                                        })()}
                                         <p>Condition: {ship.condition}%</p>
                                         <p>Fuel: {ship.fuelLevel}%</p>
                                         <p>Capacity: {ship.capacity}</p>

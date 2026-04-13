@@ -32,7 +32,7 @@ function GamePage() {
 
     const [selectedPort, setSelectedPort] = useState(null);
 
-    const [showPortInstruction, setShowPortInstruction] = useState(false);
+    const [showPortInstructionModal, setShowPortInstructionModal] = useState(false);
 
     const [voyages, setVoyages] = useState([]);
 
@@ -45,6 +45,10 @@ function GamePage() {
     const [cargoCache, setCargoCache] = useState({});
 
     const savedPort = localStorage.getItem(`currentPort-${sessionCode}`);
+    const shouldShowBanner =
+        !showWelcome &&
+        !showPortInstructionModal &&
+        !savedPort;
 
     const [showRewardPopup, setShowRewardPopup] = useState(false);
 
@@ -54,8 +58,6 @@ function GamePage() {
         const saved = sessionStorage.getItem(`lastFinishedVoyageId-${sessionCode}`);
         return saved ? Number(saved) : null;
     });
-
-
 
     useEffect(() => {
         if (!session || !storedPlayer) return;
@@ -97,30 +99,30 @@ function GamePage() {
 
         setSelectedShip({
             ...backendShip,
-            currentPort: backendShip.currentPort // 👈 IMMER backend truth
+            currentPort: backendShip.currentPort
         });
 
     }, [session]);
 
 
     useEffect(() => {
-        const fetchData = () => {
-            api.get(`/sessions/${sessionCode}`)
-                .then((res) => {
-                    setSession(res.data);
+        const fetchData = async () => {
+            try {
+                const sessionRes = await api.get(`/sessions/${sessionCode}`);
+                const sessionData = sessionRes.data;
 
-                })
-                .catch((err) => console.error(err));
+                setSession(sessionData);
 
-            api.get(`/voyages?sessionId=${session?.id}`)
-                .then(res => setVoyages(res.data))
-                .catch(err => console.error(err));
+                const voyagesRes = await api.get(`/voyages?sessionId=${sessionData.id}`);
+                setVoyages(voyagesRes.data);
+
+            } catch (err) {
+                console.error(err);
+            }
         };
 
         fetchData();
-        const interval = setInterval(() => {
-            fetchData();
-        }, 2000);
+        const interval = setInterval(fetchData, 500);
 
         return () => clearInterval(interval);
     }, [sessionCode]);
@@ -164,13 +166,6 @@ function GamePage() {
             setPortCargo([]);
         }
     };
-
-    useEffect(() => {
-
-        if (savedPort) {
-            setShowPortInstruction(false);
-        }
-    }, [sessionCode]);
 
     const handleLeaveSession = async () => {
         if (!storedPlayer?.id) return;
@@ -220,6 +215,15 @@ function GamePage() {
         v => myShipIds.includes(v.shipId) && v.status === "RUNNING"
     );
 
+    let voyageProgress = null;
+
+    if (myActiveVoyage) {
+        voyageProgress = {
+            current: myActiveVoyage.currentDay,
+            total: myActiveVoyage.duration
+        };
+    }
+
     const rewards = portCargo.map(c => c.reward);
     const minReward = rewards.length > 0 ? Math.min(...rewards) : 0;
     const maxReward = rewards.length > 0 ? Math.max(...rewards) : 0;
@@ -257,7 +261,8 @@ function GamePage() {
                 setHoveredPort={setHoveredPort}
                 handlePortHover={handlePortHover}
                 showWelcome={showWelcome}
-                showPortInstruction={showPortInstruction}
+                showPortInstruction={shouldShowBanner}
+                showPortInstructionModal={showPortInstructionModal}
                 setSelectedPort={setSelectedPort}
                 mainPort={mainPort}
                 shipPorts={shipPorts}
@@ -280,6 +285,7 @@ function GamePage() {
                 selectedShip={selectedShip}
                 currentPlayer={currentPlayer}
                 myActiveVoyage={myActiveVoyage}
+                voyageProgress={voyageProgress}
             />
 
             <GameSidebar
@@ -296,8 +302,10 @@ function GamePage() {
                 setShowWelcome={setShowWelcome}
                 selectedPort={selectedPort}
                 setSelectedPort={setSelectedPort}
-                showPortInstruction={showPortInstruction}
-                setShowPortInstruction={setShowPortInstruction}
+
+                showPortInstructionModal={showPortInstructionModal}
+                setShowPortInstructionModal={setShowPortInstructionModal}
+
                 showRewardPopup={showRewardPopup}
                 setShowRewardPopup={setShowRewardPopup}
                 rewardAmount={rewardAmount}

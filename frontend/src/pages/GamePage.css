@@ -355,3 +355,29 @@
     padding: 20px;
     width: 100%;
 }
+
+.port-instruction-popup {
+    position: absolute;
+    top: 20px;
+    left: 50%;
+    transform: translateX(-50%);
+
+    background: rgba(15, 23, 42, 0.9);
+    color: #e2e8f0;
+
+    padding: 14px 22px;
+    border-radius: 14px;
+
+    font-size: 14px;
+    font-weight: 600;
+    text-align: center;
+
+    border: 1px solid rgba(148, 163, 184, 0.2);
+
+    box-shadow:
+            0 0 12px rgba(34, 211, 238, 0.15),
+            0 4px 20px rgba(0, 0, 0, 0.6);
+
+    z-index: 1000;
+    pointer-events: none; /* 👈 wichtig: blockiert keine Klicks */
+}

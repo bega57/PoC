@@ -19,6 +19,14 @@ export default function VoyagePage() {
     const [showVoyageStartedPopup, setShowVoyageStartedPopup] = useState(false);
     const [startedVoyageInfo, setStartedVoyageInfo] = useState(null);
 
+    const [session, setSession] = useState(null);
+
+    useEffect(() => {
+        api.get(`/sessions/${sessionCode}`)
+            .then(res => setSession(res.data))
+            .catch(err => console.error(err));
+    }, [sessionCode]);
+
     useEffect(() => {
         const player = JSON.parse(sessionStorage.getItem(`player-${sessionCode}`));
 
@@ -37,11 +45,22 @@ export default function VoyagePage() {
                 }
             })
             .catch(err => console.error(err));
+    }, [sessionCode]);
 
-        api.get("/voyages")
-            .then(res => setVoyages(res.data))
-            .catch(err => console.error(err));
-    }, [sessionCode, navigate]);
+    useEffect(() => {
+        if (!session) return;
+
+        const fetchVoyages = () => {
+            api.get(`/voyages?sessionId=${session.id}`)
+                .then(res => setVoyages(res.data))
+                .catch(err => console.error(err));
+        };
+
+        fetchVoyages();
+        const interval = setInterval(fetchVoyages, 2000);
+
+        return () => clearInterval(interval);
+    }, [session]);
 
     useEffect(() => {
         if (!selectedShip?.currentPort) {
@@ -123,6 +142,7 @@ export default function VoyagePage() {
                 shipName: selectedShip.name,
                 origin: selectedShip.currentPort,
                 destination: selectedCargo?.destinationPort?.name,
+                duration: selectedCargo.requiredTicks,
                 price: selectedCargo?.price,
                 reward: selectedCargo?.reward
             });
@@ -289,6 +309,11 @@ export default function VoyagePage() {
                                 <p>Required Capacity: {selectedCargo.requiredCapacity}</p>
                                 <p>Risk: {selectedCargo.riskLevel}</p>
                                 <p>Expected Profit: {selectedCargo.reward - selectedCargo.price} Talers</p>
+                                {selectedCargo && session && (
+                                    <p>
+                                        Estimated Duration: {selectedCargo.requiredTicks} days
+                                    </p>
+                                )}
 
                                 {selectedShip && selectedCargo && selectedShip.cargoCapacity < selectedCargo.requiredCapacity && (
                                     <p style={{ color: "#f87171", marginTop: "10px" }}>
@@ -327,6 +352,9 @@ export default function VoyagePage() {
                             <>
                                 <p>Ship: {startedVoyageInfo.shipName}</p>
                                 <p>Route: {startedVoyageInfo.origin} → {startedVoyageInfo.destination}</p>
+                                <p>
+                                    Duration: {startedVoyageInfo.duration} days
+                                </p>
                                 <p>Paid: {startedVoyageInfo.price} Talers</p>
                                 <p>Potential Reward: {startedVoyageInfo.reward} Talers</p>
                             </>

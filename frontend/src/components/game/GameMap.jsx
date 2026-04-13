@@ -14,6 +14,7 @@ function GameMap({
                      handlePortHover,
                      showWelcome,
                      showPortInstruction,
+                     showPortInstructionModal,
                      setSelectedPort,
                      mainPort,
                      shipPorts,
@@ -34,6 +35,13 @@ function GameMap({
 
     return (
         <div className="map-container">
+
+            {showPortInstruction && (
+                <div className="port-instruction-popup">
+                    ⚠️ Don't forget to pick a main port <br />
+                    (You cannot change this later)
+                </div>
+            )}
 
             <ComposableMap
                 projection="geoEqualEarth"
@@ -68,7 +76,9 @@ function GameMap({
                             setTimeout(() => setHoveredPort(null), 80);
                         }}
                         onClick={() => {
-                            if (!showWelcome && !showPortInstruction) {
+                            if (mainPort) return;
+
+                            if (!showWelcome && !showPortInstructionModal) {
                                 setSelectedPort(port.name);
                             }
                         }}
@@ -198,23 +208,7 @@ function GameMap({
                         const dest = ports.find(p => p.name === voyage.destinationPort);
                         if (!origin || !dest) return null;
 
-                        const startTick = voyage.startTick;
-                        const arrivalTick = voyage.arrivalTick;
-
-
-                        const currentTick = session.currentTick;
-
-                        const totalTicks = arrivalTick - startTick;
-                        const passedTicks = currentTick - startTick;
-
-                        let progress = passedTicks / totalTicks;
-
-                        progress = Math.max(0, Math.min(1, progress));
-
-
-                        if (currentTick >= arrivalTick) {
-                            progress = 1;
-                        }
+                        const progress = voyage.progress ?? 0;
 
                         const lat =
                             origin.latitude +

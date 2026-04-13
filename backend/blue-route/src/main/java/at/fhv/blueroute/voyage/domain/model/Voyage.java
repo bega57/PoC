@@ -37,6 +37,11 @@ public class Voyage {
     @Column(nullable = false)
     private Long sessionId;
 
+    @Transient
+    public int getDurationInTicks() {
+        return arrivalTick - startTick;
+    }
+
 
     public Long getId() {
         return id;
