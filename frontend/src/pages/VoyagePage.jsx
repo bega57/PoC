@@ -1,5 +1,7 @@
 import { useEffect, useMemo, useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
+import { Client } from "@stomp/stompjs";
+import SockJS from "sockjs-client";
 import api from "../api/api";
 import "./VoyagePage.css";
 
@@ -9,22 +11,36 @@ export default function VoyagePage() {
 
     const [ships, setShips] = useState([]);
     const [selectedShip, setSelectedShip] = useState(null);
-
     const [allCargo, setAllCargo] = useState([]);
     const [selectedDestination, setSelectedDestination] = useState("");
     const [selectedCargoId, setSelectedCargoId] = useState("");
-
     const [voyages, setVoyages] = useState([]);
-
     const [showVoyageStartedPopup, setShowVoyageStartedPopup] = useState(false);
     const [startedVoyageInfo, setStartedVoyageInfo] = useState(null);
-
     const [session, setSession] = useState(null);
 
+    const fetchSession = async () => {
+        try {
+            const res = await api.get(`/sessions/${sessionCode}`);
+            setSession(res.data);
+        } catch (err) {
+            console.error(err);
+        }
+    };
+
+    const fetchVoyages = async () => {
+        if (!session) return;
+
+        try {
+            const res = await api.get(`/voyages?sessionId=${session.id}`);
+            setVoyages(res.data);
+        } catch (err) {
+            console.error(err);
+        }
+    };
+
     useEffect(() => {
-        api.get(`/sessions/${sessionCode}`)
-            .then(res => setSession(res.data))
-            .catch(err => console.error(err));
+        fetchSession();
     }, [sessionCode]);
 
     useEffect(() => {
@@ -49,17 +65,7 @@ export default function VoyagePage() {
 
     useEffect(() => {
         if (!session) return;
-
-        const fetchVoyages = () => {
-            api.get(`/voyages?sessionId=${session.id}`)
-                .then(res => setVoyages(res.data))
-                .catch(err => console.error(err));
-        };
-
         fetchVoyages();
-        const interval = setInterval(fetchVoyages, 2000);
-
-        return () => clearInterval(interval);
     }, [session]);
 
     useEffect(() => {
@@ -83,6 +89,53 @@ export default function VoyagePage() {
                 setSelectedCargoId("");
             });
     }, [selectedShip]);
+
+    useEffect(() => {
+        const socket = new SockJS(`${import.meta.env.VITE_API_BASE_URL}/ws`);
+
+        const client = new Client({
+            webSocketFactory: () => socket,
+            reconnectDelay: 5000
+        });
+
+        client.onConnect = () => {
+            console.log("VoyagePage WebSocket connected");
+
+            client.subscribe(`/topic/session/${sessionCode}`, async (message) => {
+                const data = JSON.parse(message.body);
+                console.log("VOYAGEPAGE WS EVENT:", data);
+
+                if (data.type === "TICK") {
+                    await fetchSession();
+                    return;
+                }
+
+                if (data.type === "VOYAGE_STARTED") {
+                    console.log("VOYAGE STARTED EVENT:", data);
+                    await fetchSession();
+                    await fetchVoyages();
+                    return;
+                }
+
+                if (data.type === "VOYAGE_FINISHED") {
+                    await fetchSession();
+                    await fetchVoyages();
+                    return;
+                }
+
+                if (data.type === "SESSION_PAUSED" || data.type === "SESSION_RUNNING") {
+                    await fetchSession();
+                    return;
+                }
+            });
+        };
+
+        client.activate();
+
+        return () => {
+            client.deactivate();
+        };
+    }, [sessionCode]);
 
     const isShipBusy = (shipId) => {
         return voyages.some(
@@ -137,6 +190,9 @@ export default function VoyagePage() {
                 cargoId: Number(selectedCargoId),
                 sessionCode: sessionCode
             });
+
+            await fetchSession();
+            await fetchVoyages();
 
             setStartedVoyageInfo({
                 shipName: selectedShip.name,

@@ -1,5 +1,7 @@
 import { useEffect, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
+import { Client } from "@stomp/stompjs";
+import SockJS from "sockjs-client";
 import api from "../api/api";
 import cheapSide from "../assets/ships/cheapSide.png";
 import middleSide from "../assets/ships/middleSide.png";
@@ -15,26 +17,61 @@ function CompanyPage() {
 
     const storedPlayer = JSON.parse(sessionStorage.getItem(`player-${sessionCode}`));
 
+    const fetchData = async () => {
+        try {
+            const sessionResponse = await api.get(`/sessions/${sessionCode}`);
+            const sessionData = sessionResponse.data;
+
+            const voyagesResponse = await api.get(`/voyages?sessionId=${sessionData.id}`);
+
+            setSession(sessionData);
+            setVoyages(voyagesResponse.data);
+        } catch (error) {
+            console.error("Failed to fetch company data:", error);
+        }
+    };
+
     useEffect(() => {
-        const fetchData = async () => {
-            try {
-                const sessionResponse = await api.get(`/sessions/${sessionCode}`);
-                const sessionData = sessionResponse.data;
+        fetchData();
+    }, [sessionCode]);
 
-                const voyagesResponse = await api.get(`/voyages?sessionId=${sessionData.id}`);
+    useEffect(() => {
+        const socket = new SockJS(`${import.meta.env.VITE_API_BASE_URL}/ws`);
 
-                setSession(sessionData);
-                setVoyages(voyagesResponse.data);
-            } catch (error) {
-                console.error("Failed to fetch company data:", error);
-            }
+        const client = new Client({
+            webSocketFactory: () => socket,
+            reconnectDelay: 5000
+        });
+
+        client.onConnect = () => {
+            console.log("CompanyPage WebSocket connected");
+
+            client.subscribe(`/topic/session/${sessionCode}`, async (message) => {
+                const data = JSON.parse(message.body);
+                console.log("COMPANY WS EVENT:", data);
+
+                if (data.type === "TICK") {
+                    await fetchData();
+                    return;
+                }
+
+                if (data.type === "VOYAGE_STARTED") {
+                    await fetchData();
+                    return;
+                }
+
+                if (data.type === "VOYAGE_FINISHED") {
+                    await fetchData();
+                    return;
+                }
+            });
         };
 
-        fetchData();
+        client.activate();
 
-        const interval = setInterval(fetchData, 2000);
-
-        return () => clearInterval(interval);
+        return () => {
+            client.deactivate();
+        };
     }, [sessionCode]);
 
     const currentPlayer = session?.players?.find(

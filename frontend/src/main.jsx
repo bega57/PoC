@@ -1,6 +1,11 @@
 import { StrictMode } from 'react'
 import { createRoot } from 'react-dom/client'
 import { BrowserRouter } from 'react-router-dom'
+
+if (typeof global === "undefined") {
+    window.global = window;
+}
+
 import './index.css'
 import App from './App.jsx'
 

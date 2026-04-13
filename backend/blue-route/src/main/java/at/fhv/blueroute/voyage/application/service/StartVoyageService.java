@@ -4,7 +4,6 @@ import at.fhv.blueroute.cargo.domain.model.Cargo;
 import at.fhv.blueroute.cargo.infrastructure.persistence.JpaCargoRepository;
 import at.fhv.blueroute.player.domain.repository.PlayerRepository;
 import at.fhv.blueroute.session.domain.model.Session;
-import at.fhv.blueroute.session.domain.model.SessionStatus;
 import at.fhv.blueroute.session.infrastructure.persistence.JpaSessionRepository;
 import at.fhv.blueroute.ship.domain.model.Ship;
 import at.fhv.blueroute.ship.infrastructure.persistence.JpaShipRepository;
@@ -12,6 +11,8 @@ import at.fhv.blueroute.voyage.application.exception.VoyageException;
 import at.fhv.blueroute.voyage.domain.model.Voyage;
 import at.fhv.blueroute.voyage.domain.model.VoyageStatus;
 import at.fhv.blueroute.voyage.infrastructure.persistence.JpaVoyageRepository;
+import at.fhv.blueroute.common.websocket.VoyageStartedMessage;
+import at.fhv.blueroute.common.websocket.WebSocketSender;
 import org.springframework.stereotype.Service;
 import jakarta.transaction.Transactional;
 
@@ -26,19 +27,22 @@ public class StartVoyageService {
     private final JpaCargoRepository cargoRepository;
     private final PlayerRepository playerRepository;
     private final JpaSessionRepository sessionRepository;
+    private final WebSocketSender webSocketSender;
 
     public StartVoyageService(
             JpaVoyageRepository voyageRepository,
             JpaShipRepository shipRepository,
             JpaCargoRepository cargoRepository,
             PlayerRepository playerRepository,
-            JpaSessionRepository sessionRepository
+            JpaSessionRepository sessionRepository,
+            WebSocketSender webSocketSender
     ) {
         this.voyageRepository = voyageRepository;
         this.shipRepository = shipRepository;
         this.cargoRepository = cargoRepository;
         this.playerRepository = playerRepository;
         this.sessionRepository = sessionRepository;
+        this.webSocketSender = webSocketSender;
     }
 
     public Voyage startVoyage(Long shipId, Long cargoId, String sessionCode) {
@@ -126,7 +130,21 @@ public class StartVoyageService {
         ship.setCurrentPort(null);
         shipRepository.save(ship);
 
-        return voyageRepository.save(voyage);
+        Voyage savedVoyage = voyageRepository.save(voyage);
+
+        webSocketSender.sendSessionUpdate(
+                session.getSessionCode(),
+                new VoyageStartedMessage(
+                        "VOYAGE_STARTED",
+                        session.getSessionCode(),
+                        ship.getId(),
+                        cargo.getOriginPort().getName(),
+                        cargo.getDestinationPort().getName(),
+                        cargo.getRequiredTicks()
+                )
+        );
+
+        return savedVoyage;
     }
 
 }

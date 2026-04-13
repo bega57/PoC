@@ -1,4 +1,6 @@
 import { useEffect, useState } from "react";
+import { Client } from "@stomp/stompjs";
+import SockJS from "sockjs-client";
 import api from "../api/api";
 import CreatePlayerForm from "../components/CreatePlayerForm";
 import JoinSessionForm from "../components/JoinSessionForm";
@@ -35,11 +37,36 @@ function MainPage() {
     useEffect(() => {
         if (!session?.sessionCode) return;
 
-        const interval = setInterval(() => {
-            fetchSession();
-        }, 2000);
+        const socket = new SockJS(`${import.meta.env.VITE_API_BASE_URL}/ws`);
 
-        return () => clearInterval(interval);
+        const client = new Client({
+            webSocketFactory: () => socket,
+            reconnectDelay: 5000
+        });
+
+        client.onConnect = () => {
+            console.log("MainPage WebSocket connected");
+
+            client.subscribe(`/topic/session/${session.sessionCode}`, async (message) => {
+                const data = JSON.parse(message.body);
+                console.log("MAINPAGE WS EVENT:", data);
+
+                if (
+                    data.type === "TICK" ||
+                    data.type === "VOYAGE_FINISHED" ||
+                    data.type === "SESSION_PAUSED" ||
+                    data.type === "SESSION_RUNNING"
+                ) {
+                    await fetchSession();
+                }
+            });
+        };
+
+        client.activate();
+
+        return () => {
+            client.deactivate();
+        };
     }, [session?.sessionCode]);
 
     return (

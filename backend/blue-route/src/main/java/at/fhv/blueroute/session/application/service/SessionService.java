@@ -1,5 +1,7 @@
 package at.fhv.blueroute.session.application.service;
 
+import at.fhv.blueroute.common.websocket.SessionStatusMessage;
+import at.fhv.blueroute.common.websocket.WebSocketSender;
 import at.fhv.blueroute.player.application.exception.PlayerNotFoundException;
 import at.fhv.blueroute.player.domain.model.Player;
 import at.fhv.blueroute.player.domain.repository.PlayerRepository;
@@ -23,13 +25,17 @@ public class SessionService {
     private final SessionRepository sessionRepository;
     private final PlayerRepository playerRepository;
     private final SessionMapper sessionMapper;
+    private final WebSocketSender webSocketSender;
 
     public SessionService(SessionRepository sessionRepository,
                           PlayerRepository playerRepository,
-                          SessionMapper sessionMapper) {
+                          SessionMapper sessionMapper,
+                          WebSocketSender webSocketSender) {
         this.sessionRepository = sessionRepository;
         this.playerRepository = playerRepository;
         this.sessionMapper = sessionMapper;
+        this.webSocketSender = webSocketSender;
+
     }
 
     public List<SessionResponse> getAllSessions() {
@@ -77,6 +83,18 @@ public class SessionService {
         }
 
         Session updatedSession = sessionRepository.save(session);
+
+        if (updatedSession.getStatus() == SessionStatus.RUNNING) {
+            webSocketSender.sendSessionUpdate(
+                    updatedSession.getSessionCode(),
+                    new SessionStatusMessage(
+                            "SESSION_RUNNING",
+                            updatedSession.getSessionCode(),
+                            updatedSession.getStatus().name()
+                    )
+            );
+        }
+
         return sessionMapper.toResponse(updatedSession);
     }
 
@@ -142,6 +160,18 @@ public class SessionService {
         }
 
         Session updatedSession = sessionRepository.save(session);
+
+        if (updatedSession.getStatus() == SessionStatus.PAUSED) {
+            webSocketSender.sendSessionUpdate(
+                    updatedSession.getSessionCode(),
+                    new SessionStatusMessage(
+                            "SESSION_PAUSED",
+                            updatedSession.getSessionCode(),
+                            updatedSession.getStatus().name()
+                    )
+            );
+        }
+
         return sessionMapper.toResponse(updatedSession);
     }
 }

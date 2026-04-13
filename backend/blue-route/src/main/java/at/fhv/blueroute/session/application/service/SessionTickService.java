@@ -1,15 +1,17 @@
 package at.fhv.blueroute.session.application.service;
 
+import at.fhv.blueroute.common.websocket.SessionUpdateMessage;
+import at.fhv.blueroute.common.websocket.WebSocketSender;
 import at.fhv.blueroute.session.domain.model.Session;
 import at.fhv.blueroute.session.domain.model.SessionStatus;
 import at.fhv.blueroute.session.infrastructure.persistence.JpaSessionRepository;
 import at.fhv.blueroute.ship.infrastructure.persistence.JpaShipRepository;
 import at.fhv.blueroute.voyage.domain.model.VoyageStatus;
 import jakarta.transaction.Transactional;
-import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 import at.fhv.blueroute.voyage.domain.model.Voyage;
 import at.fhv.blueroute.voyage.infrastructure.persistence.JpaVoyageRepository;
+import at.fhv.blueroute.common.websocket.VoyageFinishedMessage;
 
 import java.time.LocalDateTime;
 import java.util.List;
@@ -21,13 +23,16 @@ public class SessionTickService {
     private final JpaSessionRepository sessionRepository;
     private final JpaVoyageRepository voyageRepository;
     private final JpaShipRepository shipRepository;
+    private final WebSocketSender webSocketSender;
 
     public SessionTickService(JpaSessionRepository sessionRepository,
                               JpaVoyageRepository voyageRepository,
-                              JpaShipRepository shipRepository) {
+                              JpaShipRepository shipRepository,
+                              WebSocketSender webSocketSender) {
         this.sessionRepository = sessionRepository;
         this.voyageRepository = voyageRepository;
         this.shipRepository = shipRepository;
+        this.webSocketSender = webSocketSender;
     }
 
     public void processTicks() {
@@ -60,14 +65,29 @@ public class SessionTickService {
 
                     v.setRewardGranted(true);
 
+                    webSocketSender.sendSessionUpdate(
+                            session.getSessionCode(),
+                            new VoyageFinishedMessage(
+                                    "VOYAGE_FINISHED",
+                                    session.getSessionCode(),
+                                    v.getId(),
+                                    v.getShipId(),
+                                    v.getDestinationPort(),
+                                    v.getReward()
+                            )
+                    );
                 }
             }
+
+            webSocketSender.sendSessionUpdate(
+                    session.getSessionCode(),
+                    new SessionUpdateMessage(
+                            "TICK",
+                            session.getSessionCode(),
+                            session.getCurrentTick()
+                    )
+            );
         }
     }
 
-    @Scheduled(fixedRate = 3000)
-    public void runTicks() {
-        System.out.println("RUN TICK CALLED");
-        processTicks();
-    }
 }
