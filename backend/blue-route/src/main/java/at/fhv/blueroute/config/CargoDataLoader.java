@@ -7,13 +7,20 @@ import at.fhv.blueroute.port.domain.model.Port;
 import at.fhv.blueroute.port.infrastructure.persistence.JpaPortRepository;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.core.annotation.Order;
 
 import java.util.List;
 
 @Configuration
 public class CargoDataLoader {
 
+    private Port getPort(JpaPortRepository portRepo, String name) {
+        return portRepo.findByName(name)
+                .orElseThrow(() -> new RuntimeException("Port not found: " + name));
+    }
+
     @Bean
+    @Order(2)
     public org.springframework.boot.CommandLineRunner initCargo(
             JpaCargoRepository cargoRepo,
             JpaPortRepository portRepo
@@ -46,33 +53,31 @@ public class CargoDataLoader {
                 return;
             }
 
-            Port rio = portRepo.findByName("Rio").orElse(null);
-            Port newYork = portRepo.findByName("New York").orElse(null);
-            Port lagos = portRepo.findByName("Lagos").orElse(null);
-            Port capeTown = portRepo.findByName("Cape Town").orElse(null);
-            Port london = portRepo.findByName("London").orElse(null);
-            Port dubai = portRepo.findByName("Dubai").orElse(null);
-            Port mumbai = portRepo.findByName("Mumbai").orElse(null);
-            Port singapore = portRepo.findByName("Singapore").orElse(null);
-            Port tokyo = portRepo.findByName("Tokyo").orElse(null);
-            Port sydney = portRepo.findByName("Sydney").orElse(null);
-            Port shanghai = portRepo.findByName("Shanghai").orElse(null);
-            Port bangkok = portRepo.findByName("Bangkok").orElse(null);
-            Port jakarta = portRepo.findByName("Jakarta").orElse(null);
-            Port istanbul = portRepo.findByName("Istanbul").orElse(null);
-            Port mombasa = portRepo.findByName("Mombasa").orElse(null);
-            Port losAngeles = portRepo.findByName("Los Angeles").orElse(null);
-            Port hamburg = portRepo.findByName("Hamburg").orElse(null);
-            Port rotterdam = portRepo.findByName("Rotterdam").orElse(null);
-            Port seoul = portRepo.findByName("Seoul").orElse(null);
-            Port honolulu = portRepo.findByName("Honolulu").orElse(null);
-            Port buenosAires = portRepo.findByName("Buenos Aires").orElse(null);
-            Port lima = portRepo.findByName("Lima").orElse(null);
-            Port vancouver = portRepo.findByName("Vancouver").orElse(null);
+            Port rio = getPort(portRepo, "Rio");
+            Port newYork = getPort(portRepo, "New York");
+            Port lagos = getPort(portRepo, "Lagos");
+            Port capeTown = getPort(portRepo, "Cape Town");
+            Port london = getPort(portRepo, "London");
+            Port dubai = getPort(portRepo, "Dubai");
+            Port mumbai = getPort(portRepo, "Mumbai");
+            Port singapore = getPort(portRepo, "Singapore");
+            Port tokyo = getPort(portRepo, "Tokyo");
+            Port sydney = getPort(portRepo, "Sydney");
+            Port shanghai = getPort(portRepo, "Shanghai");
+            Port bangkok = getPort(portRepo, "Bangkok");
+            Port jakarta = getPort(portRepo, "Jakarta");
+            Port istanbul = getPort(portRepo, "Istanbul");
+            Port mombasa = getPort(portRepo, "Mombasa");
+            Port losAngeles = getPort(portRepo, "Los Angeles");
+            Port hamburg = getPort(portRepo, "Hamburg");
+            Port rotterdam = getPort(portRepo, "Rotterdam");
+            Port seoul = getPort(portRepo, "Seoul");
+            Port honolulu = getPort(portRepo, "Honolulu");
+            Port buenosAires = getPort(portRepo, "Buenos Aires");
+            Port lima = getPort(portRepo, "Lima");
+            Port vancouver = getPort(portRepo, "Vancouver");
 
-            cargoRepo.saveAll
-                    (List.of(
-
+            cargoRepo.saveAll(List.of(
                     create(london, hamburg, 3000, 4200, 30, RiskLevel.LOW),
                     create(hamburg, rotterdam, 2000, 2800, 25, RiskLevel.LOW),
                     create(rotterdam, istanbul, 7000, 9800, 80, RiskLevel.MEDIUM),
@@ -103,16 +108,13 @@ public class CargoDataLoader {
                     create(honolulu, losAngeles, 7000, 11000, 100, RiskLevel.MEDIUM),
                     create(jakarta, singapore, 3000, 4200, 35, RiskLevel.LOW),
                     create(shanghai, bangkok, 5000, 7600, 70, RiskLevel.MEDIUM)
-
-            ).stream().filter(c -> c != null).toList()
-                    );
+            ));
 
             System.out.println("Cargo loaded safely");
         };
     }
 
     private Cargo create(Port origin, Port dest, double price, double reward, int capacity, RiskLevel risk) {
-        if (origin == null || dest == null) return null;
 
         Cargo c = new Cargo();
         c.setOriginPort(origin);

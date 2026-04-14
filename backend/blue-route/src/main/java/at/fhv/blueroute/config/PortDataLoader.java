@@ -4,11 +4,13 @@ import at.fhv.blueroute.port.domain.model.Port;
 import at.fhv.blueroute.port.infrastructure.persistence.JpaPortRepository;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.core.annotation.Order;
 
 @Configuration
 public class PortDataLoader {
 
     @Bean
+    @Order(1)
     public org.springframework.boot.CommandLineRunner initPorts(JpaPortRepository repo) {
         return args -> {
 
