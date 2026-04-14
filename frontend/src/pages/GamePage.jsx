@@ -46,7 +46,7 @@ function GamePage() {
     const [portCargo, setPortCargo] = useState([]);
     const [cargoCache, setCargoCache] = useState({});
 
-    const savedPort = localStorage.getItem(`currentPort-${sessionCode}`);
+    const savedPort = sessionStorage.getItem(`currentPort-${sessionCode}`);
     const shouldShowBanner =
         !showWelcome &&
         !showPortInstructionModal &&

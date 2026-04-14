@@ -46,7 +46,7 @@ function GameModals({
                         <button
                             className="confirm-btn"
                             onClick={async () => {
-                                const existing = localStorage.getItem(`currentPort-${sessionCode}`);
+                                const existing = sessionStorage.getItem(`currentPort-${sessionCode}`);
 
                                 if (existing) {
                                     setSelectedPort(null);
@@ -63,10 +63,10 @@ function GameModals({
                                     currentPort: res.data.currentPort
                                 }));
 
-                                localStorage.setItem(`currentPort-${sessionCode}`, res.data.currentPort);
+                                sessionStorage.setItem(`currentPort-${sessionCode}`, res.data.currentPort);
 
                                 if (currentPlayer) {
-                                    localStorage.setItem(
+                                    sessionStorage.setItem(
                                         `player-${sessionCode}`,
                                         JSON.stringify({
                                             ...currentPlayer,
