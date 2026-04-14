@@ -2,6 +2,7 @@ package at.fhv.blueroute.session.infrastructure.persistence;
 
 import at.fhv.blueroute.session.domain.model.SessionPlayer;
 import at.fhv.blueroute.session.domain.model.SessionPlayerStatus;
+import at.fhv.blueroute.session.domain.model.SessionStatus;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 
@@ -13,4 +14,6 @@ public interface JpaSessionPlayerRepository extends JpaRepository<SessionPlayer,
     List<SessionPlayer> findByStatus(SessionPlayerStatus status);
 
     List<SessionPlayer> findBySessionId(Long sessionId);
+
+    List<SessionPlayer> findByStatusAndSession_Status(SessionPlayerStatus status, SessionStatus sessionStatus);
 }

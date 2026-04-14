@@ -56,11 +56,4 @@ public class SessionController {
         return ResponseEntity.noContent().build();
     }
 
-    @GetMapping("/{sessionCode}/players/{playerId}")
-    public ResponseEntity<SessionResponse> getSessionByCodeForPlayer(
-            @PathVariable String sessionCode,
-            @PathVariable Long playerId) {
-        return ResponseEntity.ok(sessionService.getSessionByCodeForPlayer(sessionCode, playerId));
-    }
-
 }

@@ -10,7 +10,6 @@ import at.fhv.blueroute.ship.domain.model.Ship;
 import at.fhv.blueroute.ship.infrastructure.persistence.JpaShipRepository;
 import org.springframework.stereotype.Service;
 
-import java.time.LocalDateTime;
 import java.util.List;
 
 @Service
@@ -45,7 +44,6 @@ public class PlayerService {
     public PlayerResponse createPlayer(PlayerRequest request) {
         Player player = playerMapper.toEntity(request);
         player.setBalance(40000.0);
-        player.setLastHeartbeat(LocalDateTime.now());
         Player savedPlayer = playerRepository.save(player);
         return playerMapper.toResponse(savedPlayer);
     }
@@ -76,7 +74,6 @@ public class PlayerService {
         Player player = playerRepository.findById(playerId)
                 .orElseThrow(() -> new PlayerNotFoundException(playerId));
 
-        player.setLastHeartbeat(LocalDateTime.now());
         playerRepository.save(player);
     }
 

@@ -111,7 +111,7 @@ function GamePage() {
             return;
         }
         try {
-            const sessionRes = await api.get(`/sessions/${sessionCode}/players/${storedPlayer.id}`);
+            const sessionRes = await api.get(`/sessions/${sessionCode}`)
             const sessionData = sessionRes.data;
 
             setSession(sessionData);
@@ -282,8 +282,20 @@ function GamePage() {
         }
     };
 
+    if (!storedPlayer) {
+        return (
+            <div style={{ color: "white", padding: "20px" }}>
+                Session data missing. Please return to the lobby.
+            </div>
+        );
+    }
+
     if (!session) {
-        return <div style={{ color: "white", padding: "20px" }}>Loading game...</div>;
+        return (
+            <div style={{ color: "white", padding: "20px" }}>
+                Loading game...
+            </div>
+        );
     }
 
     const myShips = session.players
