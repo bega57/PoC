@@ -107,8 +107,11 @@ function GamePage() {
     }, [session]);
 
     const fetchData = async () => {
+        if (!storedPlayer?.id) {
+            return;
+        }
         try {
-            const sessionRes = await api.get(`/sessions/${sessionCode}`);
+            const sessionRes = await api.get(`/sessions/${sessionCode}/players/${storedPlayer.id}`);
             const sessionData = sessionRes.data;
 
             setSession(sessionData);
@@ -124,6 +127,19 @@ function GamePage() {
     useEffect(() => {
         fetchData();
     }, [sessionCode]);
+
+    useEffect(() => {
+        if (!sessionCode || !storedPlayer?.id) {
+            return;
+        }
+
+        const interval = setInterval(() => {
+            api.patch(`/sessions/${sessionCode}/players/${storedPlayer.id}/heartbeat`)
+                .catch((error) => console.error("Heartbeat failed:", error));
+        }, 20000);
+
+        return () => clearInterval(interval);
+    }, [sessionCode, storedPlayer?.id]);
 
     useEffect(() => {
         const timer = setTimeout(() => {

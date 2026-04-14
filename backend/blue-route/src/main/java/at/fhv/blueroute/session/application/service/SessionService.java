@@ -52,6 +52,26 @@ public class SessionService {
         return sessionMapper.toResponse(session);
     }
 
+    public SessionResponse getSessionByCodeForPlayer(String sessionCode, Long playerId) {
+        Session session = sessionRepository.findBySessionCode(sessionCode)
+                .orElseThrow(() -> new SessionNotFoundException(sessionCode));
+
+        SessionPlayer sessionPlayer = session.getSessionPlayerByPlayerId(playerId);
+
+        if (sessionPlayer == null) {
+            throw new PlayerNotFoundException(playerId);
+        }
+
+        sessionPlayer.markActive();
+
+        if (session.getStatus() == SessionStatus.PAUSED) {
+            session.setStatus(SessionStatus.RUNNING);
+        }
+
+        Session updatedSession = sessionRepository.save(session);
+        return sessionMapper.toResponse(updatedSession);
+    }
+
     public SessionResponse createSession() {
         Session session = new Session(generateSessionCode(), SessionStatus.WAITING, 0, 5);
         Session savedSession = sessionRepository.save(session);
@@ -173,5 +193,24 @@ public class SessionService {
         }
 
         return sessionMapper.toResponse(updatedSession);
+    }
+
+    public void heartbeat(String sessionCode, Long playerId) {
+        Session session = sessionRepository.findBySessionCode(sessionCode)
+                .orElseThrow(() -> new SessionNotFoundException(sessionCode));
+
+        SessionPlayer sessionPlayer = session.getSessionPlayerByPlayerId(playerId);
+
+        if (sessionPlayer == null) {
+            throw new PlayerNotFoundException(playerId);
+        }
+
+        sessionPlayer.markActive();
+
+        if (session.getStatus() == SessionStatus.PAUSED) {
+            session.setStatus(SessionStatus.RUNNING);
+        }
+
+        sessionRepository.save(session);
     }
 }

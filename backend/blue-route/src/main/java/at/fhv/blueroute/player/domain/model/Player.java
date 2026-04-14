@@ -4,6 +4,7 @@ import at.fhv.blueroute.ship.domain.model.Ship;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import jakarta.persistence.*;
 
+import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -23,6 +24,8 @@ public class Player {
 
     // currentPort = player's home/main port
     private String currentPort;
+
+    private LocalDateTime lastHeartbeat;
 
     @OneToMany(mappedBy = "owner")
     private List<Ship> ships = new ArrayList<>();
@@ -68,6 +71,14 @@ public class Player {
 
     public void setCurrentPort(String currentPort) {
         this.currentPort = currentPort;
+    }
+
+    public LocalDateTime getLastHeartbeat() {
+        return lastHeartbeat;
+    }
+
+    public void setLastHeartbeat(LocalDateTime lastHeartbeat) {
+        this.lastHeartbeat = lastHeartbeat;
     }
 
     public List<Ship> getShips() {
