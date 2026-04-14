@@ -12,7 +12,7 @@ public class SessionTickScheduler {
         this.sessionTickService = sessionTickService;
     }
 
-    @Scheduled(fixedRate = 10000)
+    @Scheduled(fixedRateString = "${game.tick.rate}")
     public void tickSessions() {
         sessionTickService.processTicks();
     }

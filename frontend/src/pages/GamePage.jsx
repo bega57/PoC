@@ -1,5 +1,7 @@
 import { useEffect, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
+import { Client } from "@stomp/stompjs";
+import SockJS from "sockjs-client";
 import api from "../api/api";
 import "./GamePage.css";
 import "leaflet/dist/leaflet.css";
@@ -104,29 +106,24 @@ function GamePage() {
 
     }, [session]);
 
+    const fetchData = async () => {
+        try {
+            const sessionRes = await api.get(`/sessions/${sessionCode}`);
+            const sessionData = sessionRes.data;
+
+            setSession(sessionData);
+
+            const voyagesRes = await api.get(`/voyages?sessionId=${sessionData.id}`);
+            setVoyages(voyagesRes.data);
+
+        } catch (err) {
+            console.error(err);
+        }
+    };
 
     useEffect(() => {
-        const fetchData = async () => {
-            try {
-                const sessionRes = await api.get(`/sessions/${sessionCode}`);
-                const sessionData = sessionRes.data;
-
-                setSession(sessionData);
-
-                const voyagesRes = await api.get(`/voyages?sessionId=${sessionData.id}`);
-                setVoyages(voyagesRes.data);
-
-            } catch (err) {
-                console.error(err);
-            }
-        };
-
         fetchData();
-        const interval = setInterval(fetchData, 500);
-
-        return () => clearInterval(interval);
     }, [sessionCode]);
-
 
     useEffect(() => {
         const timer = setTimeout(() => {
@@ -141,6 +138,81 @@ function GamePage() {
         api.get("/ports")
             .then(res => setPorts(res.data))
             .catch(err => console.error(err));
+    }, []);
+
+    useEffect(() => {
+
+        const socket = new SockJS(`${import.meta.env.VITE_API_BASE_URL}/ws`);
+
+        const client = new Client({
+            webSocketFactory: () => socket,
+            reconnectDelay: 5000
+        });
+
+        client.onConnect = () => {
+            console.log("WebSocket connected");
+
+            client.subscribe(`/topic/session/${sessionCode}`, async (message) => {
+                const data = JSON.parse(message.body);
+                console.log("RAW WS EVENT:", data);
+
+                if (data.type === "TICK") {
+                    console.log("TICK EVENT:", data);
+
+                    setSession(prev =>
+                        prev
+                            ? { ...prev, currentTick: data.currentTick }
+                            : prev
+                    );
+
+                    await fetchData();
+                    return;
+                }
+
+                if (data.type === "VOYAGE_STARTED") {
+                    console.log("VOYAGE STARTED EVENT:", data);
+                    await fetchData();
+                    return;
+                }
+
+                if (data.type === "VOYAGE_FINISHED") {
+                    console.log("VOYAGE FINISHED EVENT:", data);
+                    await fetchData();
+                    return;
+                }
+
+                if (data.type === "SESSION_PAUSED") {
+                    console.log("SESSION PAUSED EVENT:", data);
+
+                    setSession(prev =>
+                        prev
+                            ? { ...prev, status: data.status }
+                            : prev
+                    );
+                    return;
+                }
+
+                if (data.type === "SESSION_RUNNING") {
+                    console.log("SESSION RUNNING EVENT:", data);
+
+                    setSession(prev =>
+                        prev
+                            ? { ...prev, status: data.status }
+                            : prev
+                    );
+
+                    await fetchData();
+                    return;
+                }
+            });
+        };
+
+        client.activate();
+
+        return () => {
+            client.deactivate();
+        };
+
     }, []);
 
     const handlePortHover = async (port) => {
