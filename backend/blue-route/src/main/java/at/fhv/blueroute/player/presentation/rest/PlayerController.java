@@ -5,6 +5,7 @@ import at.fhv.blueroute.player.presentation.dto.PlayerRequest;
 import at.fhv.blueroute.player.presentation.dto.PlayerResponse;
 import at.fhv.blueroute.player.presentation.dto.SelectPortRequest;
 import jakarta.validation.Valid;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -38,5 +39,11 @@ public class PlayerController {
     public PlayerResponse selectPort(@RequestBody SelectPortRequest request) {
         playerService.selectPort(request.getPlayerId(), request.getPort());
         return playerService.getPlayerById(request.getPlayerId());
+    }
+
+    @PatchMapping("/{playerId}/heartbeat")
+    public ResponseEntity<Void> heartbeat(@PathVariable Long playerId) {
+        playerService.updateHeartbeat(playerId);
+        return ResponseEntity.noContent().build();
     }
 }

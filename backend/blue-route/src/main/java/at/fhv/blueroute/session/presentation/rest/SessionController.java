@@ -5,6 +5,7 @@ import at.fhv.blueroute.session.presentation.dto.CreateSessionRequest;
 import at.fhv.blueroute.session.presentation.dto.JoinSessionRequest;
 import at.fhv.blueroute.session.presentation.dto.SessionResponse;
 import jakarta.validation.Valid;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -44,6 +45,15 @@ public class SessionController {
     public SessionResponse leaveSession(@PathVariable String sessionCode,
                                         @Valid @RequestBody JoinSessionRequest request) {
         return sessionService.leaveSession(sessionCode, request.getPlayerId());
+    }
+
+    @PatchMapping("/{sessionCode}/players/{playerId}/heartbeat")
+    public ResponseEntity<Void> heartbeat(
+            @PathVariable String sessionCode,
+            @PathVariable Long playerId) {
+
+        sessionService.heartbeat(sessionCode, playerId);
+        return ResponseEntity.noContent().build();
     }
 
 }

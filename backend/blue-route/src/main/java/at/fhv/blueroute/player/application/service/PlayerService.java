@@ -69,4 +69,12 @@ public class PlayerService {
 
         shipRepository.saveAll(ships);
     }
+
+    public void updateHeartbeat(Long playerId) {
+        Player player = playerRepository.findById(playerId)
+                .orElseThrow(() -> new PlayerNotFoundException(playerId));
+
+        playerRepository.save(player);
+    }
+
 }

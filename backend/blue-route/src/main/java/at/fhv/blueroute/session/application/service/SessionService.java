@@ -7,6 +7,7 @@ import at.fhv.blueroute.player.domain.model.Player;
 import at.fhv.blueroute.player.domain.repository.PlayerRepository;
 import at.fhv.blueroute.session.application.exception.SessionFullException;
 import at.fhv.blueroute.session.application.exception.SessionNotFoundException;
+import at.fhv.blueroute.session.application.exception.SessionPlayerNotFoundException;
 import at.fhv.blueroute.session.application.mapper.SessionMapper;
 import at.fhv.blueroute.session.domain.model.Session;
 import at.fhv.blueroute.session.domain.model.SessionPlayer;
@@ -51,6 +52,8 @@ public class SessionService {
 
         return sessionMapper.toResponse(session);
     }
+
+
 
     public SessionResponse createSession() {
         Session session = new Session(generateSessionCode(), SessionStatus.WAITING, 0, 5);
@@ -134,20 +137,14 @@ public class SessionService {
     }
 
     public SessionResponse leaveSession(String sessionCode, Long playerId) {
-        System.out.println("leaveSession called with sessionCode=" + sessionCode + ", playerId=" + playerId);
 
         Session session = sessionRepository.findBySessionCode(sessionCode)
                 .orElseThrow(() -> new SessionNotFoundException(sessionCode));
 
-        System.out.println("session found: " + session.getSessionCode());
-        System.out.println("session players: " + session.getSessionPlayers().size());
-
         SessionPlayer sessionPlayer = session.getSessionPlayerByPlayerId(playerId);
 
-        System.out.println("sessionPlayer found? " + (sessionPlayer != null));
-
         if (sessionPlayer == null) {
-            throw new PlayerNotFoundException(playerId);
+            throw new SessionPlayerNotFoundException(playerId);
         }
 
         sessionPlayer.markDisconnected();
@@ -173,5 +170,24 @@ public class SessionService {
         }
 
         return sessionMapper.toResponse(updatedSession);
+    }
+
+    public void heartbeat(String sessionCode, Long playerId) {
+        Session session = sessionRepository.findBySessionCode(sessionCode)
+                .orElseThrow(() -> new SessionNotFoundException(sessionCode));
+
+        SessionPlayer sessionPlayer = session.getSessionPlayerByPlayerId(playerId);
+
+        if (sessionPlayer == null) {
+            throw new SessionPlayerNotFoundException(playerId);
+        }
+
+        sessionPlayer.markActive();
+
+        if (session.getStatus() == SessionStatus.PAUSED) {
+            session.setStatus(SessionStatus.RUNNING);
+        }
+
+        sessionRepository.save(session);
     }
 }
