@@ -317,7 +317,10 @@ export default function VoyagePage() {
                                     <option value="">Select cargo order</option>
                                     {filteredCargo.map(item => (
                                         <option key={item.id} value={item.id}>
-                                            Order #{item.id} - {item.originPort?.name} → {item.destinationPort?.name} - Price: {item.price} - Reward: {item.reward}
+                                            Order #{item.id} - {item.originPort?.name} → {item.destinationPort?.name}
+                                            - Price: {item.price}
+                                            - Reward: {item.reward}
+                                            - Duration: {item.requiredTicks} days
                                         </option>
                                     ))}
                                 </select>
@@ -342,6 +345,7 @@ export default function VoyagePage() {
                                             <p>Reward: {item.reward} Talers</p>
                                             <p>Required Capacity: {item.requiredCapacity}</p>
                                             <p>Risk: {item.riskLevel}</p>
+                                            <p>Estimated Duration: {item.requiredTicks} days</p>
                                         </div>
                                     ))}
                                 </div>

@@ -279,25 +279,29 @@
 
 .status-bar {
     position: absolute;
-    bottom: 20px;
-    left: 50%;
-    transform: translateX(-50%);
 
-    width: 90%;
-    max-width: 1000px;
+    left: 40px;
+    top: 360px;
 
-    background: rgba(15, 23, 42, 0.6);
-    backdrop-filter: blur(10px);
+    width: auto;
+    max-width: 260px;
 
-    border-radius: 14px;
-    padding: 12px 16px;
+    background: rgba(15, 23, 42, 0.85);
+    backdrop-filter: blur(8px);
 
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
+    border: 1px solid #334155;
+    border-radius: 12px;
+
+    padding: 14px 16px;
 
     color: #e2e8f0;
-    font-size: 14px;
+    font-size: 13px;
+
+    display: block;
+
+    box-shadow: 0 10px 25px rgba(0, 0, 0, 0.4);
+
+    z-index: 20;
 }
 
 /* LEFT */
@@ -379,5 +383,5 @@
             0 4px 20px rgba(0, 0, 0, 0.6);
 
     z-index: 1000;
-    pointer-events: none; /* 👈 wichtig: blockiert keine Klicks */
+    pointer-events: none;
 }
