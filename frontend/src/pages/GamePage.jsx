@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { useRef } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { Client } from "@stomp/stompjs";
 import SockJS from "sockjs-client";
@@ -156,6 +157,8 @@ function GamePage() {
             .catch(err => console.error(err));
     }, []);
 
+    const lastFetchRef = useRef(0);
+
     useEffect(() => {
 
         const socket = new SockJS(`${import.meta.env.VITE_API_BASE_URL}/ws`);
@@ -173,15 +176,19 @@ function GamePage() {
                 console.log("RAW WS EVENT:", data);
 
                 if (data.type === "TICK") {
-                    console.log("TICK EVENT:", data);
-
                     setSession(prev =>
                         prev
                             ? { ...prev, currentTick: data.currentTick }
                             : prev
                     );
 
-                    await fetchData();
+                    const now = Date.now();
+
+                    if (now - lastFetchRef.current > 2000) {
+                        lastFetchRef.current = now;
+                        await fetchData();
+                    }
+
                     return;
                 }
 
@@ -301,8 +308,11 @@ function GamePage() {
     const myShips = session.players
         .find(p => p.id === storedPlayer?.id)?.ships || [];
 
-
     const myShipIds = myShips.map(s => s.id);
+
+    const myActiveVoyages = voyages.filter(
+        v => myShipIds.includes(v.shipId) && v.status === "RUNNING"
+    );
 
     const mainPort = savedPort;
     const shipPorts = myShips
@@ -310,19 +320,6 @@ function GamePage() {
         .filter(Boolean);
 
     const now = Date.now();
-
-    const myActiveVoyage = voyages.find(
-        v => myShipIds.includes(v.shipId) && v.status === "RUNNING"
-    );
-
-    let voyageProgress = null;
-
-    if (myActiveVoyage) {
-        voyageProgress = {
-            current: myActiveVoyage.currentDay,
-            total: myActiveVoyage.duration
-        };
-    }
 
     const rewards = portCargo.map(c => c.reward);
     const minReward = rewards.length > 0 ? Math.min(...rewards) : 0;
@@ -384,8 +381,7 @@ function GamePage() {
                 session={session}
                 selectedShip={selectedShip}
                 currentPlayer={currentPlayer}
-                myActiveVoyage={myActiveVoyage}
-                voyageProgress={voyageProgress}
+                myActiveVoyages={myActiveVoyages}
             />
 
             <GameSidebar
