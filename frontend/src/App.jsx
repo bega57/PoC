@@ -8,6 +8,8 @@ import VoyagePage from "./pages/VoyagePage";
 
 import "./App.css";
 import SellShipPage from "./pages/SellShipPage.jsx";
+import ShipRefuelPage from "./pages/ShipRefuelPage.jsx";
+import ShipRepairPage from "./pages/ShipRepairPage.jsx";
 
 function App() {
     return (
@@ -19,6 +21,8 @@ function App() {
             <Route path="/company/:sessionCode" element={<CompanyPage />} />
             <Route path="/market/:sessionCode/sell" element={<SellShipPage />} />
             <Route path="/voyage/:sessionCode" element={<VoyagePage />} />
+            <Route path="/market/:sessionCode/refuel" element={<ShipRefuelPage />} />
+            <Route path="/market/:sessionCode/repair" element={<ShipRepairPage />} />
         </Routes>
     );
 }
