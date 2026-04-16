@@ -4,6 +4,7 @@
     <modules>
       <module fileurl="file://$PROJECT_DIR$/.idea/PoC.iml" filepath="$PROJECT_DIR$/.idea/PoC.iml" />
       <module fileurl="file://$PROJECT_DIR$/.idea/modules/blue-route.main.iml" filepath="$PROJECT_DIR$/.idea/modules/blue-route.main.iml" />
+      <module fileurl="file://$PROJECT_DIR$/.idea/modules/blue-route.test.iml" filepath="$PROJECT_DIR$/.idea/modules/blue-route.test.iml" />
     </modules>
   </component>
 </project>
