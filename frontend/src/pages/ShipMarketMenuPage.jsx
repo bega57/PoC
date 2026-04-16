@@ -103,6 +103,40 @@ function ShipMarketMenuPage() {
                             </div>
                         </div>
                     </button>
+
+                    <button
+                        type="button"
+                        className="ship-market-card"
+                        onClick={() => navigate(`/market/${sessionCode}/refuel`)}
+                    >
+                        <div className="ship-card-right">
+                            <div className="ship-main-info">
+                                <div className="ship-title-row">
+                                    <h2>Refuel Ship</h2>
+                                </div>
+                                <p className="ship-description">
+                                    Refill your ship's fuel to continue traveling.
+                                </p>
+                            </div>
+                        </div>
+                    </button>
+
+                    <button
+                        type="button"
+                        className="ship-market-card"
+                        onClick={() => navigate(`/market/${sessionCode}/repair`)}
+                    >
+                        <div className="ship-card-right">
+                            <div className="ship-main-info">
+                                <div className="ship-title-row">
+                                    <h2>Repair Ship</h2>
+                                </div>
+                                <p className="ship-description">
+                                    Fix damaged ships and restore performance.
+                                </p>
+                            </div>
+                        </div>
+                    </button>
                 </div>
             </div>
         </div>
