@@ -87,6 +87,10 @@ public class StartVoyageService {
             throw new VoyageException("Not enough balance to start this voyage");
         }
 
+        if (ship.getFuelLevel() < cargo.getFuelConsumption()) {
+            throw new VoyageException("Not enough fuel for this voyage");
+        }
+
         ship.getOwner().setBalance(ship.getOwner().getBalance() - cargo.getPrice());
         playerRepository.save(ship.getOwner());
 
@@ -114,6 +118,7 @@ public class StartVoyageService {
         System.out.println("CurrentTick: " + currentTick);
         System.out.println("RequiredTicks (Cargo): " + requiredTicks);
         System.out.println("Ship Speed: " + speed);
+        System.out.println("Fuel Consumption (Cargo): " + cargo.getFuelConsumption());
 
         int adjustedTicks = requiredTicks;
 
@@ -125,6 +130,13 @@ public class StartVoyageService {
 
         voyage.setReward(cargo.getReward());
         voyage.setRewardGranted(false);
+
+
+        double fuelUsed = cargo.getFuelConsumption();
+        ship.setFuelLevel((int)(ship.getFuelLevel() - fuelUsed));
+
+        System.out.println("Fuel used: " + fuelUsed);
+        System.out.println("Remaining fuel: " + ship.getFuelLevel());
 
         ship.setTraveling(true);
         ship.setCurrentPort(null);
