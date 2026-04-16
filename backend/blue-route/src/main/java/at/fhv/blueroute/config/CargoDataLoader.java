@@ -1,5 +1,6 @@
 package at.fhv.blueroute.config;
 
+import at.fhv.blueroute.cargo.application.service.CalculateFuelConsumptionService;
 import at.fhv.blueroute.cargo.domain.model.Cargo;
 import at.fhv.blueroute.cargo.domain.model.RiskLevel;
 import at.fhv.blueroute.cargo.infrastructure.persistence.JpaCargoRepository;
@@ -32,6 +33,12 @@ public class CargoDataLoader {
 
                 for (Cargo cargo : existingCargos) {
 
+                    System.out.println(
+                            cargo.getOriginPort().getName() + " -> " +
+                                    cargo.getDestinationPort().getName() +
+                                    " | Fuel: " + cargo.getFuelConsumption()
+                    );
+
                     if (cargo.getRequiredTicks() == 0) {
                         int distance = DistanceCalculator.calculate(
                                 cargo.getOriginPort(),
@@ -46,6 +53,16 @@ public class CargoDataLoader {
                         cargo.setRequiredCapacity(100);
                         cargo.setRiskLevel(RiskLevel.LOW);
                     }
+
+                    CalculateFuelConsumptionService fuelService = new CalculateFuelConsumptionService();
+
+                    int distance = DistanceCalculator.calculate(
+                            cargo.getOriginPort(),
+                            cargo.getDestinationPort()
+                    );
+
+                    double fuel = fuelService.calculate(cargo, distance);
+                    cargo.setFuelConsumption(fuel);
                 }
 
                 cargoRepo.saveAll(existingCargos);
@@ -127,6 +144,11 @@ public class CargoDataLoader {
         int distance = DistanceCalculator.calculate(origin, dest);
         int requiredTicks = Math.max(1, distance / 10);
         c.setRequiredTicks(requiredTicks);
+
+        CalculateFuelConsumptionService fuelService = new CalculateFuelConsumptionService();
+        double fuel = fuelService.calculate(c, distance);
+        c.setFuelConsumption(fuel);
+
 
         return c;
     }

@@ -30,6 +30,8 @@ public class Cargo {
     @Column(nullable = false)
     private int requiredTicks;
 
+    private double fuelConsumption;
+
     public Cargo() {}
 
     public Long getId() {
@@ -58,6 +60,10 @@ public class Cargo {
 
     public RiskLevel getRiskLevel() {
         return riskLevel;
+    }
+
+    public double getFuelConsumption() {
+        return fuelConsumption;
     }
 
     public int getRequiredTicks() {
@@ -90,5 +96,9 @@ public class Cargo {
 
     public void setRequiredTicks(int requiredTicks) {
         this.requiredTicks = requiredTicks;
+    }
+
+    public void setFuelConsumption(double fuelConsumption) {
+        this.fuelConsumption = fuelConsumption;
     }
 }

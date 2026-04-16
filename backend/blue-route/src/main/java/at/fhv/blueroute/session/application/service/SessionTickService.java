@@ -48,15 +48,24 @@ public class SessionTickService {
             List<Voyage> voyages = voyageRepository.findBySessionId(session.getId());
 
             for (Voyage v : voyages) {
+                System.out.println(
+                        "Voyage " + v.getId() +
+                                " | CurrentTick: " + session.getCurrentTick() +
+                                " | ArrivalTick: " + v.getArrivalTick()
+                );
 
                 if (v.getStatus() == VoyageStatus.FINISHED) continue;
 
                 if (session.getCurrentTick() >= v.getArrivalTick()) {
 
+                    var ship = shipRepository.findById(v.getShipId()).orElseThrow();
+
+                    System.out.println("Voyage finished for ship " + v.getShipId());
+                    System.out.println("Ship fuel after voyage: " + ship.getFuelLevel());
+
                     v.setStatus(VoyageStatus.FINISHED);
                     v.setArrivalTime(LocalDateTime.now());
 
-                    var ship = shipRepository.findById(v.getShipId()).orElseThrow();
                     ship.setTraveling(false);
                     ship.setCurrentPort(v.getDestinationPort());
 
