@@ -28,6 +28,13 @@ function GameSidebar({
 
                     <button
                         className="action-btn"
+                        onClick={() => navigate(`/cargo-offers/${sessionCode}`)}
+                    >
+                        Cargo Offers
+                    </button>
+
+                    <button
+                        className="action-btn"
                         onClick={() => navigate(`/company/${sessionCode}`)}
                     >
                         Company
