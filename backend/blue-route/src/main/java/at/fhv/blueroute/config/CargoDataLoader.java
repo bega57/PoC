@@ -31,7 +31,14 @@ public class CargoDataLoader {
             List<Cargo> existingCargos = cargoRepo.findAll();
             if (!existingCargos.isEmpty()) {
 
+                CalculateFuelConsumptionService fuelService = new CalculateFuelConsumptionService();
+
                 for (Cargo cargo : existingCargos) {
+
+                    if (cargo.getOriginPort() == null || cargo.getDestinationPort() == null) {
+                        System.out.println("Cargo " + cargo.getId() + " has missing ports");
+                        continue;
+                    }
 
                     System.out.println(
                             cargo.getOriginPort().getName() + " -> " +
@@ -50,11 +57,15 @@ public class CargoDataLoader {
 
                     if (cargo.getReward() == 0) {
                         cargo.setReward(cargo.getPrice() * 1.2);
-                        cargo.setRequiredCapacity(100);
-                        cargo.setRiskLevel(RiskLevel.LOW);
                     }
 
-                    CalculateFuelConsumptionService fuelService = new CalculateFuelConsumptionService();
+                    if (cargo.getRequiredCapacity() == 0) {
+                        cargo.setRequiredCapacity(100);
+                    }
+
+                    if (cargo.getRiskLevel() == null) {
+                        cargo.setRiskLevel(RiskLevel.LOW);
+                    }
 
                     int distance = DistanceCalculator.calculate(
                             cargo.getOriginPort(),

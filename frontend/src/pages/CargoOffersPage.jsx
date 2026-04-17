@@ -1,11 +1,8 @@
 import { useEffect, useMemo, useState } from "react";
-import { useParams } from "react-router-dom";
 import axios from "axios";
 import "./CargoOffersPage.css";
 
 function CargoOffersPage() {
-    const { sessionCode } = useParams();
-
     const [offers, setOffers] = useState([]);
     const [fromPort, setFromPort] = useState("");
     const [sortBy, setSortBy] = useState("");
@@ -26,73 +23,127 @@ function CargoOffersPage() {
     };
 
     const portOptions = useMemo(() => {
-        const ports = [...new Set(offers.map((offer) => offer.fromPort))];
+        const ports = [
+            ...new Set(
+                offers
+                    .map((offer) => offer.fromPort)
+                    .filter(Boolean)
+            )
+        ];
         return ports.sort((a, b) => a.localeCompare(b));
     }, [offers]);
+
+    const getRiskLevelValue = (riskLevel) => {
+        const riskMap = { LOW: 0, MEDIUM: 1, HIGH: 2 };
+        return riskMap[riskLevel] ?? 999;
+    };
 
     const filteredOffers = useMemo(() => {
         let data = [...offers];
 
         if (fromPort) {
-            data = data.filter((offer) => offer.fromPort === fromPort);
-        }
+            data = data.filter((offer) => offer.fromPort === fromPort);        }
 
         if (sortBy === "reward") {
             data.sort((a, b) => b.reward - a.reward);
         }
 
         if (sortBy === "risk") {
-            data.sort((a, b) => a.riskLevel.localeCompare(b.riskLevel));
+            data.sort((a, b) => getRiskLevelValue(a.riskLevel) - getRiskLevelValue(b.riskLevel));
         }
 
         return data;
     }, [offers, fromPort, sortBy]);
 
     return (
-        <div className="page-container">
-            <h1>Cargo Offers</h1>
+        <div className="cargo-page">
+            <div className="cargo-overlay"></div>
 
-            <div className="cargo-filter-bar">
-                <select
-                    value={fromPort}
-                    onChange={(e) => setFromPort(e.target.value)}
-                    className="cargo-filter"
-                >
-                    <option value="">All Ports</option>
-                    {portOptions.map((port) => (
-                        <option key={port} value={port}>
-                            {port}
-                        </option>
-                    ))}
-                </select>
+            <div className="cargo-content">
+                <div className="cargo-header">
+                    <h1>Cargo Offers</h1>
+                </div>
 
-                <select
-                    value={sortBy}
-                    onChange={(e) => setSortBy(e.target.value)}
-                    className="cargo-filter"
-                >
-                    <option value="">Default Sort</option>
-                    <option value="reward">Highest Reward</option>
-                    <option value="risk">Lowest Risk</option>
-                </select>
-            </div>
+                <div className="cargo-toolbar">
+                    <div></div>
 
-            <div className="cargo-offers-grid">
-                {filteredOffers.map((offer) => (
-                    <div key={offer.id} className="cargo-offer-card">
-                        <div className="cargo-offer-left">
-                            <span className="cargo-label">Port</span>
-                            <h3>{offer.fromPort}</h3>
-                        </div>
+                    <div className="cargo-filter-bar">
+                        <select
+                            value={fromPort}
+                            onChange={(e) => setFromPort(e.target.value)}
+                            className="cargo-filter"
+                        >
+                            <option value="">All Ports</option>
+                            {portOptions.map((port) => (
+                                <option key={port} value={port}>
+                                    {port}
+                                </option>
+                            ))}
+                        </select>
 
-                        <div className="cargo-offer-right">
-                            <h3>{offer.name}</h3>
-                            <p><strong>To:</strong> {offer.toPort}</p>
-                            <p><strong>Reward:</strong> {offer.reward}</p>
-                            <p><strong>Risk:</strong> {offer.riskLevel}</p>
-                        </div>
+                        <select
+                            value={sortBy}
+                            onChange={(e) => setSortBy(e.target.value)}
+                            className="cargo-filter"
+                        >
+                            <option value="">Default Sort</option>
+                            <option value="reward">Highest Reward</option>
+                            <option value="risk">Lowest Risk</option>
+                        </select>
                     </div>
-                ))}
+                </div>
+
+                <div className="cargo-cards">
+                    {filteredOffers.map((offer) => (
+                        <div className="cargo-market-card" key={offer.id}>
+                            <div className="cargo-card-left">
+                                <div className="cargo-port-box">
+                                    <span className="cargo-port-label">FROM PORT</span>
+                                    <h2>{offer.fromPort  || "Unknown"}</h2>
+                                    <p className="cargo-destination">
+                                        To: {offer.toPort || "Unknown"}
+                                    </p>
+                                </div>
+                            </div>
+
+                            <div className="cargo-card-right">
+                                <div className="cargo-title-row">
+                                    <h2>Cargo {offer.id}</h2>
+                                    <div className="cargo-reward">
+                                        {offer.reward} $
+                                    </div>
+                                </div>
+
+                                <div className="cargo-stats">
+                                    <div className="cargo-stat-block">
+                                        <span className="cargo-stat-label">Price</span>
+                                        <span className="cargo-stat-value">{offer.price}</span>
+                                    </div>
+
+                                    <div className="cargo-stat-block">
+                                        <span className="cargo-stat-label">Capacity</span>
+                                        <span className="cargo-stat-value">{offer.requiredCapacity}</span>
+                                    </div>
+
+                                    <div className="cargo-stat-block">
+                                        <span className="cargo-stat-label">Ticks</span>
+                                        <span className="cargo-stat-value">{offer.requiredTicks}</span>
+                                    </div>
+
+                                    <div className="cargo-stat-block">
+                                        <span className="cargo-stat-label">Fuel</span>
+                                        <span className="cargo-stat-value">{offer.fuelConsumption}</span>
+                                    </div>
+
+                                    <div className="cargo-stat-block">
+                                        <span className="cargo-stat-label">Risk</span>
+                                        <span className="cargo-stat-value">{offer.riskLevel}</span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    ))}
+                </div>
             </div>
         </div>
     );

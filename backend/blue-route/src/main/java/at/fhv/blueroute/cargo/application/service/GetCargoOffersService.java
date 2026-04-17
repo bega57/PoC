@@ -26,10 +26,14 @@ public class GetCargoOffersService {
         return new CargoOfferDto(
                 cargo.getId(),
                 "Cargo " + cargo.getId(),
-                cargo.getOriginPort().getName(),
-                cargo.getDestinationPort().getName(),
+                cargo.getOriginPort() != null ? cargo.getOriginPort().getName() : "Unknown",
+                cargo.getDestinationPort() != null ? cargo.getDestinationPort().getName() : "Unknown",
+                cargo.getPrice(),
                 cargo.getReward(),
-                cargo.getRiskLevel().name()
+                cargo.getRequiredCapacity(),
+                cargo.getRequiredTicks(),
+                cargo.getFuelConsumption(),
+                cargo.getRiskLevel() != null ? cargo.getRiskLevel().name() : "LOW"
         );
     }
 }
