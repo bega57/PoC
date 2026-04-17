@@ -49,7 +49,19 @@ public class SessionHeartbeatMonitorService {
         );
 
         for (SessionPlayer sessionPlayer : activePlayers) {
-            if (sessionPlayer.getLastSeen() != null && sessionPlayer.getLastSeen().isBefore(cutoff)) {
+            LocalDateTime safeCutoff = cutoff.minusSeconds(10);
+
+            log.info(
+                    "Heartbeat check - Player {} | LastSeen: {} | Now: {} | Diff: {} sec",
+                    sessionPlayer.getPlayer().getId(),
+                    sessionPlayer.getLastSeen(),
+                    LocalDateTime.now(),
+                    sessionPlayer.getLastSeen() != null
+                            ? java.time.Duration.between(sessionPlayer.getLastSeen(), LocalDateTime.now()).getSeconds()
+                            : "null"
+            );
+
+            if (sessionPlayer.getLastSeen() != null && sessionPlayer.getLastSeen().isBefore(safeCutoff)) {
                 sessionPlayer.markDisconnected();
 
                 log.info(

@@ -183,7 +183,10 @@ public class SessionService {
 
         sessionPlayer.markActive();
 
-        if (session.getStatus() == SessionStatus.PAUSED) {
+        boolean hasActivePlayers = session.getSessionPlayers().stream()
+                .anyMatch(sp -> sp.getStatus() == SessionPlayerStatus.ACTIVE);
+
+        if (hasActivePlayers) {
             session.setStatus(SessionStatus.RUNNING);
         }
 

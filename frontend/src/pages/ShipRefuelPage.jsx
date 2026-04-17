@@ -39,7 +39,7 @@ function ShipRefuelPage() {
                 </button>
 
                 <header className="market-header">
-                    <h1>Refuel Ships</h1>
+                    <h1>Refuel Ship</h1>
                     <p>Select a ship to refuel.</p>
                 </header>
 
