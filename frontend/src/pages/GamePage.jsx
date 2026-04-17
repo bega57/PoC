@@ -62,6 +62,35 @@ function GamePage() {
         return saved ? Number(saved) : null;
     });
 
+    const lastHeartbeatRef = useRef(0);
+    const isFetchingRef = useRef(false);
+
+    const sendHeartbeatSafe = () => {
+        if (!sessionCode || !storedPlayer?.id) return;
+        const now = Date.now();
+
+        if (now - lastHeartbeatRef.current < 5000) return;
+
+        lastHeartbeatRef.current = now;
+
+        api.patch(`/sessions/${sessionCode}/players/${storedPlayer.id}/heartbeat`)
+            .catch(err => console.error("Heartbeat failed:", err));
+    };
+
+    const safeFetchData = async () => {
+        if (isFetchingRef.current) return;
+
+        isFetchingRef.current = true;
+
+        try {
+            await fetchData();
+        } catch (err) {
+            console.error("safeFetchData failed:", err);
+        } finally {
+            isFetchingRef.current = false;
+        }
+    };
+
     useEffect(() => {
         if (!session || !storedPlayer) return;
 
@@ -130,16 +159,44 @@ function GamePage() {
     }, [sessionCode]);
 
     useEffect(() => {
-        if (!sessionCode || !storedPlayer?.id) {
-            return;
-        }
+        if (!sessionCode || !storedPlayer?.id) return;
 
-        const interval = setInterval(() => {
-            api.patch(`/sessions/${sessionCode}/players/${storedPlayer.id}/heartbeat`)
-                .catch((error) => console.error("Heartbeat failed:", error));
-        }, 20000);
+        sendHeartbeatSafe();
+        const interval = setInterval(sendHeartbeatSafe, 10000);
 
         return () => clearInterval(interval);
+    }, [sessionCode, storedPlayer?.id]);
+
+    useEffect(() => {
+        if (!sessionCode || !storedPlayer?.id) return;
+
+        const handleActivity = () => {
+            sendHeartbeatSafe();
+        };
+
+        window.addEventListener("click", handleActivity);
+        window.addEventListener("keydown", handleActivity);
+
+        return () => {
+            window.removeEventListener("click", handleActivity);
+            window.removeEventListener("keydown", handleActivity);
+        };
+    }, [sessionCode, storedPlayer?.id]);
+
+    useEffect(() => {
+        if (!sessionCode || !storedPlayer?.id) return;
+
+        const handleVisibility = () => {
+            if (document.visibilityState === "visible") {
+                sendHeartbeatSafe();
+            }
+        };
+
+        document.addEventListener("visibilitychange", handleVisibility);
+
+        return () => {
+            document.removeEventListener("visibilitychange", handleVisibility);
+        };
     }, [sessionCode, storedPlayer?.id]);
 
     useEffect(() => {
@@ -157,7 +214,6 @@ function GamePage() {
             .catch(err => console.error(err));
     }, []);
 
-    const lastFetchRef = useRef(0);
 
     useEffect(() => {
 
@@ -182,25 +238,18 @@ function GamePage() {
                             : prev
                     );
 
-                    const now = Date.now();
-
-                    if (now - lastFetchRef.current > 2000) {
-                        lastFetchRef.current = now;
-                        await fetchData();
-                    }
-
                     return;
                 }
 
                 if (data.type === "VOYAGE_STARTED") {
                     console.log("VOYAGE STARTED EVENT:", data);
-                    await fetchData();
+                    await safeFetchData();
                     return;
                 }
 
                 if (data.type === "VOYAGE_FINISHED") {
                     console.log("VOYAGE FINISHED EVENT:", data);
-                    await fetchData();
+                    await safeFetchData();
                     return;
                 }
 
@@ -224,7 +273,7 @@ function GamePage() {
                             : prev
                     );
 
-                    await fetchData();
+                    await safeFetchData();
                     return;
                 }
             });
@@ -233,10 +282,12 @@ function GamePage() {
         client.activate();
 
         return () => {
-            client.deactivate();
+            if (client.active) {
+                client.deactivate();
+            }
         };
 
-    }, []);
+    }, [sessionCode]);
 
     const handlePortHover = async (port) => {
         setHoveredPort(port);
