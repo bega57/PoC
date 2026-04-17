@@ -39,7 +39,7 @@ function ShipRepairPage() {
                 </button>
 
                 <header className="market-header">
-                    <h1>Repair Ships</h1>
+                    <h1>Repair Ship</h1>
                     <p>Select a ship to repair.</p>
                 </header>
 
