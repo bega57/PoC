@@ -1,5 +1,6 @@
 package at.fhv.blueroute.voyage.application.service;
 
+import at.fhv.blueroute.cargo.application.service.CalculateDeteriorationService;
 import at.fhv.blueroute.cargo.domain.model.Cargo;
 import at.fhv.blueroute.cargo.infrastructure.persistence.JpaCargoRepository;
 import at.fhv.blueroute.player.domain.repository.PlayerRepository;
@@ -28,6 +29,7 @@ public class StartVoyageService {
     private final PlayerRepository playerRepository;
     private final JpaSessionRepository sessionRepository;
     private final WebSocketSender webSocketSender;
+    private final CalculateDeteriorationService deteriorationService = new CalculateDeteriorationService();
 
     public StartVoyageService(
             JpaVoyageRepository voyageRepository,
@@ -47,11 +49,16 @@ public class StartVoyageService {
 
     public Voyage startVoyage(Long shipId, Long cargoId, String sessionCode) {
 
+        System.out.println("🔥 START VOYAGE CALLED 🔥");
         Ship ship = shipRepository.findById(shipId)
                 .orElseThrow(() -> new RuntimeException("Ship not found"));
 
         if (ship.isTraveling()) {
             throw new VoyageException("Ship is already traveling");
+        }
+
+        if (ship.getCondition() <= 0) {
+            throw new VoyageException("Ship is broken and needs repair");
         }
 
         boolean isBusy = voyageRepository
@@ -135,8 +142,16 @@ public class StartVoyageService {
         double fuelUsed = cargo.getFuelConsumption();
         ship.setFuelLevel((int)(ship.getFuelLevel() - fuelUsed));
 
+
+        double damage = deteriorationService.calculate(cargo);
+
+        ship.setCondition(Math.max(0, (int)(ship.getCondition() - damage)));
+
         System.out.println("Fuel used: " + fuelUsed);
         System.out.println("Remaining fuel: " + ship.getFuelLevel());
+
+        System.out.println("Damage taken: " + damage);
+        System.out.println("Ship condition after voyage: " + ship.getCondition());
 
         ship.setTraveling(true);
         ship.setCurrentPort(null);

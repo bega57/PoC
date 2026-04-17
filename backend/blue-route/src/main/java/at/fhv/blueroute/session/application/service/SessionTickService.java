@@ -74,6 +74,9 @@ public class SessionTickService {
 
                     v.setRewardGranted(true);
 
+                    voyageRepository.save(v);
+                    shipRepository.save(ship);
+
                     webSocketSender.sendSessionUpdate(
                             session.getSessionCode(),
                             new VoyageFinishedMessage(
