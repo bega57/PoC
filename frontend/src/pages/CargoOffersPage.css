@@ -1,0 +1,64 @@
+.cargo-filter-bar {
+    display: flex;
+    gap: 12px;
+    margin-bottom: 20px;
+    justify-content: flex-start;
+    align-items: center;
+}
+
+.cargo-filter {
+    width: 180px;
+    padding: 10px 14px;
+    border-radius: 10px;
+    border: 1px solid #2f4f85;
+    background: rgba(10, 20, 40, 0.95);
+    color: white;
+    font-size: 14px;
+}
+
+.cargo-offers-grid {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 18px;
+}
+
+.cargo-offer-card {
+    display: grid;
+    grid-template-columns: 220px 1fr;
+    gap: 20px;
+    align-items: center;
+    padding: 22px;
+    border-radius: 20px;
+    background: rgba(12, 18, 30, 0.9);
+    border: 1px solid rgba(80, 130, 255, 0.25);
+    box-shadow: 0 8px 30px rgba(0, 0, 0, 0.25);
+}
+
+.cargo-offer-left {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+}
+
+.cargo-offer-left h3,
+.cargo-offer-right h3 {
+    margin: 0;
+}
+
+.cargo-label {
+    font-size: 12px;
+    opacity: 0.7;
+    margin-bottom: 6px;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+}
+
+.cargo-offer-right {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+}
+
+.cargo-offer-right p {
+    margin: 0;
+}

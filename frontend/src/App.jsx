@@ -10,6 +10,7 @@ import "./App.css";
 import SellShipPage from "./pages/SellShipPage.jsx";
 import ShipRefuelPage from "./pages/ShipRefuelPage.jsx";
 import ShipRepairPage from "./pages/ShipRepairPage.jsx";
+import CargoOffersPage from "./pages/CargoOffersPage";
 
 function App() {
     return (
@@ -23,6 +24,8 @@ function App() {
             <Route path="/voyage/:sessionCode" element={<VoyagePage />} />
             <Route path="/market/:sessionCode/refuel" element={<ShipRefuelPage />} />
             <Route path="/market/:sessionCode/repair" element={<ShipRepairPage />} />
+            <Route path="/cargo-offers/:sessionCode"  element={<CargoOffersPage />}
+            />
         </Routes>
     );
 }
