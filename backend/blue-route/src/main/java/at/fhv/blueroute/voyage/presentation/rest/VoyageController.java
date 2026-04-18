@@ -32,6 +32,8 @@ public class VoyageController {
 
     @PostMapping("/start")
     public ResponseEntity<?> startVoyage(@RequestBody StartVoyageRequest request) {
+
+        System.out.println("🚨 CONTROLLER WIRD AUSGEFÜHRT 🚨");
         try {
             Voyage voyage = startVoyageService.startVoyage(
                     request.getShipId(),

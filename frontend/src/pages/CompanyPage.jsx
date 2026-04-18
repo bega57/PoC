@@ -202,7 +202,7 @@ function CompanyPage() {
                                         })()}
                                         <p>Condition: {ship.condition}%</p>
                                         <p>Fuel: {ship.fuelLevel}%</p>
-                                        <p>Capacity: {ship.capacity}</p>
+                                        <p>Capacity: {ship.cargoCapacity}</p>
                                         <p>Speed: {ship.speed}</p>
                                     </div>
                                 </div>

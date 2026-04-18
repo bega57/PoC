@@ -54,9 +54,8 @@ public class SessionService {
     }
 
 
-
     public SessionResponse createSession() {
-        Session session = new Session(generateSessionCode(), SessionStatus.WAITING, 0, 5);
+        Session session = new Session(generateSessionCode(), SessionStatus.RUNNING, 0, 5);
         Session savedSession = sessionRepository.save(session);
         return sessionMapper.toResponse(savedSession);
     }
