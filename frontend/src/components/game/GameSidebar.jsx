@@ -61,7 +61,7 @@ function GameSidebar({
                     <div className="leave-section">
                         <button
                             className="action-btn leave-btn"
-                            onClick={handleLeaveSession}
+                            onClick={() => handleLeaveSession()}
                         >
                             Leave Session
                         </button>

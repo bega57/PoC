@@ -14,7 +14,11 @@ function GameModals({
                         storedPlayer,
                         selectedShip,
                         setSelectedShip,
-                        sessionCode
+                        sessionCode,
+                        showLeaveModal,
+                        setShowLeaveModal,
+                        handleLeaveSession,
+                        closeLeaveModal
                     }) {
     return (
         <>
@@ -115,6 +119,41 @@ function GameModals({
 
                         <button onClick={() => setShowRewardPopup(false)}>
                             Nice
+                        </button>
+                    </div>
+                </div>
+            )}
+
+            {showLeaveModal && (
+                <div className="welcome-overlay">
+                    <div className="welcome-modal">
+                        <h2>Leave Session?</h2>
+                        <p>
+                            You can resume this session later with the following details:
+                        </p>
+
+                        <p><strong>Session Code:</strong> {sessionCode}</p>
+                        <p><strong>Player ID:</strong> {storedPlayer?.id}</p>
+
+                        <p>
+                            Make sure to save this information before leaving.
+                        </p>
+
+                        <button
+                            className="confirm-btn"
+                            onClick={async () => {
+                                await handleLeaveSession();
+                                closeLeaveModal();
+                            }}
+                        >
+                            Leave Session
+                        </button>
+
+                        <button
+                            className="cancel-btn"
+                            onClick={() => setShowLeaveModal(false)}
+                        >
+                            Cancel
                         </button>
                     </div>
                 </div>

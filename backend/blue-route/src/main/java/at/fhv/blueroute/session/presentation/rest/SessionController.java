@@ -41,6 +41,12 @@ public class SessionController {
         return sessionService.joinSession(sessionCode, request.getPlayerId());
     }
 
+    @PostMapping("/{sessionCode}/resume")
+    public SessionResponse resumeSession(@PathVariable String sessionCode,
+                                         @Valid @RequestBody JoinSessionRequest request) {
+        return sessionService.resumeSession(sessionCode, request.getPlayerId());
+    }
+
     @PostMapping("/{sessionCode}/leave")
     public SessionResponse leaveSession(@PathVariable String sessionCode,
                                         @Valid @RequestBody JoinSessionRequest request) {
