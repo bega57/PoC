@@ -28,5 +28,19 @@ import org.springframework.stereotype.Service;
 
             // capacity
             cargo.setRequiredCapacity(Math.max(20, distance / 2));
+
+
+            String description = switch (cargo.getRiskLevel()) {
+                case LOW -> "Safe delivery";
+                case MEDIUM -> "Moderate risk transport";
+                case HIGH -> "High-risk shipment";
+            };
+
+            description += " from " +
+                    cargo.getOriginPort().getName() +
+                    " to " +
+                    cargo.getDestinationPort().getName();
+
+            cargo.setDescription(description);
         }
     }
