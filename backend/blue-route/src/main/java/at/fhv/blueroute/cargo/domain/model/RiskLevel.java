@@ -1,9 +1,9 @@
 package at.fhv.blueroute.cargo.domain.model;
 
 public enum RiskLevel {
-    LOW(1.0),
-    MEDIUM(1.2),
-    HIGH(1.5);
+    LOW(1.2),
+    MEDIUM(1.5),
+    HIGH(2.0);
 
     private final double fuelMultiplier;
 
