@@ -6,15 +6,18 @@ import at.fhv.blueroute.session.presentation.dto.PlayerSummaryResponse;
 import at.fhv.blueroute.session.presentation.dto.SessionResponse;
 import at.fhv.blueroute.session.domain.model.SessionPlayer;
 import at.fhv.blueroute.ship.application.mapper.ShipMapper;
+import at.fhv.blueroute.ship.application.service.CalculateShipSellPriceService;
 import org.springframework.stereotype.Component;
 
 @Component
 public class SessionMapper {
 
     private final ShipMapper shipMapper;
+    private final CalculateShipSellPriceService sellPriceService;
 
-    public SessionMapper(ShipMapper shipMapper) {
+    public SessionMapper(ShipMapper shipMapper, CalculateShipSellPriceService sellPriceService) {
         this.shipMapper = shipMapper;
+        this.sellPriceService = sellPriceService;
     }
 
     public SessionResponse toResponse(Session session) {
@@ -40,7 +43,10 @@ public class SessionMapper {
                 player.getBalance(),
                 sessionPlayer.getStatus().name(),
                 player.getShips().stream()
-                        .map(shipMapper::toResponse)
+                        .map(ship -> shipMapper.toResponse(
+                                ship,
+                                sellPriceService.calculate(ship)
+                        ))
                         .toList(),
                 player.getCurrentPort()
 
