@@ -1,5 +1,6 @@
 package at.fhv.blueroute.config;
 
+import at.fhv.blueroute.cargo.application.service.CalculateCargoValuesService;
 import at.fhv.blueroute.cargo.application.service.CalculateFuelConsumptionService;
 import at.fhv.blueroute.cargo.domain.model.Cargo;
 import at.fhv.blueroute.cargo.domain.model.RiskLevel;
@@ -28,10 +29,11 @@ public class CargoDataLoader {
     ) {
         return args -> {
 
+            CalculateCargoValuesService valueService = new CalculateCargoValuesService();
+            CalculateFuelConsumptionService fuelService = new CalculateFuelConsumptionService();
+
             List<Cargo> existingCargos = cargoRepo.findAll();
             if (!existingCargos.isEmpty()) {
-
-                CalculateFuelConsumptionService fuelService = new CalculateFuelConsumptionService();
 
                 for (Cargo cargo : existingCargos) {
 
@@ -40,37 +42,25 @@ public class CargoDataLoader {
                         continue;
                     }
 
-                    System.out.println(
-                            cargo.getOriginPort().getName() + " -> " +
-                                    cargo.getDestinationPort().getName() +
-                                    " | Fuel: " + cargo.getFuelConsumption()
-                    );
-
-                    if (cargo.getRequiredTicks() == 0) {
-                        int distance = DistanceCalculator.calculate(
-                                cargo.getOriginPort(),
-                                cargo.getDestinationPort()
-                        );
-                        int ticks = Math.max(1, distance / 10);
-                        cargo.setRequiredTicks(ticks);
-                    }
-
-                    if (cargo.getReward() == 0) {
-                        cargo.setReward(cargo.getPrice() * 1.2);
-                    }
-
-                    if (cargo.getRequiredCapacity() == 0) {
-                        cargo.setRequiredCapacity(100);
-                    }
-
-                    if (cargo.getRiskLevel() == null) {
-                        cargo.setRiskLevel(RiskLevel.LOW);
-                    }
-
                     int distance = DistanceCalculator.calculate(
                             cargo.getOriginPort(),
                             cargo.getDestinationPort()
                     );
+
+                    valueService.apply(cargo, distance);
+
+                    System.out.println(
+                            cargo.getOriginPort().getName() + " -> " +
+                                    cargo.getDestinationPort().getName() +
+                                    " | Price: " + cargo.getPrice() +
+                                    " | Reward: " + cargo.getReward() +
+                                    " | Risk: " + cargo.getRiskLevel()
+                    );
+
+                    if (cargo.getRequiredTicks() == 0) {
+                        int ticks = Math.max(1, distance / 10);
+                        cargo.setRequiredTicks(ticks);
+                    }
 
                     double fuel = fuelService.calculate(cargo, distance);
                     cargo.setFuelConsumption(fuel);
@@ -106,53 +96,53 @@ public class CargoDataLoader {
             Port vancouver = getPort(portRepo, "Vancouver");
 
             cargoRepo.saveAll(List.of(
-                    create(london, hamburg, 3000, 4200, 30, RiskLevel.LOW),
-                    create(hamburg, rotterdam, 2000, 2800, 25, RiskLevel.LOW),
-                    create(rotterdam, istanbul, 7000, 9800, 80, RiskLevel.MEDIUM),
+                    create(london, hamburg),
+                    create(hamburg, rotterdam),
+                    create(rotterdam, istanbul),
 
-                    create(lagos, capeTown, 7000, 11000, 90, RiskLevel.MEDIUM),
-                    create(capeTown, mombasa, 5000, 7600, 70, RiskLevel.MEDIUM),
+                    create(lagos, capeTown),
+                    create(capeTown, mombasa),
 
-                    create(dubai, mumbai, 4000, 5600, 40, RiskLevel.LOW),
-                    create(mumbai, singapore, 6000, 9000, 80, RiskLevel.MEDIUM),
-                    create(singapore, tokyo, 9000, 14000, 120, RiskLevel.HIGH),
-                    create(tokyo, seoul, 4000, 6000, 50, RiskLevel.LOW),
+                    create(dubai, mumbai),
+                    create(mumbai, singapore),
+                    create(singapore, tokyo),
+                    create(tokyo, seoul),
 
-                    create(newYork, losAngeles, 9000, 15000, 150, RiskLevel.HIGH),
-                    create(losAngeles, vancouver, 5000, 7600, 70, RiskLevel.MEDIUM),
-                    create(vancouver, lima, 6000, 9000, 80, RiskLevel.MEDIUM),
-                    create(lima, buenosAires, 4000, 6000, 50, RiskLevel.LOW),
-                    create(buenosAires, rio, 4000, 6000, 50, RiskLevel.LOW),
+                    create(newYork, losAngeles),
+                    create(losAngeles, vancouver),
+                    create(vancouver, lima),
+                    create(lima, buenosAires),
+                    create(buenosAires, rio),
 
-                    create(rio, lagos, 7000, 11000, 100, RiskLevel.MEDIUM),
-                    create(lagos, london, 8000, 13000, 120, RiskLevel.HIGH),
-                    create(london, newYork, 9000, 15000, 140, RiskLevel.HIGH),
-                    create(newYork, tokyo, 12000, 20000, 180, RiskLevel.HIGH),
-                    create(tokyo, sydney, 11000, 18000, 160, RiskLevel.HIGH),
-                    create(sydney, singapore, 8000, 12000, 100, RiskLevel.MEDIUM),
-                    create(singapore, dubai, 7000, 10500, 90, RiskLevel.MEDIUM),
-                    create(dubai, istanbul, 6000, 9000, 80, RiskLevel.MEDIUM),
+                    create(rio, lagos),
+                    create(lagos, london),
+                    create(london, newYork),
+                    create(newYork, tokyo),
+                    create(tokyo, sydney),
+                    create(sydney, singapore),
+                    create(singapore, dubai),
+                    create(dubai, istanbul),
 
-                    create(honolulu, losAngeles, 7000, 11000, 100, RiskLevel.MEDIUM),
-                    create(jakarta, singapore, 3000, 4200, 35, RiskLevel.LOW),
-                    create(shanghai, bangkok, 5000, 7600, 70, RiskLevel.MEDIUM)
+                    create(honolulu, losAngeles),
+                    create(jakarta, singapore),
+                    create(shanghai, bangkok)
             ));
-
             System.out.println("Cargo loaded safely");
         };
     }
 
-    private Cargo create(Port origin, Port dest, double price, double reward, int capacity, RiskLevel risk) {
+    private Cargo create(Port origin, Port dest) {
 
         Cargo c = new Cargo();
         c.setOriginPort(origin);
         c.setDestinationPort(dest);
-        c.setPrice(price);
-        c.setReward(reward);
-        c.setRequiredCapacity(capacity);
-        c.setRiskLevel(risk);
+
 
         int distance = DistanceCalculator.calculate(origin, dest);
+
+        CalculateCargoValuesService valueService = new CalculateCargoValuesService();
+        valueService.apply(c, distance);
+
         int requiredTicks = Math.max(1, distance / 10);
         c.setRequiredTicks(requiredTicks);
 
