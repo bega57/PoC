@@ -15,6 +15,8 @@ import at.fhv.blueroute.session.domain.model.SessionPlayerStatus;
 import at.fhv.blueroute.session.domain.model.SessionStatus;
 import at.fhv.blueroute.session.domain.repository.SessionRepository;
 import at.fhv.blueroute.session.presentation.dto.SessionResponse;
+import at.fhv.blueroute.session.application.exception.PlayerAlreadyActiveException;
+import at.fhv.blueroute.session.application.exception.PlayerAlreadyInSessionException;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
@@ -70,13 +72,14 @@ public class SessionService {
         SessionPlayer existingSessionPlayer = session.getSessionPlayerByPlayerId(playerId);
 
         if (existingSessionPlayer != null) {
-            existingSessionPlayer.markActive();
-        } else {
-            if (session.isFull()) {
-                throw new SessionFullException(sessionCode);
-            }
-            session.addPlayer(player, false);
+            throw new PlayerAlreadyInSessionException(playerId, sessionCode);
         }
+
+        if (session.isFull()) {
+            throw new SessionFullException(sessionCode);
+        }
+
+        session.addPlayer(player, false);
 
         if (session.getSessionPlayers().stream().anyMatch(sp -> sp.getStatus() == SessionPlayerStatus.ACTIVE)) {
             session.setStatus(SessionStatus.RUNNING);
@@ -191,5 +194,61 @@ public class SessionService {
         }
 
         sessionRepository.save(session);
+    }
+
+    public SessionResponse resumeSession(String sessionCode, Long playerId) {
+        System.out.println("RESUME 1 - start");
+
+        Session session = sessionRepository.findBySessionCode(sessionCode)
+                .orElseThrow(() -> new SessionNotFoundException(sessionCode));
+        System.out.println("RESUME 2 - session found: " + session.getSessionCode());
+
+        Player player = playerRepository.findById(playerId)
+                .orElseThrow(() -> new PlayerNotFoundException(playerId));
+        System.out.println("RESUME 3 - player found: " + player.getId());
+
+        SessionPlayer sessionPlayer = session.getSessionPlayerByPlayerId(player.getId());
+        System.out.println("RESUME 4 - sessionPlayer: " + sessionPlayer);
+
+        if (sessionPlayer == null) {
+            throw new SessionPlayerNotFoundException(playerId);
+        }
+
+        System.out.println("RESUME 5 - status before: " + sessionPlayer.getStatus());
+
+        if (sessionPlayer.getStatus() == SessionPlayerStatus.ACTIVE) {
+            throw new PlayerAlreadyActiveException(playerId, sessionCode);
+        }
+
+        sessionPlayer.markActive();
+        System.out.println("RESUME 6 - marked active");
+
+        boolean hasActivePlayers = session.getSessionPlayers().stream()
+                .anyMatch(sp -> sp.getStatus() == SessionPlayerStatus.ACTIVE);
+        System.out.println("RESUME 7 - hasActivePlayers: " + hasActivePlayers);
+
+        if (hasActivePlayers) {
+            session.setStatus(SessionStatus.RUNNING);
+        }
+
+        Session updatedSession = sessionRepository.save(session);
+        System.out.println("RESUME 8 - session saved");
+
+        if (updatedSession.getStatus() == SessionStatus.RUNNING) {
+            webSocketSender.sendSessionUpdate(
+                    updatedSession.getSessionCode(),
+                    new SessionStatusMessage(
+                            "SESSION_RUNNING",
+                            updatedSession.getSessionCode(),
+                            updatedSession.getStatus().name()
+                    )
+            );
+            System.out.println("RESUME 9 - websocket sent");
+        }
+
+        SessionResponse response = sessionMapper.toResponse(updatedSession);
+        System.out.println("RESUME 10 - mapped response");
+
+        return response;
     }
 }

@@ -22,6 +22,7 @@ function GamePage() {
 
     const [session, setSession] = useState(null);
     const [sidebarOpen, setSidebarOpen] = useState(true);
+    const [showLeaveModal, setShowLeaveModal] = useState(false);
 
     const [showWelcome, setShowWelcome] = useState(() => {
         return sessionStorage.getItem(`welcomeShown-${sessionCode}`) !== "true";
@@ -327,6 +328,14 @@ function GamePage() {
         }
     };
 
+    const openLeaveModal = () => {
+        setShowLeaveModal(true);
+    };
+
+    const closeLeaveModal = () => {
+        setShowLeaveModal(false);
+    };
+
     const getShipImage = (ship) => {
         switch (ship.type) {
             case "CHEAP":
@@ -441,7 +450,7 @@ function GamePage() {
                 setSidebarOpen={setSidebarOpen}
                 navigate={navigate}
                 sessionCode={sessionCode}
-                handleLeaveSession={handleLeaveSession}
+                handleLeaveSession={openLeaveModal}
             />
 
             <GameModals
@@ -460,6 +469,11 @@ function GamePage() {
                 storedPlayer={storedPlayer}
                 setSelectedShip={setSelectedShip}
                 sessionCode={sessionCode}
+
+                showLeaveModal={showLeaveModal}
+                setShowLeaveModal={setShowLeaveModal}
+                handleLeaveSession={handleLeaveSession}
+                closeLeaveModal={closeLeaveModal}
             />
 
         </div>

@@ -24,7 +24,7 @@ function JoinSessionForm({ player, onSessionJoined }) {
                 playerId: player.id,
             });
 
-            sessionStorage.setItem(`activePlayerId-${response.data.sessionCode}`, player.id);
+            sessionStorage.setItem(`activePlayerId-${response.data.sessionCode}`, String(player.id));
             sessionStorage.setItem(`player-${response.data.sessionCode}`, JSON.stringify(player));
 
             onSessionJoined(response.data);

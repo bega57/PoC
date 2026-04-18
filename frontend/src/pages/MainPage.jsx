@@ -4,6 +4,7 @@ import SockJS from "sockjs-client";
 import api from "../api/api";
 import CreatePlayerForm from "../components/CreatePlayerForm";
 import JoinSessionForm from "../components/JoinSessionForm";
+import ResumeSessionForm from "../components/ResumeSessionForm";
 import SessionDetails from "../components/SessionDetails";
 import CreateSessionButton from "../components/CreateSessionButton";
 import Toast from "../components/Toast";
@@ -104,6 +105,13 @@ function MainPage() {
                             player={player}
                             onSessionJoined={setSession}
                             showToast={showToast}
+                        />
+                    </div>
+
+                    <div className="card">
+                        <ResumeSessionForm
+                            onSessionResumed={setSession}
+                            onPlayerResumed={setPlayer}
                         />
                     </div>
 

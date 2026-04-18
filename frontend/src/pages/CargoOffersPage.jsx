@@ -126,7 +126,7 @@ function CargoOffersPage() {
                                     </div>
 
                                     <div className="cargo-stat-block">
-                                        <span className="cargo-stat-label">Ticks</span>
+                                        <span className="cargo-stat-label">Game Days</span>
                                         <span className="cargo-stat-value">{offer.requiredTicks}</span>
                                     </div>
 

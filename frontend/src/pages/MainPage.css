@@ -480,3 +480,12 @@ li {
 .form-card-content h2 {
     margin-bottom: 16px; /* statt 24px */
 }
+
+.resume-input-row {
+    display: flex;
+    gap: 0.8rem;
+}
+
+.resume-input-row input {
+    flex: 1;
+}
