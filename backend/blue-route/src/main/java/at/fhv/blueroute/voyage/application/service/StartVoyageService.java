@@ -49,7 +49,6 @@ public class StartVoyageService {
 
     public Voyage startVoyage(Long shipId, Long cargoId, String sessionCode) {
 
-        System.out.println("🔥 START VOYAGE CALLED 🔥");
         Ship ship = shipRepository.findById(shipId)
                 .orElseThrow(() -> new RuntimeException("Ship not found"));
 

@@ -18,6 +18,7 @@ export default function VoyagePage() {
     const [showVoyageStartedPopup, setShowVoyageStartedPopup] = useState(false);
     const [startedVoyageInfo, setStartedVoyageInfo] = useState(null);
     const [session, setSession] = useState(null);
+    const [errorMessage, setErrorMessage] = useState(null);
 
     const fetchSession = async () => {
         try {
@@ -164,6 +165,10 @@ export default function VoyagePage() {
     }, [filteredCargo, selectedCargoId]);
 
     const handleStartVoyage = async () => {
+        if (availableDestinations.length === 0) {
+            setErrorMessage("No cargo available from this port");
+            return;
+        }
         if (!selectedShip) {
             alert("Select a ship");
             return;
@@ -206,7 +211,11 @@ export default function VoyagePage() {
             setShowVoyageStartedPopup(true);
         } catch (err) {
             console.error(err);
-            alert(err.response?.data?.message || "Failed to start voyage");
+            setErrorMessage(
+                err.response?.data?.message ||
+                err.response?.data ||
+                "Failed to start voyage"
+            );
         }
     };
 
@@ -307,7 +316,9 @@ export default function VoyagePage() {
                         {!selectedDestination ? (
                             <p>Select a destination first</p>
                         ) : filteredCargo.length === 0 ? (
-                            <p>No cargo orders available for this destination</p>
+                            <p style={{ color: "#f87171" }}>
+                                🚫 No cargo available from {selectedShip?.currentPort}.
+                            </p>
                         ) : (
                             <>
                                 <select
@@ -393,6 +404,7 @@ export default function VoyagePage() {
                             !selectedShip ||
                             !selectedDestination ||
                             !selectedCargoId ||
+                            availableDestinations.length === 0 ||
                             isShipBusy(selectedShip?.id) ||
                             (selectedShip && selectedCargo && selectedShip.cargoCapacity < selectedCargo.requiredCapacity)
                         }
@@ -428,6 +440,20 @@ export default function VoyagePage() {
                     </div>
                 </div>
             )}
+
+            {errorMessage && (
+                <div className="welcome-overlay">
+                    <div className="welcome-modal">
+                        <h2>🚫 Error</h2>
+                        <p>{errorMessage}</p>
+
+                        <button onClick={() => setErrorMessage(null)}>
+                            OK
+                        </button>
+                    </div>
+                </div>
+            )}
+
 
         </div>
     );
