@@ -356,6 +356,7 @@ export default function VoyagePage() {
                                             <p>Reward: {item.reward} Talers</p>
                                             <p>Required Capacity: {item.requiredCapacity}</p>
                                             <p>Risk: {item.riskLevel}</p>
+                                            <p>Description: {item.description}</p>
                                             <p>Estimated Duration: {item.requiredTicks} days</p>
                                         </div>
                                     ))}
@@ -379,6 +380,7 @@ export default function VoyagePage() {
                                 <p>Reward: {selectedCargo.reward} Talers</p>
                                 <p>Required Capacity: {selectedCargo.requiredCapacity}</p>
                                 <p>Risk: {selectedCargo.riskLevel}</p>
+                                <p>Description: {selectedCargo.description}</p>
                                 <p>Expected Profit: {selectedCargo.reward - selectedCargo.price} Talers</p>
                                 {selectedCargo && session && (
                                     <p>

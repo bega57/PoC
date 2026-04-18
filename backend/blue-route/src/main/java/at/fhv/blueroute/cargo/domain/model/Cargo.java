@@ -32,6 +32,9 @@ public class Cargo {
 
     private double fuelConsumption;
 
+    @Column
+    private String description;
+
     public Cargo() {}
 
     public Long getId() {
@@ -70,6 +73,8 @@ public class Cargo {
         return requiredTicks;
     }
 
+    public String getDescription() { return description; }
+
     public void setOriginPort(Port originPort) {
         this.originPort = originPort;
     }
@@ -100,5 +105,9 @@ public class Cargo {
 
     public void setFuelConsumption(double fuelConsumption) {
         this.fuelConsumption = fuelConsumption;
+    }
+
+    public void setDescription(String description) {
+        this.description = description;
     }
 }
