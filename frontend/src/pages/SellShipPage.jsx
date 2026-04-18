@@ -66,12 +66,22 @@ function SellShipPage() {
 
     const getSellPrice = (ship) => {
         const basePrices = {
-            CHEAP: 1000,
-            MEDIUM: 2500,
-            EXPENSIVE: 4000
+            CHEAP: 12000,
+            MEDIUM: 30000,
+            EXPENSIVE: 60000
         };
 
-        return Math.floor(basePrices[ship.type] * (ship.condition / 100));
+        const base = basePrices[ship.type];
+
+        const depreciation = 0.85;
+
+        const conditionFactor = ship.condition / 100; // 0–1
+
+        const fuelFactor = 0.9 + (ship.fuelLevel / 100) * 0.1;
+
+        const price = base * depreciation * conditionFactor * fuelFactor;
+
+        return Math.floor(price);
     };
 
     const handleSellShip = async () => {
