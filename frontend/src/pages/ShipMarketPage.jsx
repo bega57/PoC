@@ -112,7 +112,8 @@ function ShipMarketPage() {
         setShowBuyModal(false);
     };
 
-    const handleBuyShip = async () => {
+    const handleBuyShip = async (e) => {
+        e.preventDefault();
         if (!shipName.trim()) {
             setMessage("Please enter a ship name.");
             return;
@@ -244,43 +245,44 @@ function ShipMarketPage() {
 
                         <p className="modal-price">Price: ${selectedShip.price}</p>
 
-                        <input
-                            type="text"
-                            placeholder="Enter ship name"
-                            value={shipName}
-                            onChange={(e) => setShipName(e.target.value)}
-                        />
-
-                        {playerNeedsCompanyName && (
+                        <form onSubmit={handleBuyShip}>
                             <input
                                 type="text"
-                                placeholder="Enter company name"
-                                value={companyName}
-                                onChange={(e) => setCompanyName(e.target.value)}
+                                placeholder="Enter ship name"
+                                value={shipName}
+                                onChange={(e) => setShipName(e.target.value)}
                             />
-                        )}
 
-                        {message && <p className="modal-message">{message}</p>}
+                            {playerNeedsCompanyName && (
+                                <input
+                                    type="text"
+                                    placeholder="Enter company name"
+                                    value={companyName}
+                                    onChange={(e) => setCompanyName(e.target.value)}
+                                />
+                            )}
 
-                        <div className="modal-actions">
-                            <button
-                                type="button"
-                                className="secondary-button"
-                                onClick={closeBuyModal}
-                                disabled={isBuying}
-                            >
-                                Cancel
-                            </button>
+                            {message && <p className="modal-message">{message}</p>}
 
-                            <button
-                                type="button"
-                                className="buy-button"
-                                onClick={handleBuyShip}
-                                disabled={isBuying}
-                            >
-                                {isBuying ? "Buying..." : "Confirm Purchase"}
-                            </button>
-                        </div>
+                            <div className="modal-actions">
+                                <button
+                                    type="button"
+                                    className="secondary-button"
+                                    onClick={closeBuyModal}
+                                    disabled={isBuying}
+                                >
+                                    Cancel
+                                </button>
+
+                                <button
+                                    type="submit"
+                                    className="buy-button"
+                                    disabled={isBuying}
+                                >
+                                    {isBuying ? "Buying..." : "Confirm Purchase"}
+                                </button>
+                            </div>
+                        </form>
                     </div>
                 </div>
             )}

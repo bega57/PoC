@@ -1,12 +1,13 @@
 import { useState } from "react";
 import api from "../api/api";
 
-function JoinSessionForm({ player, onSessionJoined }) {
+function JoinSessionForm({ player, onSessionJoined, showToast }) {
     const [sessionCode, setSessionCode] = useState("");
     const [message, setMessage] = useState("");
     const [isError, setIsError] = useState(false);
 
-    const handleJoinSession = async () => {
+    const handleJoinSession = async (e) => {
+        e.preventDefault();
         if (!player) {
             setMessage("Player is required.");
             setIsError(true);
@@ -31,10 +32,12 @@ function JoinSessionForm({ player, onSessionJoined }) {
             setMessage(`Joined session: ${response.data.sessionCode}`);
             setIsError(false);
             setSessionCode("");
+            showToast(`Joined session: ${response.data.sessionCode}`, "success");
         } catch (error) {
             console.error(error);
             setMessage(error.response?.data?.message || "Failed to join session");
             setIsError(true);
+            showToast(error.response?.data?.message || "Failed to join session", "error");
         }
     };
 
@@ -42,27 +45,29 @@ function JoinSessionForm({ player, onSessionJoined }) {
         <div className="form-card-content">
             <h2>Join Session</h2>
 
-            <input
-                type="text"
-                placeholder="Enter session code"
-                value={sessionCode}
-                onChange={(e) => setSessionCode(e.target.value)}
-            />
+            <form onSubmit={handleJoinSession}>
+                <input
+                    type="text"
+                    placeholder="Enter session code"
+                    value={sessionCode}
+                    onChange={(e) => setSessionCode(e.target.value)}
+                />
 
-            {message && (
-                <p
-                    className="form-message"
-                    style={{
-                        color: isError ? "#ff6b6b" : "#4ade80",
-                    }}
-                >
-                    {message}
-                </p>
-            )}
+                {message && (
+                    <p
+                        className="form-message"
+                        style={{
+                            color: isError ? "#ff6b6b" : "#4ade80",
+                        }}
+                    >
+                        {message}
+                    </p>
+                )}
 
-            <button className="main-action-button" onClick={handleJoinSession}>
-                Join Session
-            </button>
+                <button type="submit" className="main-action-button">
+                    Join Session
+                </button>
+            </form>
         </div>
     );
 }

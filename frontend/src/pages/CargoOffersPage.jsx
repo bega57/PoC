@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
+import { useNavigate } from "react-router-dom";
 import axios from "axios";
 import "./CargoOffersPage.css";
 
@@ -6,6 +7,7 @@ function CargoOffersPage() {
     const [offers, setOffers] = useState([]);
     const [fromPort, setFromPort] = useState("");
     const [sortBy, setSortBy] = useState("");
+    const navigate = useNavigate();
 
     useEffect(() => {
         fetchOffers();
@@ -60,6 +62,15 @@ function CargoOffersPage() {
             <div className="cargo-overlay"></div>
 
             <div className="cargo-content">
+                <div className="cargo-topbar">
+                    <button
+                        className="back-button"
+                        onClick={() => navigate(-1)}
+                    >
+                        ← Back
+                    </button>
+                </div>
+
                 <div className="cargo-header">
                     <h1>Cargo Offers</h1>
                 </div>

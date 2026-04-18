@@ -7,7 +7,8 @@ function ResumeSessionForm({ onSessionResumed, onPlayerResumed }) {
     const [message, setMessage] = useState("");
     const [isError, setIsError] = useState(false);
 
-    const handleResumeSession = async () => {
+    const handleResumeSession = async (e) => {
+        e.preventDefault();
         if (!sessionCode.trim()) {
             setMessage("Session code is required.");
             setIsError(true);
@@ -49,36 +50,38 @@ function ResumeSessionForm({ onSessionResumed, onPlayerResumed }) {
         <div className="form-card-content">
             <h2>Resume Session</h2>
 
-            <div className="resume-input-row">
-                <input
-                    type="text"
-                    placeholder="Session code"
-                    value={sessionCode}
-                    onChange={(e) => setSessionCode(e.target.value)}
-                />
+            <form onSubmit={handleResumeSession}>
+                <div className="resume-input-row">
+                    <input
+                        type="text"
+                        placeholder="Session code"
+                        value={sessionCode}
+                        onChange={(e) => setSessionCode(e.target.value)}
+                    />
 
-                <input
-                    type="number"
-                    placeholder="Player ID"
-                    value={playerId}
-                    onChange={(e) => setPlayerId(e.target.value)}
-                />
-            </div>
+                    <input
+                        type="number"
+                        placeholder="Player ID"
+                        value={playerId}
+                        onChange={(e) => setPlayerId(e.target.value)}
+                    />
+                </div>
 
-            {message && (
-                <p
-                    className="form-message"
-                    style={{
-                        color: isError ? "#ff6b6b" : "#4ade80",
-                    }}
-                >
-                    {message}
-                </p>
-            )}
+                {message && (
+                    <p
+                        className="form-message"
+                        style={{
+                            color: isError ? "#ff6b6b" : "#4ade80",
+                        }}
+                    >
+                        {message}
+                    </p>
+                )}
 
-            <button className="main-action-button" onClick={handleResumeSession}>
-                Resume Session
-            </button>
+                <button type="submit" className="main-action-button">
+                    Resume Session
+                </button>
+            </form>
         </div>
     );
 }
