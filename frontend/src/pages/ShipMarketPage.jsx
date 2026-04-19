@@ -26,7 +26,7 @@ function ShipMarketPage() {
             type: "CHEAP",
             name: "Cutter",
             image: cheapSide,
-            price: 1000,
+            price: 12000,
             speed: "Slow",
             capacity: "Low",
             description: "A small starter vessel for short-distance trading."
@@ -36,7 +36,7 @@ function ShipMarketPage() {
             type: "MEDIUM",
             name: "Brigantine",
             image: middleSide,
-            price: 2500,
+            price: 30000,
             speed: "Medium",
             capacity: "Medium",
             description: "A versatile mid-range ship with solid cargo capacity."
@@ -46,7 +46,7 @@ function ShipMarketPage() {
             type: "EXPENSIVE",
             name: "Galleon",
             image: expensiveSide,
-            price: 4000,
+            price: 60000,
             speed: "Fast",
             capacity: "High",
             description: "A powerful long-distance trading ship with high capacity."

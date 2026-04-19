@@ -22,13 +22,15 @@ public class ShipService {
     private final JpaShipRepository shipRepository;
     private final PlayerRepository playerRepository;
     private final ShipMapper shipMapper;
+    private final CalculateShipSellPriceService sellPriceService;
 
     public ShipService(JpaShipRepository shipRepository,
                        PlayerRepository playerRepository,
-                       ShipMapper shipMapper) {
+                       ShipMapper shipMapper, CalculateShipSellPriceService sellPriceService) {
         this.shipRepository = shipRepository;
         this.playerRepository = playerRepository;
         this.shipMapper = shipMapper;
+        this.sellPriceService = sellPriceService;
     }
 
     public ShipResponse buyShip(BuyShipRequest request) {
@@ -75,13 +77,18 @@ public class ShipService {
         playerRepository.save(player);
         Ship savedShip = shipRepository.save(ship);
 
-        return shipMapper.toResponse(savedShip);
+        double sellPrice = sellPriceService.calculate(savedShip);
+
+        return shipMapper.toResponse(savedShip, sellPrice);
     }
 
     public List<ShipResponse> getShipsByPlayer(Long playerId) {
         return shipRepository.findByOwnerId(playerId)
                 .stream()
-                .map(shipMapper::toResponse)
+                .map(ship -> {
+                    double sellPrice = sellPriceService.calculate(ship);
+                    return shipMapper.toResponse(ship, sellPrice);
+                })
                 .toList();
     }
 
@@ -96,14 +103,13 @@ public class ShipService {
             throw new IllegalArgumentException("This ship does not belong to the player.");
         }
 
-        double basePrice = ship.getType().getPrice();
-        double sellPrice = basePrice * (ship.getCondition() / 100.0);
+        double sellPrice = sellPriceService.calculate(ship);
 
         player.setBalance(player.getBalance() + sellPrice);
 
         shipRepository.delete(ship);
         playerRepository.save(player);
 
-        return shipMapper.toResponse(ship);
+        return shipMapper.toResponse(ship, sellPrice);
     }
 }

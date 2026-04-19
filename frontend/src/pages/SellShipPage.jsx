@@ -17,6 +17,7 @@ function SellShipPage() {
     const [message, setMessage] = useState("");
     const [toastMessage, setToastMessage] = useState("");
     const [isSelling, setIsSelling] = useState(false);
+    const [ships, setShips] = useState([]);
 
     useEffect(() => {
         const fetchSession = async () => {
@@ -37,14 +38,25 @@ function SellShipPage() {
         (player) => player.id === activePlayerId
     );
 
-    const playerShips = currentPlayer?.ships || [];
+    const playerShips = ships;
 
-    // default selection
     useEffect(() => {
         if (playerShips.length > 0 && !selectedShip) {
             setSelectedShip(playerShips[0]);
         }
     }, [playerShips, selectedShip]);
+
+    useEffect(() => {
+        if (!activePlayerId) return;
+
+        const fetchShips = async () => {
+            const res = await api.get(`/ships/player/${activePlayerId}`);
+            console.log("SHIPS RESPONSE:", res.data);
+            setShips(res.data);
+        };
+
+        fetchShips();
+    }, [activePlayerId]);
 
     const showToast = (text) => {
         setToastMessage(text);
@@ -64,16 +76,6 @@ function SellShipPage() {
         return type;
     };
 
-    const getSellPrice = (ship) => {
-        const basePrices = {
-            CHEAP: 1000,
-            MEDIUM: 2500,
-            EXPENSIVE: 4000
-        };
-
-        return Math.floor(basePrices[ship.type] * (ship.condition / 100));
-    };
-
     const handleSellShip = async () => {
         try {
             setIsSelling(true);
@@ -87,10 +89,13 @@ function SellShipPage() {
             const refreshed = await api.get(`/sessions/${sessionCode}`);
             setSession(refreshed.data);
 
+            const refreshedShips = await api.get(`/ships/player/${activePlayerId}`);
+            setShips(refreshedShips.data);
+
             setShowSellModal(false);
             setSelectedShip(null);
 
-            showToast(`Sold ${selectedShip.name} for $${getSellPrice(selectedShip)}`);
+            showToast(`Sold ${selectedShip.name} for $${selectedShip.sellPrice}`);
         } catch (error) {
             console.error(error);
             setMessage("Failed to sell ship.");
@@ -165,7 +170,7 @@ function SellShipPage() {
                                         <div className="ship-title-row">
                                             <h2>{ship.name}</h2>
                                             <span className="ship-price">
-                                                ${getSellPrice(ship)}
+                                                ${ship.sellPrice}
                                             </span>
                                         </div>
 
@@ -196,7 +201,7 @@ function SellShipPage() {
                         <div className="buy-panel-text">
                             <h3>Selected Ship</h3>
                             <p>
-                                {selectedShip.name} — ${getSellPrice(selectedShip)}
+                                {selectedShip.name} — ${selectedShip.sellPrice}
                             </p>
                         </div>
 
@@ -216,7 +221,7 @@ function SellShipPage() {
                         <h2>Sell {selectedShip.name}</h2>
 
                         <p className="modal-price">
-                            You will receive: ${getSellPrice(selectedShip)}
+                            You will receive: ${selectedShip.sellPrice}
                         </p>
 
                         {message && <p className="modal-message">{message}</p>}

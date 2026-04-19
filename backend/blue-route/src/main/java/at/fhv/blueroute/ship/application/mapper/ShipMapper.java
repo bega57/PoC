@@ -7,8 +7,8 @@ import org.springframework.stereotype.Component;
 @Component
 public class ShipMapper {
 
-    public ShipResponse toResponse(Ship ship) {
-        return new ShipResponse(
+    public ShipResponse toResponse(Ship ship, double sellPrice) {
+        ShipResponse response = new ShipResponse(
                 ship.getId(),
                 ship.getName(),
                 ship.getType().name(),
@@ -21,5 +21,10 @@ public class ShipMapper {
                 ship.isTraveling(),
                 ship.getCargoCapacity()
         );
+
+        response.setSellPrice(sellPrice);
+
+        return response;
+
     }
 }

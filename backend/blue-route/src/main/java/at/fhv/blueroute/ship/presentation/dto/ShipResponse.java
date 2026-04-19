@@ -13,6 +13,7 @@ public class ShipResponse {
     private boolean traveling;
     private String currentPort;
     private double cargoCapacity;
+    private Double sellPrice;
 
 
     public ShipResponse() {
@@ -69,6 +70,10 @@ public class ShipResponse {
         return cargoCapacity;
     }
 
+    public Double getSellPrice() {
+        return sellPrice;
+    }
+
     public void setCurrentPort(String currentPort) {
         this.currentPort = currentPort;
     }
@@ -83,6 +88,10 @@ public class ShipResponse {
 
     public void setCargoCapacity(double cargoCapacity) {
         this.cargoCapacity = cargoCapacity;
+    }
+
+    public void setSellPrice(Double sellPrice) {
+        this.sellPrice = sellPrice;
     }
 
 }

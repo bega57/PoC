@@ -1,9 +1,9 @@
 package at.fhv.blueroute.ship.domain.model;
 
 public enum ShipType {
-    CHEAP(10, 50, 1000),
-    MEDIUM(20, 100, 2500),
-    EXPENSIVE(30, 200, 4000);
+    CHEAP(10, 50, 12000),
+    MEDIUM(20, 100, 30000),
+    EXPENSIVE(30, 200, 60000);
 
     private final int speed;
     private final int capacity;
