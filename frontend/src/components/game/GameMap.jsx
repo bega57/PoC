@@ -5,6 +5,24 @@ import {
     Marker
 } from "react-simple-maps";
 
+function getPositionOnRoute(route, progress) {
+    if (!route || route.length < 2) return null;
+
+    const totalSegments = route.length - 1;
+    const segmentProgress = progress * totalSegments;
+
+    const index = Math.floor(segmentProgress);
+    const localProgress = segmentProgress - index;
+
+    const from = route[index];
+    const to = route[index + 1] || from;
+
+    const lng = from[0] + (to[0] - from[0]) * localProgress;
+    const lat = from[1] + (to[1] - from[1]) * localProgress;
+
+    return [lng, lat];
+}
+
 function GameMap({
                      session,
                      ports,
@@ -204,22 +222,30 @@ function GameMap({
 
                     if (voyage) {
 
-                        const origin = ports.find(p => p.name === voyage.originPort);
-                        const dest = ports.find(p => p.name === voyage.destinationPort);
-                        if (!origin || !dest) return null;
-
                         const progress = voyage.progress ?? 0;
 
-                        const lat =
-                            origin.latitude +
-                            (dest.latitude - origin.latitude) * progress;
+                        let position;
 
-                        const lon =
-                            origin.longitude +
-                            (dest.longitude - origin.longitude) * progress;
+                        if (voyage.route && voyage.route.length > 1) {
+                            position = getPositionOnRoute(voyage.route, progress);
+                        } else {
+                            const origin = ports.find(p => p.name === voyage.originPort);
+                            const dest = ports.find(p => p.name === voyage.destinationPort);
+                            if (!origin || !dest) return null;
+
+                            const lat =
+                                origin.latitude +
+                                (dest.latitude - origin.latitude) * progress;
+
+                            const lon =
+                                origin.longitude +
+                                (dest.longitude - origin.longitude) * progress;
+
+                            position = [lon, lat];
+                        }
 
                         return (
-                            <Marker key={ship.id} coordinates={[lon, lat]}>
+                            <Marker key={ship.id} coordinates={position}>
 
                                 <>
                                     <image

@@ -51,7 +51,6 @@ function SellShipPage() {
 
         const fetchShips = async () => {
             const res = await api.get(`/ships/player/${activePlayerId}`);
-            console.log("SHIPS RESPONSE:", res.data);
             setShips(res.data);
         };
 
