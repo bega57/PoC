@@ -29,7 +29,6 @@ public class StartVoyageService {
     private final PlayerRepository playerRepository;
     private final JpaSessionRepository sessionRepository;
     private final WebSocketSender webSocketSender;
-    private final CalculateDeteriorationService deteriorationService = new CalculateDeteriorationService();
 
     public StartVoyageService(
             JpaVoyageRepository voyageRepository,
@@ -58,6 +57,10 @@ public class StartVoyageService {
 
         if (ship.getCondition() <= 0) {
             throw new VoyageException("Ship is broken and needs repair");
+        }
+
+        if (ship.getCondition() < 20) {
+            throw new VoyageException("Ship condition too low for voyage");
         }
 
         boolean isBusy = voyageRepository
@@ -96,6 +99,7 @@ public class StartVoyageService {
         if (ship.getFuelLevel() < cargo.getFuelConsumption()) {
             throw new VoyageException("Not enough fuel for this voyage");
         }
+
 
         ship.getOwner().setBalance(ship.getOwner().getBalance() - cargo.getPrice());
         playerRepository.save(ship.getOwner());
@@ -137,20 +141,6 @@ public class StartVoyageService {
         voyage.setReward(cargo.getReward());
         voyage.setRewardGranted(false);
 
-
-        double fuelUsed = cargo.getFuelConsumption();
-        ship.setFuelLevel((int)(ship.getFuelLevel() - fuelUsed));
-
-
-        double damage = deteriorationService.calculate(cargo);
-
-        ship.setCondition(Math.max(0, (int)(ship.getCondition() - damage)));
-
-        System.out.println("Fuel used: " + fuelUsed);
-        System.out.println("Remaining fuel: " + ship.getFuelLevel());
-
-        System.out.println("Damage taken: " + damage);
-        System.out.println("Ship condition after voyage: " + ship.getCondition());
 
         ship.setTraveling(true);
         ship.setCurrentPort(null);
