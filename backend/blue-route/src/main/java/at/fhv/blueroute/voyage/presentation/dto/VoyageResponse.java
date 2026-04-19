@@ -1,5 +1,7 @@
 package at.fhv.blueroute.voyage.presentation.dto;
 
+import java.util.List;
+
 public class VoyageResponse {
 
     public Long id;
@@ -15,4 +17,6 @@ public class VoyageResponse {
     public double progress;
 
     public double reward;
+
+    public List<double[]> route;
 }
