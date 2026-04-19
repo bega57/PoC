@@ -20,19 +20,13 @@ public class FinishVoyageService {
     private final JpaVoyageRepository voyageRepository;
     private final JpaShipRepository shipRepository;
     private final PlayerRepository playerRepository;
-    private final JpaCargoRepository cargoRepository;
-    private final CalculateDeteriorationService deteriorationService;
 
     public FinishVoyageService(JpaVoyageRepository voyageRepository,
                                JpaShipRepository shipRepository,
-                               PlayerRepository playerRepository,
-                               JpaCargoRepository cargoRepository,
-                               CalculateDeteriorationService deteriorationService) {
+                               PlayerRepository playerRepository) {
         this.voyageRepository = voyageRepository;
         this.shipRepository = shipRepository;
         this.playerRepository = playerRepository;
-        this.cargoRepository = cargoRepository;
-        this.deteriorationService = deteriorationService;
     }
 
     public void finishVoyage(Long voyageId) {
@@ -48,18 +42,6 @@ public class FinishVoyageService {
                 .orElseThrow(() -> new RuntimeException("Ship not found"));
 
 
-        Cargo cargo = cargoRepository.findById(voyage.getCargoId())
-                .orElseThrow();
-
-
-        double fuelUsed = cargo.getFuelConsumption();
-        ship.setFuelLevel(Math.max(0, (int)(ship.getFuelLevel() - fuelUsed)));
-
-
-        double damage = deteriorationService.calculate(cargo);
-        ship.setCondition(Math.max(0, (int)(ship.getCondition() - damage)));
-
-
         ship.setCurrentPort(voyage.getDestinationPort());
         ship.setTraveling(false);
 
@@ -67,9 +49,6 @@ public class FinishVoyageService {
         if (owner == null) {
             throw new RuntimeException("Ship owner not found");
         }
-
-        System.out.println("Reward = " + voyage.getReward());
-        System.out.println("Balance before finish = " + owner.getBalance());
 
         if (!voyage.isRewardGranted()) {
             owner.setBalance(owner.getBalance() + voyage.getReward());
@@ -82,6 +61,5 @@ public class FinishVoyageService {
         shipRepository.save(ship);
         voyageRepository.save(voyage);
 
-        System.out.println("Balance after finish = " + owner.getBalance());
     }
 }

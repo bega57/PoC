@@ -181,8 +181,11 @@ function CompanyPage() {
 
                                     <div className="fleet-info">
                                         <h3>{ship.name}</h3>
-                                        <p>Type: {getShipDisplayName(ship.type)}</p>
-                                        <p>Location: {getShipLocationText(ship)}</p>
+
+                                        <p className="ship-type">{getShipDisplayName(ship.type)}</p>
+                                        <p className="ship-location">
+                                            {getShipLocationText(ship)}
+                                        </p>
 
                                         {(() => {
                                             const voyage = getRunningVoyageForShip(ship.id);
@@ -190,20 +193,65 @@ function CompanyPage() {
 
                                             if (!progress) return null;
 
+                                            const percent = (progress.current / progress.total) * 100;
+
                                             return (
-                                                <p style={{
-                                                    color: "#22c55e",
-                                                    fontWeight: "600",
-                                                    marginTop: "4px"
-                                                }}>
-                                                    🗓️ Day {progress.current} / {progress.total}
-                                                </p>
+                                                <div className="voyage-progress">
+                                                    <span>Voyage Progress</span>
+                                                    <div className="bar">
+                                                        <div style={{ width: `${percent}%` }} />
+                                                        <span className="bar-text">
+                        {progress.current} / {progress.total}
+                    </span>
+                                                    </div>
+                                                </div>
                                             );
                                         })()}
-                                        <p>Condition: {ship.condition}%</p>
-                                        <p>Fuel: {ship.fuelLevel}%</p>
-                                        <p>Capacity: {ship.cargoCapacity}</p>
-                                        <p>Speed: {ship.speed}</p>
+
+                                        <div className="ship-stats">
+                                            <div className="stat-block">
+                                                <span className="stat-label">Fuel</span>
+                                                <div className="bar small">
+                                                    <div
+                                                        style={{
+                                                            width: `${ship.fuelLevel}%`,
+                                                            background: ship.fuelLevel < 20 ? "#ef4444" :
+                                                                ship.fuelLevel < 50 ? "#f59e0b" :
+                                                                    "#22c55e"
+                                                        }}
+                                                    />
+                                                    <span className="bar-text">{ship.fuelLevel?.toFixed(0)}%</span>
+                                                </div>
+                                            </div>
+
+                                            <div className="stat-block">
+                                                <span className="stat-label">Condition</span>
+                                                <div className="bar small">
+                                                    <div
+                                                        style={{
+                                                            width: `${ship.condition}%`,
+                                                            background: ship.condition < 20 ? "#ef4444" :
+                                                                ship.condition < 50 ? "#f59e0b" :
+                                                                    "#22c55e"
+                                                        }}
+                                                    />
+                                                    <span className="bar-text">{ship.condition?.toFixed(0)}%</span>
+                                                </div>
+                                            </div>
+
+                                            <div className="stat-block">
+                                                <span className="stat-label">Capacity</span>
+                                                <div className="bar small capacity-bar">
+                                                    <div style={{ width: "100%" }} />
+                                                    <span className="bar-text">{ship.cargoCapacity}</span>
+                                                </div>
+                                            </div>
+
+                                            <div className="stat-block">
+                                                <span className="stat-label">Speed</span>
+                                                <span className="stat-value">{ship.speed}</span>
+                                            </div>
+                                        </div>
                                     </div>
                                 </div>
                             ))}

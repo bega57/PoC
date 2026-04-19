@@ -196,15 +196,15 @@
     display: flex;
     flex-direction: column;
     gap: 8px;
-    padding: 16px;
+    padding: 12px;
     border-radius: 16px;
     background: rgba(15, 23, 42, 0.92);
     border: 1px solid rgba(96, 165, 250, 0.14);
 }
 
 .stat-label {
-    color: #8ca3c2;
-    font-size: 14px;
+    font-size: 13px;
+    color: #cbd5f5;
 }
 
 .stat-value {
@@ -418,4 +418,46 @@
 
 .damage {
     color: #f97316;
+}
+
+.bar.small {
+    height: 6px;
+    background: rgba(255,255,255,0.1);
+    border-radius: 6px;
+    overflow: hidden;
+    position: relative;
+    opacity: 0.8;
+}
+
+.bar.small div {
+    height: 100%;
+    border-radius: 6px;
+}
+
+.bar-text {
+    font-size: 10px;
+    opacity: 0.7;
+}
+
+.badge {
+    background: linear-gradient(135deg, #fde047, #f59e0b);
+    color: #1e293b;
+    padding: 4px 10px;
+    border-radius: 10px;
+    font-size: 11px;
+    font-weight: 700;
+    box-shadow:
+            0 0 6px rgba(250, 204, 21, 0.6),
+            0 0 12px rgba(250, 204, 21, 0.3);
+}
+
+.ship-meta {
+    margin-top: 6px;
+}
+
+.ship-profit {
+    color: #38bdf8;
+    font-size: 12px;
+    font-weight: 500;
+    opacity: 0.8;
 }
