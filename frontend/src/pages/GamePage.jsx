@@ -130,10 +130,7 @@ function GamePage() {
 
         const backendShip = me.ships[0];
 
-        setSelectedShip({
-            ...backendShip,
-            currentPort: backendShip.currentPort
-        });
+        setSelectedShip(backendShip);
 
     }, [session]);
 

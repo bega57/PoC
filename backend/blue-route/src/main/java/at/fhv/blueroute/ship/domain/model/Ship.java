@@ -25,9 +25,8 @@ public class Ship {
 
     private Integer speed;
 
-    private Integer condition;
-
-    private Integer fuelLevel;
+    private Double condition;
+    private Double fuelLevel;
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "owner_id")
@@ -47,8 +46,8 @@ public class Ship {
         this.speed = speed;
         this.owner = owner;
 
-        this.condition = 100;
-        this.fuelLevel = 100;
+        this.condition = 100.0;
+        this.fuelLevel = 100.0;
     }
 
     public Long getId() {
@@ -97,19 +96,19 @@ public class Ship {
         this.owner = owner;
     }
 
-    public Integer getCondition() {
+    public Double getCondition() {
         return condition;
     }
 
-    public void setCondition(Integer condition) {
+    public void setCondition(Double condition) {
         this.condition = condition;
     }
 
-    public Integer getFuelLevel() {
+    public Double getFuelLevel() {
         return fuelLevel;
     }
 
-    public void setFuelLevel(Integer fuelLevel) {
+    public void setFuelLevel(Double fuelLevel) {
         this.fuelLevel = fuelLevel;
     }
 
