@@ -2,7 +2,9 @@ package at.fhv.blueroute.cargo.application.service;
 
 import at.fhv.blueroute.cargo.domain.model.Cargo;
 import at.fhv.blueroute.cargo.domain.model.RiskLevel;
+import org.springframework.stereotype.Service;
 
+@Service
 public class CalculateDeteriorationService {
 
     public double calculate(Cargo cargo) {
