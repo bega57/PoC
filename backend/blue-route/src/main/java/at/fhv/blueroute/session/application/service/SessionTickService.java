@@ -6,6 +6,7 @@ import at.fhv.blueroute.session.domain.model.Session;
 import at.fhv.blueroute.session.domain.model.SessionStatus;
 import at.fhv.blueroute.session.infrastructure.persistence.JpaSessionRepository;
 import at.fhv.blueroute.ship.infrastructure.persistence.JpaShipRepository;
+import at.fhv.blueroute.voyage.application.service.FinishVoyageService;
 import at.fhv.blueroute.voyage.domain.model.VoyageStatus;
 import jakarta.transaction.Transactional;
 import org.springframework.stereotype.Service;
@@ -24,15 +25,18 @@ public class SessionTickService {
     private final JpaVoyageRepository voyageRepository;
     private final JpaShipRepository shipRepository;
     private final WebSocketSender webSocketSender;
+    private final FinishVoyageService finishVoyageService;
 
     public SessionTickService(JpaSessionRepository sessionRepository,
                               JpaVoyageRepository voyageRepository,
                               JpaShipRepository shipRepository,
-                              WebSocketSender webSocketSender) {
+                              WebSocketSender webSocketSender,
+                              FinishVoyageService finishVoyageService) {
         this.sessionRepository = sessionRepository;
         this.voyageRepository = voyageRepository;
         this.shipRepository = shipRepository;
         this.webSocketSender = webSocketSender;
+        this.finishVoyageService = finishVoyageService;
     }
 
     public void processTicks() {
@@ -58,24 +62,10 @@ public class SessionTickService {
 
                 if (session.getCurrentTick() >= v.getArrivalTick()) {
 
-                    var ship = shipRepository.findById(v.getShipId()).orElseThrow();
-
+                    finishVoyageService.finishVoyage(v.getId());
+                    var updatedShip = shipRepository.findById(v.getShipId()).orElseThrow();
+                    System.out.println("Fuel AFTER finish: " + updatedShip.getFuelLevel());
                     System.out.println("Voyage finished for ship " + v.getShipId());
-                    System.out.println("Ship fuel after voyage: " + ship.getFuelLevel());
-
-                    v.setStatus(VoyageStatus.FINISHED);
-                    v.setArrivalTime(LocalDateTime.now());
-
-                    ship.setTraveling(false);
-                    ship.setCurrentPort(v.getDestinationPort());
-
-                    var player = ship.getOwner();
-                    player.setBalance(player.getBalance() + v.getReward());
-
-                    v.setRewardGranted(true);
-
-                    voyageRepository.save(v);
-                    shipRepository.save(ship);
 
                     webSocketSender.sendSessionUpdate(
                             session.getSessionCode(),
