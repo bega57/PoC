@@ -196,7 +196,7 @@
 
 .stat-value {
     color: #f8fbff;
-    font-size: 16px;
+    font-size: 15px;
     font-weight: 700;
 }
 
@@ -216,5 +216,57 @@
     .ship-stats {
         grid-template-columns: 1fr 1fr;
     }
+}
+
+/* EXTRA INFO */
+.ship-type {
+    font-size: 14px;
+    color: #93c5fd;
+}
+
+.ship-location {
+    font-size: 13px;
+    color: #b7c9e6;
+}
+
+/* PROGRESS */
+.voyage-progress {
+    margin-top: 8px;
+    font-size: 12px;
+    color: #22c55e;
+}
+
+/* BAR SYSTEM (reuse from voyage) */
+.bar {
+    position: relative;
+    height: 10px;
+    background: rgba(255,255,255,0.1);
+    border-radius: 8px;
+    overflow: hidden;
+    margin-top: 4px;
+}
+
+.bar.small {
+    height: 15px;
+}
+
+.bar div {
+    height: 100%;
+    border-radius: 8px;
+    transition: width 0.4s ease;
+}
+
+.bar-text {
+    position: absolute;
+    right: 8px;
+    top: 50%;
+    transform: translateY(-50%);
+    font-size: 11px;
+    font-weight: 600;
+    color: white;
+}
+
+.capacity-bar div {
+    background: linear-gradient(90deg, #3b82f6, #60a5fa);
 }
 

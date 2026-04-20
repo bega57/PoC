@@ -27,9 +27,10 @@ function ShipMarketPage() {
             name: "Cutter",
             image: cheapSide,
             price: 12000,
-            speed: "Slow",
-            capacity: "Low",
-            description: "A small starter vessel for short-distance trading."
+            speed: 30,
+            capacity: 50,
+            fuel: 70,
+            description: "Starter ship for short routes."
         },
         {
             id: "middle",
@@ -37,9 +38,10 @@ function ShipMarketPage() {
             name: "Brigantine",
             image: middleSide,
             price: 30000,
-            speed: "Medium",
-            capacity: "Medium",
-            description: "A versatile mid-range ship with solid cargo capacity."
+            speed: 55,
+            capacity: 100,
+            fuel: 60,
+            description: "Balanced ship with solid cargo."
         },
         {
             id: "expensive",
@@ -47,11 +49,32 @@ function ShipMarketPage() {
             name: "Galleon",
             image: expensiveSide,
             price: 60000,
-            speed: "Fast",
-            capacity: "High",
-            description: "A powerful long-distance trading ship with high capacity."
+            speed: 80,
+            capacity: 180,
+            fuel: 50,
+            description: "High capacity long-distance ship."
         }
     ];
+
+    const isBetter = (value, key) => {
+        const max = Math.max(...ships.map(s => s[key]));
+        return value === max;
+    };
+
+    const getPercent = (value, key) => {
+        const max = Math.max(...ships.map(s => s[key]));
+        return (value / max) * 100;
+    };
+
+    const getColor = (value, key) => {
+        const max = Math.max(...ships.map(s => s[key]));
+        const ratio = value / max;
+
+        if (ratio > 0.8) return "#22c55e"; // green
+        if (ratio > 0.5) return "#3b82f6"; // blue
+        return "#64748b"; // gray
+    };
+
 
     useEffect(() => {
         const fetchSession = async () => {
@@ -202,22 +225,58 @@ function ShipMarketPage() {
                             <div className="ship-card-right">
                                 <div className="ship-main-info">
                                     <div className="ship-title-row">
-                                        <h2>{ship.name}</h2>
+                                        <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
+                                            <h2>{ship.name}</h2>
+
+                                            {isBetter(ship.capacity, "capacity") && (
+                                                <span className="badge">BEST</span>
+                                            )}
+                                        </div>
+
                                         <span className="ship-price">${ship.price}</span>
                                     </div>
 
                                     <p className="ship-description">{ship.description}</p>
+
+                                    <div className="ship-meta">
+                                        <span className="ship-profit">
+                                            💰 {Math.round((ship.capacity * ship.speed) / 10)} profit
+                                        </span>
+                                    </div>
                                 </div>
 
                                 <div className="ship-stats">
+
+                                    {/* SPEED */}
                                     <div className="stat-block">
                                         <span className="stat-label">Speed</span>
-                                        <span className="stat-value">{ship.speed}</span>
+                                        <div className="bar small">
+                                            <div
+                                                style={{
+                                                    width: `${getPercent(ship.speed, "speed")}%`,
+                                                    background: getColor(ship.speed, "speed")
+                                                        ? "#22c55e"
+                                                        : "#3b82f6"
+                                                }}
+                                            />
+                                            <span className="bar-text">{ship.speed}</span>
+                                        </div>
                                     </div>
 
+                                    {/* CAPACITY */}
                                     <div className="stat-block">
                                         <span className="stat-label">Capacity</span>
-                                        <span className="stat-value">{ship.capacity}</span>
+                                        <div className="bar small capacity-bar">
+                                            <div
+                                                style={{
+                                                    width: `${getPercent(ship.capacity, "capacity")}%`,
+                                                    background: getColor(ship.capacity, "capacity")
+                                                        ? "#22c55e"
+                                                        : "#3b82f6"
+                                                }}
+                                            />
+                                            <span className="bar-text">{ship.capacity}</span>
+                                        </div>
                                     </div>
 
                                 </div>

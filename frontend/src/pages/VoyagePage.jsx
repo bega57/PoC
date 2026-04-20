@@ -23,7 +23,21 @@ export default function VoyagePage() {
     const fetchSession = async () => {
         try {
             const res = await api.get(`/sessions/${sessionCode}`);
-            setSession(res.data);
+            const sessionData = res.data;
+
+            setSession(sessionData);
+
+            // 🔥 SELECTED SHIP LIVE UPDATEN
+            if (selectedShip) {
+                const updatedShip = sessionData.players
+                    ?.flatMap(p => p.ships || [])
+                    .find(s => s.id === selectedShip.id);
+
+                if (updatedShip) {
+                    setSelectedShip(updatedShip);
+                }
+            }
+
         } catch (err) {
             console.error(err);
         }
@@ -38,6 +52,12 @@ export default function VoyagePage() {
         } catch (err) {
             console.error(err);
         }
+    };
+
+    const getBarColor = (value) => {
+        if (value <= 10) return "#ef4444";   // red
+        if (value <= 50) return "#f59e0b";   // orange
+        return "#22c55e";                    // green
     };
 
     useEffect(() => {
@@ -240,7 +260,7 @@ export default function VoyagePage() {
 
                 <div className="voyage-cards">
                     <div className="voyage-card">
-                        <h2>Ship</h2>
+                        <h2>1. Choose Ship</h2>
 
                         <select
                             value={selectedShip?.id || ""}
@@ -268,17 +288,62 @@ export default function VoyagePage() {
 
                         {selectedShip && (
                             <div className="voyage-info">
-                                <p>Ship: {selectedShip.name}</p>
+                                <p><strong>{selectedShip.name}</strong></p>
                                 <p>Current Port: {selectedShip?.currentPort || "Unknown"}</p>
-                                <p>Capacity: {selectedShip.cargoCapacity}</p>
-                                <p>Fuel: {selectedShip.fuelLevel}</p>
-                                <p>Condition: {selectedShip.condition}</p>
+
+                                <div className="stat-bar">
+                                    <div className="stat-header">
+                                        <span>Fuel</span>
+                                    </div>
+
+                                    <div className="bar">
+                                        <div
+                                            style={{
+                                                width: `${selectedShip.fuelLevel}%`,
+                                                background: getBarColor(selectedShip.fuelLevel)
+                                            }}
+                                        />
+
+                                        <span className="bar-text">
+                                        {selectedShip.fuelLevel?.toFixed(0)}%
+                                        </span>
+                                    </div>
+                                </div>
+
+                                <div className="stat-bar">
+                                    <div className="stat-header">
+                                        <span>Condition</span>
+                                    </div>
+
+                                    <div className="bar">
+                                        <div
+                                            style={{
+                                                width: `${selectedShip.condition}%`,
+                                                background: getBarColor(selectedShip.condition)
+                                            }}
+                                        />
+                                        <span className="bar-text">
+                                            {selectedShip.condition?.toFixed(0)}%
+                                        </span>
+                                    </div>
+                                </div>
+
+                                <div className="stat-bar">
+                                    <div className="stat-header">
+                                        <span>Capacity</span>
+                                    </div>
+
+                                    <div className="bar capacity-bar">
+                                        <div style={{ width: "100%" }} />
+                                        <span className="bar-text">100%</span>
+                                    </div>
+                                </div>
                             </div>
                         )}
                     </div>
 
                     <div className="voyage-card">
-                        <h2>Destination</h2>
+                        <h2>2. Select Destination</h2>
 
                         {!selectedShip ? (
                             <p>Select a ship first</p>
@@ -311,7 +376,7 @@ export default function VoyagePage() {
                     </div>
 
                     <div className="voyage-card">
-                        <h2>Cargo Orders</h2>
+                        <h2>3. Cargo Orders</h2>
 
                         {!selectedDestination ? (
                             <p>Select a destination first</p>
@@ -349,15 +414,21 @@ export default function VoyagePage() {
                                             }}
                                             onClick={() => setSelectedCargoId(String(item.id))}
                                         >
-                                            <p>Order #{item.id}</p>
-                                            <p>From: {item.originPort?.name}</p>
-                                            <p>To: {item.destinationPort?.name}</p>
-                                            <p>Price: {item.price} Talers</p>
-                                            <p>Reward: {item.reward} Talers</p>
-                                            <p>Required Capacity: {item.requiredCapacity}</p>
-                                            <p>Risk: {item.riskLevel}</p>
-                                            <p>Description: {item.description}</p>
-                                            <p>Estimated Duration: {item.requiredTicks} days</p>
+                                            <h4>Order #{item.id}</h4>
+
+                                            <p className="route">
+                                                {item.originPort?.name} → {item.destinationPort?.name}
+                                            </p>
+
+                                            <div className="cargo-stats">
+                                                <span>💰 {item.price}</span>
+                                                <span>🏆 {item.reward}</span>
+                                                <span>⏱ {item.requiredTicks}</span>
+                                            </div>
+
+                                            <p style={{ fontSize: "12px", opacity: 0.7 }}>
+                                                {item.description}
+                                            </p>
                                         </div>
                                     ))}
                                 </div>
@@ -365,8 +436,8 @@ export default function VoyagePage() {
                         )}
                     </div>
 
-                    <div className="voyage-card">
-                        <h2>Summary</h2>
+                    <div className="voyage-card summary">
+                        <h2>4. Summary</h2>
 
                         {!selectedShip || !selectedCargo ? (
                             <p>Select ship, destination and cargo order</p>
