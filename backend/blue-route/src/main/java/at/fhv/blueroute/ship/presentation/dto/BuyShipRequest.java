@@ -6,6 +6,7 @@ public class BuyShipRequest {
     private String companyName;
     private String shipName;
     private String shipType;
+    private String sessionCode;
 
     public BuyShipRequest() {
     }
@@ -24,6 +25,14 @@ public class BuyShipRequest {
 
     public String getShipType() {
         return shipType;
+    }
+
+    public String getSessionCode() {
+        return sessionCode;
+    }
+
+    public void setSessionCode(String sessionCode) {
+        this.sessionCode = sessionCode;
     }
 
     public void setPlayerId(Long playerId) {

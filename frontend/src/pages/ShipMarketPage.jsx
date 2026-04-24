@@ -1,5 +1,7 @@
 import { useEffect, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
+import SockJS from "sockjs-client";
+import { Client } from "@stomp/stompjs";
 import api from "../api/api";
 import cheapSide from "../assets/ships/cheapSide.png";
 import middleSide from "../assets/ships/middleSide.png";
@@ -75,6 +77,20 @@ function ShipMarketPage() {
         return "#64748b"; // gray
     };
 
+    const getStock = (type) => {
+        if (!session) return null;
+
+        switch (type) {
+            case "CHEAP":
+                return session.cheapShipStock;
+            case "MEDIUM":
+                return session.mediumShipStock;
+            case "EXPENSIVE":
+                return session.expensiveShipStock;
+            default:
+                return null;
+        }
+    };
 
     useEffect(() => {
         const fetchSession = async () => {
@@ -87,6 +103,35 @@ function ShipMarketPage() {
         };
 
         fetchSession();
+    }, [sessionCode]);
+
+    useEffect(() => {
+        const socket = new SockJS(`${import.meta.env.VITE_API_BASE_URL}/ws`);
+
+        const client = new Client({
+            webSocketFactory: () => socket,
+            reconnectDelay: 5000
+        });
+
+        client.onConnect = () => {
+            console.log("Ship market WebSocket connected");
+
+            client.subscribe(`/topic/session/${sessionCode}`, async (message) => {
+                const data = JSON.parse(message.body);
+                console.log("SHIP MARKET WS EVENT:", data);
+
+                if (data.type === "STOCK_UPDATED") {
+                    const refreshed = await api.get(`/sessions/${sessionCode}`);
+                    setSession(refreshed.data);
+                }
+            });
+        };
+
+        client.activate();
+
+        return () => {
+            client.deactivate();
+        };
     }, [sessionCode]);
 
     useEffect(() => {
@@ -155,7 +200,8 @@ function ShipMarketPage() {
                 playerId: currentPlayer.id,
                 shipType: selectedShip.type,
                 shipName: shipName.trim(),
-                companyName: playerNeedsCompanyName ? companyName.trim() : null
+                companyName: playerNeedsCompanyName ? companyName.trim() : null,
+                sessionCode: sessionCode
             });
 
             const refreshed = await api.get(`/sessions/${sessionCode}`);
@@ -234,6 +280,11 @@ function ShipMarketPage() {
                                         </div>
 
                                         <span className="ship-price">${ship.price}</span>
+                                        {session && (
+                                            <span className="ship-stock">
+                                                {getStock(ship.type) > 0 ? `${getStock(ship.type)} left` : "Sold out"}
+                                            </span>
+                                        )}
                                     </div>
 
                                     <p className="ship-description">{ship.description}</p>
@@ -291,8 +342,15 @@ function ShipMarketPage() {
                         <p>{selectedShip.name} — ${selectedShip.price}</p>
                     </div>
 
-                    <button className="buy-button" type="button" onClick={openBuyModal}>
-                        Buy {selectedShip.name}
+                    <button
+                        className="buy-button"
+                        type="button"
+                        onClick={openBuyModal}
+                        disabled={getStock(selectedShip.type) === 0}
+                    >
+                        {getStock(selectedShip.type) === 0
+                            ? "Sold out"
+                            : `Buy ${selectedShip.name}`}
                     </button>
                 </div>
             </div>
@@ -336,7 +394,7 @@ function ShipMarketPage() {
                                 <button
                                     type="submit"
                                     className="buy-button"
-                                    disabled={isBuying}
+                                    disabled={isBuying || getStock(selectedShip.type) === 0}
                                 >
                                     {isBuying ? "Buying..." : "Confirm Purchase"}
                                 </button>
