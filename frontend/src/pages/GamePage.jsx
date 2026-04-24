@@ -68,16 +68,39 @@ function GamePage() {
 
     const sessionIdRef = useRef(null);
 
-    const fetchVoyagesOnly = async (sessionId) => {
+    const [smoothProgress, setSmoothProgress] = useState({});
+
+    const fetchVoyagesOnly = async (sessionId, currentTick) => {
         if (!sessionId) return;
 
         try {
-            const res = await api.get(`/voyages?sessionId=${sessionId}`);
+            const res = await api.get(
+                `/voyages?sessionId=${sessionId}&tick=${currentTick}`
+            );
             setVoyages([...res.data]);
         } catch (err) {
             console.error(err);
         }
     };
+
+    useEffect(() => {
+        const interval = setInterval(() => {
+            setSmoothProgress(prev => {
+                const updated = { ...prev };
+
+                voyages.forEach(v => {
+                    const current = prev[v.id] ?? v.progress ?? 0;
+                    const target = v.progress ?? 0;
+
+                    updated[v.id] = current + (target - current) * 0.15;
+                });
+
+                return updated;
+            });
+        }, 50);
+
+        return () => clearInterval(interval);
+    }, [voyages]);
 
     const sendHeartbeatSafe = () => {
         if (!sessionCode || !storedPlayer?.id) return;
@@ -161,7 +184,7 @@ function GamePage() {
             setSession(sessionData);
 
             const voyagesRes = await api.get(
-                `/voyages?sessionId=${sessionData.id}`
+                `/voyages?sessionId=${sessionData.id}&tick=${sessionData.currentTick}`
             );
             setVoyages(voyagesRes.data);
 
@@ -255,12 +278,10 @@ function GamePage() {
 
                 if (data.type === "TICK") {
                     setSession(prev =>
-                        prev
-                            ? { ...prev, currentTick: data.currentTick }
-                            : prev
+                        prev ? { ...prev, currentTick: data.currentTick } : prev
                     );
 
-                    await fetchVoyagesOnly(sessionIdRef.current);
+                    await fetchVoyagesOnly(sessionIdRef.current, data.currentTick);
 
                     return;
                 }
@@ -488,6 +509,7 @@ function GamePage() {
                 selectedShip={selectedShip}
                 currentPlayer={currentPlayer}
                 myActiveVoyages={myActiveVoyages}
+                smoothProgress={smoothProgress}
             />
 
             <GameSidebar
