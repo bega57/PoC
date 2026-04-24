@@ -27,6 +27,9 @@ public class SessionMapper {
                 session.getStatus().name(),
                 session.getCurrentTick(),
                 session.getMaxPlayers(),
+                session.getCheapShipStock(),
+                session.getMediumShipStock(),
+                session.getExpensiveShipStock(),
                 session.getSessionPlayers().stream()
                         .map(this::toPlayerSummary)
                         .toList()
