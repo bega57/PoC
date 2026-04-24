@@ -66,6 +66,19 @@ function GamePage() {
     const lastHeartbeatRef = useRef(0);
     const isFetchingRef = useRef(false);
 
+    const sessionIdRef = useRef(null);
+
+    const fetchVoyagesOnly = async (sessionId) => {
+        if (!sessionId) return;
+
+        try {
+            const res = await api.get(`/voyages?sessionId=${sessionId}`);
+            setVoyages([...res.data]);
+        } catch (err) {
+            console.error(err);
+        }
+    };
+
     const sendHeartbeatSafe = () => {
         if (!sessionCode || !storedPlayer?.id) return;
         const now = Date.now();
@@ -147,7 +160,9 @@ function GamePage() {
 
             setSession(sessionData);
 
-            const voyagesRes = await api.get(`/voyages?sessionId=${sessionData.id}`);
+            const voyagesRes = await api.get(
+                `/voyages?sessionId=${sessionData.id}`
+            );
             setVoyages(voyagesRes.data);
 
         } catch (err) {
@@ -215,6 +230,12 @@ function GamePage() {
             .catch(err => console.error(err));
     }, []);
 
+    useEffect(() => {
+        if (session?.id) {
+            sessionIdRef.current = session.id;
+        }
+    }, [session]);
+
 
     useEffect(() => {
 
@@ -238,6 +259,8 @@ function GamePage() {
                             ? { ...prev, currentTick: data.currentTick }
                             : prev
                     );
+
+                    await fetchVoyagesOnly(sessionIdRef.current);
 
                     return;
                 }

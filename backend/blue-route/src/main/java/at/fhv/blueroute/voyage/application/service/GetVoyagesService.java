@@ -1,6 +1,5 @@
 package at.fhv.blueroute.voyage.application.service;
 
-import at.fhv.blueroute.session.domain.model.Session;
 import at.fhv.blueroute.voyage.domain.model.Voyage;
 import at.fhv.blueroute.voyage.domain.model.VoyageStatus;
 import at.fhv.blueroute.voyage.infrastructure.persistence.JpaVoyageRepository;
@@ -21,13 +20,13 @@ public class GetVoyagesService {
         this.seaRouteService = seaRouteService;
     }
 
-    public List<VoyageResponse> getAllVoyages(Session session) {
-        return voyageRepository.findBySessionId(session.getId()).stream()
-                .map(v -> mapToResponse(v, session))
+    public List<VoyageResponse> getAllVoyages(Long sessionId, int currentTick) {
+        return voyageRepository.findBySessionId(sessionId).stream()
+                .map(v -> mapToResponse(v, currentTick))
                 .toList();
     }
 
-    private VoyageResponse mapToResponse(Voyage v, Session session) {
+    private VoyageResponse mapToResponse(Voyage v, int currentTick) {
         VoyageResponse dto = new VoyageResponse();
 
         dto.id = v.getId();
@@ -40,15 +39,20 @@ public class GetVoyagesService {
         int duration = v.getDurationInTicks();
         dto.duration = duration;
 
-        if (session != null && v.getStatus() == VoyageStatus.RUNNING) {
+        if (v.getStatus() == VoyageStatus.RUNNING) {
 
-            int currentDay = session.getCurrentTick() - v.getStartTick() + 1;
-            int safeDay = Math.max(1, Math.min(duration, currentDay));
+            int elapsedTicks = currentTick - v.getStartTick();
+            elapsedTicks = Math.max(0, elapsedTicks);
 
-            dto.currentDay = safeDay;
+            dto.currentDay = Math.min(duration, elapsedTicks + 1);
+
             dto.progress = duration > 0
-                    ? (double) safeDay / duration
+                    ? Math.min(1.0, (double) (elapsedTicks + 1) / duration)
                     : 1.0;
+
+            System.out.println("DEBUG → startTick=" + v.getStartTick()
+                    + " currentTick=" + currentTick
+                    + " elapsed=" + elapsedTicks);
 
         } else {
             dto.currentDay = duration;

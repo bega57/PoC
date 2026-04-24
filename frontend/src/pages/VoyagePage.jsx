@@ -46,7 +46,9 @@ export default function VoyagePage() {
         if (!session) return;
 
         try {
-            const res = await api.get(`/voyages?sessionId=${session.id}`);
+            const res = await api.get(
+                `/voyages?sessionId=${session.id}&tick=${session.currentTick}`
+            );
             setVoyages(res.data);
         } catch (err) {
             console.error(err);
@@ -82,11 +84,6 @@ export default function VoyagePage() {
             })
             .catch(err => console.error(err));
     }, [sessionCode]);
-
-    useEffect(() => {
-        if (!session) return;
-        fetchVoyages();
-    }, [session]);
 
     useEffect(() => {
         if (!selectedShip?.currentPort) {
@@ -126,8 +123,16 @@ export default function VoyagePage() {
                 console.log("VOYAGEPAGE WS EVENT:", data);
 
                 if (data.type === "TICK") {
-                    await fetchSession();
-                    return;
+                    const res = await api.get(`/sessions/${sessionCode}`);
+                    const sessionData = res.data;
+
+                    setSession(sessionData);
+
+                    const voyagesRes = await api.get(
+                        `/voyages?sessionId=${sessionData.id}&tick=${sessionData.currentTick}`
+                    );
+
+                    setVoyages(voyagesRes.data);
                 }
 
                 if (data.type === "VOYAGE_STARTED") {

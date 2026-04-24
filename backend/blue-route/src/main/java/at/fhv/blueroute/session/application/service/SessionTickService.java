@@ -67,7 +67,10 @@ public class SessionTickService {
 
                 if (session.getCurrentTick() >= v.getArrivalTick()) {
 
-                    finishVoyageService.finishVoyage(v.getId());
+                    finishVoyageService.finishVoyage(
+                            v.getId(),
+                            session.getCurrentTick()
+                    );
 
                     webSocketSender.sendSessionUpdate(
                             session.getSessionCode(),

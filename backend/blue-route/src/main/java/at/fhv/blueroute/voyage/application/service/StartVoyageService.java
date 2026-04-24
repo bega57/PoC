@@ -120,7 +120,10 @@ public class StartVoyageService {
 
         voyage.setSessionId(session.getId());
 
-        int currentTick = session.getCurrentTick();
+        int currentTick = sessionRepository
+                .findById(session.getId())
+                .orElseThrow()
+                .getCurrentTick();
         int requiredTicks = cargo.getRequiredTicks();
         int speed = ship.getSpeed();
 

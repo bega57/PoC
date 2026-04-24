@@ -29,7 +29,7 @@ public class FinishVoyageService {
         this.playerRepository = playerRepository;
     }
 
-    public void finishVoyage(Long voyageId) {
+    public void finishVoyage(Long voyageId, int currentTick) {
 
         Voyage voyage = voyageRepository.findById(voyageId)
                 .orElseThrow(() -> new RuntimeException("Voyage not found"));
@@ -38,9 +38,14 @@ public class FinishVoyageService {
             return;
         }
 
+        if (currentTick < voyage.getArrivalTick()) {
+            System.out.println("NOT FINISHED YET → current=" + currentTick
+                    + " arrival=" + voyage.getArrivalTick());
+            return;
+        }
+
         Ship ship = shipRepository.findById(voyage.getShipId())
                 .orElseThrow(() -> new RuntimeException("Ship not found"));
-
 
         ship.setCurrentPort(voyage.getDestinationPort());
         ship.setTraveling(false);
@@ -60,6 +65,5 @@ public class FinishVoyageService {
 
         shipRepository.save(ship);
         voyageRepository.save(voyage);
-
     }
 }

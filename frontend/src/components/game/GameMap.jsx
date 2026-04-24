@@ -224,6 +224,8 @@ function GameMap({
 
                         const progress = voyage.progress ?? 0;
 
+                        console.log("FRONTEND PROGRESS:", progress);
+
                         let position;
 
                         if (voyage.route && voyage.route.length > 1) {
