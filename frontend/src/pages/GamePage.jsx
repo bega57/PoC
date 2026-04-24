@@ -135,12 +135,15 @@ function GamePage() {
     }, [session]);
 
     const fetchData = async () => {
-        if (!storedPlayer?.id) {
-            return;
-        }
+        if (!storedPlayer?.id) return;
+
         try {
             const sessionRes = await api.get(`/sessions/${sessionCode}`)
             const sessionData = sessionRes.data;
+
+            const me = sessionData.players.find(p => p.id === storedPlayer.id);
+
+            console.log("MY SHIPS AFTER FETCH:", JSON.stringify(me?.ships, null, 2));
 
             setSession(sessionData);
 
@@ -247,8 +250,31 @@ function GamePage() {
 
                 if (data.type === "VOYAGE_FINISHED") {
                     console.log("VOYAGE FINISHED EVENT:", data);
-                    await safeFetchData();
-                    return;
+
+                    setSession(prev => {
+                        if (!prev) return prev;
+
+                        return {
+                            ...prev,
+                            players: prev.players.map(p => ({
+                                ...p,
+                                ships: p.ships.map(ship => {
+                                    if (ship.id === data.shipId) {
+                                        return {
+                                            ...ship,
+                                            currentPort: data.destinationPort,
+                                            traveling: false
+                                        };
+                                    }
+                                    return ship;
+                                })
+                            }))
+                        };
+                    });
+
+                    setTimeout(() => {
+                        safeFetchData();
+                    }, 300);
                 }
 
                 if (data.type === "SESSION_PAUSED") {

@@ -27,7 +27,6 @@ export default function VoyagePage() {
 
             setSession(sessionData);
 
-            // 🔥 SELECTED SHIP LIVE UPDATEN
             if (selectedShip) {
                 const updatedShip = sessionData.players
                     ?.flatMap(p => p.ships || [])
