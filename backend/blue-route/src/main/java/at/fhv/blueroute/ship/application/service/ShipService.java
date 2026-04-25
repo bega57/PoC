@@ -5,6 +5,7 @@ import at.fhv.blueroute.player.application.exception.PlayerNotFoundException;
 import at.fhv.blueroute.player.domain.model.Player;
 import at.fhv.blueroute.player.domain.repository.PlayerRepository;
 import at.fhv.blueroute.ship.application.exception.InsufficientBalanceException;
+import at.fhv.blueroute.ship.application.exception.ShipCurrentlyTravelingException;
 import at.fhv.blueroute.ship.application.mapper.ShipMapper;
 import at.fhv.blueroute.ship.domain.model.Ship;
 import at.fhv.blueroute.ship.domain.model.ShipType;
@@ -17,6 +18,11 @@ import at.fhv.blueroute.ship.presentation.dto.SellShipRequest;
 import at.fhv.blueroute.ship.presentation.dto.ShipResponse;
 import at.fhv.blueroute.ship.application.exception.ShipOutOfStockException;
 import at.fhv.blueroute.common.websocket.WebSocketSender;
+import at.fhv.blueroute.ship.domain.model.UsedShipOffer;
+import at.fhv.blueroute.ship.infrastructure.persistence.JpaUsedShipOfferRepository;
+import at.fhv.blueroute.ship.domain.model.UsedShipOffer;
+import at.fhv.blueroute.ship.infrastructure.persistence.JpaUsedShipOfferRepository;
+import at.fhv.blueroute.ship.presentation.dto.BuyUsedShipRequest;
 
 import org.springframework.stereotype.Service;
 
@@ -26,6 +32,7 @@ import java.util.List;
 public class ShipService {
 
     private final JpaShipRepository shipRepository;
+    private final JpaUsedShipOfferRepository usedShipOfferRepository;
     private final PlayerRepository playerRepository;
     private final ShipMapper shipMapper;
     private final CalculateShipSellPriceService sellPriceService;
@@ -33,11 +40,13 @@ public class ShipService {
     private final WebSocketSender webSocketSender;
 
     public ShipService(JpaShipRepository shipRepository,
+                       JpaUsedShipOfferRepository usedShipOfferRepository,
                        PlayerRepository playerRepository,
                        ShipMapper shipMapper, CalculateShipSellPriceService sellPriceService,
                        SessionRepository sessionRepository,
                        WebSocketSender webSocketSender) {
         this.shipRepository = shipRepository;
+        this.usedShipOfferRepository = usedShipOfferRepository;
         this.playerRepository = playerRepository;
         this.shipMapper = shipMapper;
         this.sellPriceService = sellPriceService;
@@ -151,7 +160,26 @@ public class ShipService {
             throw new IllegalArgumentException("This ship does not belong to the player.");
         }
 
+        if (ship.isTraveling()) {
+            throw new ShipCurrentlyTravelingException(ship.getName());
+        }
+
         double sellPrice = sellPriceService.calculate(ship);
+
+        Session session = sessionRepository.findBySessionCode(request.getSessionCode())
+                .orElseThrow(() -> new SessionNotFoundException(request.getSessionCode()));
+
+        double usedMarketPrice = Math.floor(sellPrice * 1.1);
+
+        UsedShipOffer usedShipOffer = new UsedShipOffer(
+                ship.getType(),
+                usedMarketPrice,
+                ship.getCondition(),
+                ship.getFuelLevel(),
+                session
+        );
+
+        usedShipOfferRepository.save(usedShipOffer);
 
         player.setBalance(player.getBalance() + sellPrice);
 
@@ -159,5 +187,50 @@ public class ShipService {
         playerRepository.save(player);
 
         return shipMapper.toResponse(ship, sellPrice);
+    }
+
+    public ShipResponse buyUsedShip(Long offerId, BuyUsedShipRequest request) {
+        Session session = sessionRepository.findBySessionCode(request.getSessionCode())
+                .orElseThrow(() -> new SessionNotFoundException(request.getSessionCode()));
+
+        Player player = playerRepository.findById(request.getPlayerId())
+                .orElseThrow(() -> new PlayerNotFoundException(request.getPlayerId()));
+
+        UsedShipOffer offer = usedShipOfferRepository.findById(offerId)
+                .orElseThrow(() -> new IllegalArgumentException("Used ship offer not found."));
+
+        if (!offer.getSession().getSessionCode().equals(session.getSessionCode())) {
+            throw new IllegalArgumentException("Used ship offer does not belong to this session.");
+        }
+
+        if (request.getShipName() == null || request.getShipName().isBlank()) {
+            throw new IllegalArgumentException("Ship name is required.");
+        }
+
+        if (player.getBalance() < offer.getPrice()) {
+            throw new InsufficientBalanceException(player.getId());
+        }
+
+        player.setBalance(player.getBalance() - offer.getPrice());
+
+        Ship ship = new Ship(
+                request.getShipName().trim(),
+                offer.getType(),
+                offer.getPrice(),
+                offer.getType().getSpeed(),
+                player
+        );
+
+        ship.setCargoCapacity(offer.getType().getCapacity());
+        ship.setCondition(offer.getCondition());
+        ship.setFuelLevel(offer.getFuelLevel());
+        ship.setCurrentPort(player.getCurrentPort());
+
+        playerRepository.save(player);
+        Ship savedShip = shipRepository.save(ship);
+        usedShipOfferRepository.delete(offer);
+
+        double sellPrice = sellPriceService.calculate(savedShip);
+        return shipMapper.toResponse(savedShip, sellPrice);
     }
 }

@@ -15,6 +15,9 @@ function ShipMarketPage() {
     const [session, setSession] = useState(null);
     const [selectedShip, setSelectedShip] = useState(null);
 
+    const [activeTab, setActiveTab] = useState("NEW");
+    const [usedShips, setUsedShips] = useState([]);
+
     const [showBuyModal, setShowBuyModal] = useState(false);
     const [shipName, setShipName] = useState("");
     const [companyName, setCompanyName] = useState("");
@@ -92,6 +95,34 @@ function ShipMarketPage() {
         }
     };
 
+    const getShipImage = (type) => {
+        if (type === "CHEAP") return cheapSide;
+        if (type === "MEDIUM") return middleSide;
+        return expensiveSide;
+    };
+
+    const getShipDisplayName = (type) => {
+        if (type === "CHEAP") return "Cutter";
+        if (type === "MEDIUM") return "Brigantine";
+        if (type === "EXPENSIVE") return "Galleon";
+        return type;
+    };
+
+    const getConditionColor = (value) => {
+        if (value >= 70) return "#22c55e";
+        if (value >= 35) return "#facc15";
+        return "#ef4444";
+    };
+
+    const fetchUsedShips = async () => {
+        try {
+            const response = await api.get(`/ships/used/${sessionCode}`);
+            setUsedShips(response.data);
+        } catch (error) {
+            console.error(error);
+        }
+    };
+
     useEffect(() => {
         const fetchSession = async () => {
             try {
@@ -103,6 +134,10 @@ function ShipMarketPage() {
         };
 
         fetchSession();
+    }, [sessionCode]);
+
+    useEffect(() => {
+        fetchUsedShips();
     }, [sessionCode]);
 
     useEffect(() => {
@@ -135,10 +170,10 @@ function ShipMarketPage() {
     }, [sessionCode]);
 
     useEffect(() => {
-        if (!selectedShip) {
+        if (activeTab === "NEW" && !selectedShip) {
             setSelectedShip(ships[0]);
         }
-    }, [selectedShip]);
+    }, [activeTab, selectedShip]);
 
     const showToast = (text) => {
         setToastMessage(text);
@@ -148,7 +183,7 @@ function ShipMarketPage() {
         }, 2500);
     };
 
-    if (!selectedShip) {
+    if (!session) {
         return <div style={{ color: "white", padding: "20px" }}>Loading market...</div>;
     }
 
@@ -196,13 +231,23 @@ function ShipMarketPage() {
             setIsBuying(true);
             setMessage("");
 
-            await api.post("/ships/buy", {
-                playerId: currentPlayer.id,
-                shipType: selectedShip.type,
-                shipName: shipName.trim(),
-                companyName: playerNeedsCompanyName ? companyName.trim() : null,
-                sessionCode: sessionCode
-            });
+            if (activeTab === "NEW") {
+                await api.post("/ships/buy", {
+                    playerId: currentPlayer.id,
+                    shipType: selectedShip.type,
+                    shipName: shipName.trim(),
+                    companyName: playerNeedsCompanyName ? companyName.trim() : null,
+                    sessionCode: sessionCode
+                });
+            } else {
+                await api.post(`/ships/used/${selectedShip.id}/buy`, {
+                    playerId: currentPlayer.id,
+                    shipName: shipName.trim(),
+                    sessionCode: sessionCode
+                });
+
+                await fetchUsedShips();
+            }
 
             const refreshed = await api.get(`/sessions/${sessionCode}`);
             setSession(refreshed.data);
@@ -210,7 +255,12 @@ function ShipMarketPage() {
             setShowBuyModal(false);
             setShipName("");
             setCompanyName("");
-            showToast("Ship purchased successfully.");
+
+            if (activeTab === "NEW") {
+                showToast("New ship purchased successfully.");
+            } else {
+                showToast("Used ship purchased successfully.");
+            }
         } catch (error) {
             console.error(error);
             setMessage(
@@ -244,6 +294,32 @@ function ShipMarketPage() {
                     <p>Choose a ship and compare its stats before buying.</p>
                 </header>
 
+                <div className="market-tabs">
+                    <button
+                        type="button"
+                        className={`market-tab ${activeTab === "NEW" ? "active" : ""}`}
+                        onClick={() => {
+                            setActiveTab("NEW");
+                            setSelectedShip(ships[0]);
+                            setMessage("");
+                        }}
+                    >
+                        New Ships
+                    </button>
+
+                    <button
+                        type="button"
+                        className={`market-tab ${activeTab === "USED" ? "active" : ""}`}
+                        onClick={() => {
+                            setActiveTab("USED");
+                            setSelectedShip(usedShips.length > 0 ? usedShips[0] : null);
+                            setMessage("");
+                        }}
+                    >
+                        Used Ships
+                    </button>
+                </div>
+
                 {session && currentPlayer && (
                     <div className="player-balance-bar">
                         <span>
@@ -254,111 +330,153 @@ function ShipMarketPage() {
                     </div>
                 )}
 
-                <div className="ship-cards">
-                    {ships.map((ship) => (
-                        <button
-                            key={ship.id}
-                            type="button"
-                            className={`ship-market-card ${selectedShip.id === ship.id ? "active" : ""}`}
-                            onClick={() => setSelectedShip(ship)}
-                        >
-                            <div className="ship-card-left">
-                                <div className="ship-image-box">
-                                    <img src={ship.image} alt={ship.name} />
+                {activeTab === "USED" && usedShips.length === 0 ? (
+                    <div className="empty-market-message">
+                        No used ships available yet. Check back later or buy a new ship!
+                    </div>
+                ) : (
+                    <div className="ship-cards">
+                        {(activeTab === "NEW" ? ships : usedShips).map((ship) => (
+                            <button
+                                key={ship.id}
+                                type="button"
+                                className={`ship-market-card ${selectedShip?.id === ship.id ? "active" : ""}`}
+                                onClick={() => setSelectedShip(ship)}
+                            >
+                                <div className="ship-card-left">
+                                    <div className="ship-image-box">
+                                        <img
+                                            src={activeTab === "NEW" ? ship.image : getShipImage(ship.type)}
+                                            alt={ship.name || ship.type}
+                                        />
+                                    </div>
                                 </div>
-                            </div>
 
-                            <div className="ship-card-right">
-                                <div className="ship-main-info">
-                                    <div className="ship-title-row">
-                                        <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
-                                            <h2>{ship.name}</h2>
+                                <div className="ship-card-right">
+                                    <div className="ship-main-info">
+                                        <div className="ship-title-row">
+                                            <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
+                                                <h2>{activeTab === "NEW" ? ship.name : getShipDisplayName(ship.type)}</h2>
 
-                                            {isBetter(ship.capacity, "capacity") && (
-                                                <span className="badge">BEST</span>
+                                                {activeTab === "NEW" && isBetter(ship.capacity, "capacity") && (
+                                                    <span className="badge">BEST</span>
+                                                )}
+
+                                            </div>
+
+                                            <span className="ship-price">${ship.price}</span>
+
+                                            {activeTab === "NEW" && session && (
+                                                <span className="ship-stock">
+                                    {getStock(ship.type) > 0 ? `${getStock(ship.type)} left` : "Sold out"}
+                                </span>
                                             )}
                                         </div>
 
-                                        <span className="ship-price">${ship.price}</span>
-                                        {session && (
-                                            <span className="ship-stock">
-                                                {getStock(ship.type) > 0 ? `${getStock(ship.type)} left` : "Sold out"}
-                                            </span>
-                                        )}
+                                        <p className="ship-description">
+                                            {activeTab === "NEW"
+                                                ? ship.description
+                                                : "Pre-owned ship"}
+                                        </p>
                                     </div>
 
-                                    <p className="ship-description">{ship.description}</p>
+                                    <div className="ship-stats">
+                                        <div className="stat-block">
+                                            <span className="stat-label">Speed</span>
+                                            <div className="bar small">
+                                                <div
+                                                    style={{
+                                                        width: `${getPercent(ship.speed, "speed")}%`,
+                                                        background: "#22c55e"
+                                                    }}
+                                                />
+                                                <span className="bar-text">{ship.speed}</span>
+                                            </div>
+                                        </div>
 
-                                    <div className="ship-meta">
-                                        <span className="ship-profit">
-                                            💰 {Math.round((ship.capacity * ship.speed) / 10)} profit
-                                        </span>
-                                    </div>
-                                </div>
+                                        <div className="stat-block">
+                                            <span className="stat-label">Capacity</span>
+                                            <div className="bar small capacity-bar">
+                                                <div
+                                                    style={{
+                                                        width: `${getPercent(ship.capacity, "capacity")}%`,
+                                                        background: "#22c55e"
+                                                    }}
+                                                />
+                                                <span className="bar-text">{ship.capacity}</span>
+                                            </div>
+                                        </div>
 
-                                <div className="ship-stats">
+                                        <div className="stat-block">
+                                            <span className="stat-label">Condition</span>
+                                            <div className="bar small">
+                                                <div
+                                                    style={{
+                                                        width: `${activeTab === "NEW" ? 100 : ship.condition}%`,
+                                                        background: getConditionColor(activeTab === "NEW" ? 100 : ship.condition)
+                                                    }}
+                                                />
+                                                <span className="bar-text">
+                                    {activeTab === "NEW" ? 100 : Math.round(ship.condition)}
+                                </span>
+                                            </div>
+                                        </div>
 
-                                    {/* SPEED */}
-                                    <div className="stat-block">
-                                        <span className="stat-label">Speed</span>
-                                        <div className="bar small">
-                                            <div
-                                                style={{
-                                                    width: `${getPercent(ship.speed, "speed")}%`,
-                                                    background: getColor(ship.speed, "speed")
-                                                        ? "#22c55e"
-                                                        : "#3b82f6"
-                                                }}
-                                            />
-                                            <span className="bar-text">{ship.speed}</span>
+                                        <div className="stat-block">
+                                            <span className="stat-label">Fuel</span>
+                                            <div className="bar small">
+                                                <div
+                                                    style={{
+                                                        width: `${activeTab === "NEW" ? 100 : ship.fuelLevel}%`,
+                                                        background: getConditionColor(activeTab === "NEW" ? 100 : ship.fuelLevel)
+                                                    }}
+                                                />
+                                                <span className="bar-text">
+                                    {activeTab === "NEW" ? 100 : Math.round(ship.fuelLevel)}
+                                </span>
+                                            </div>
                                         </div>
                                     </div>
-
-                                    {/* CAPACITY */}
-                                    <div className="stat-block">
-                                        <span className="stat-label">Capacity</span>
-                                        <div className="bar small capacity-bar">
-                                            <div
-                                                style={{
-                                                    width: `${getPercent(ship.capacity, "capacity")}%`,
-                                                    background: getColor(ship.capacity, "capacity")
-                                                        ? "#22c55e"
-                                                        : "#3b82f6"
-                                                }}
-                                            />
-                                            <span className="bar-text">{ship.capacity}</span>
-                                        </div>
-                                    </div>
-
                                 </div>
-                            </div>
-                        </button>
-                    ))}
-                </div>
-
-                <div className="buy-panel">
-                    <div className="buy-panel-text">
-                        <h3>Selected Ship</h3>
-                        <p>{selectedShip.name} — ${selectedShip.price}</p>
+                            </button>
+                        ))}
                     </div>
+                )}
 
-                    <button
-                        className="buy-button"
-                        type="button"
-                        onClick={openBuyModal}
-                        disabled={getStock(selectedShip.type) === 0}
-                    >
-                        {getStock(selectedShip.type) === 0
-                            ? "Sold out"
-                            : `Buy ${selectedShip.name}`}
-                    </button>
-                </div>
+                {selectedShip && (
+                    <div className="buy-panel">
+                        <div className="buy-panel-text">
+                            <h3>Selected Ship</h3>
+                            <p>
+                                {activeTab === "NEW" ? selectedShip.name : getShipDisplayName(selectedShip.type)}
+                                {" "}— ${selectedShip.price}
+                            </p>
+                        </div>
+
+                        <button
+                            className="buy-button"
+                            type="button"
+                            onClick={openBuyModal}
+                            disabled={
+                                !selectedShip ||
+                                isBuying ||
+                                (activeTab === "NEW" && getStock(selectedShip.type) === 0)
+                            }
+                        >
+                            {getStock(selectedShip.type) === 0
+                                ? "Sold out"
+                                : `Buy ${activeTab === "NEW" ? selectedShip.name : getShipDisplayName(selectedShip.type)}`}
+                        </button>
+                    </div>
+                )}
             </div>
 
             {showBuyModal && (
                 <div className="modal-overlay">
                     <div className="buy-modal">
-                        <h2>Buy {selectedShip.name}</h2>
+                        <h2>
+                            Buy {activeTab === "NEW" ? selectedShip.name : getShipDisplayName(selectedShip.type)}
+                        </h2>
 
                         <p className="modal-price">Price: ${selectedShip.price}</p>
 

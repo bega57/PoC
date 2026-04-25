@@ -81,7 +81,7 @@ function ShipMarketMenuPage() {
                                     <h2>Buy Ship</h2>
                                 </div>
                                 <p className="ship-description">
-                                    View all ships and buy a new one for your fleet.
+                                    Choose a ship and expand your fleet with new or pre-owned vessels.
                                 </p>
                             </div>
                         </div>
