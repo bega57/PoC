@@ -6,6 +6,7 @@ import at.fhv.blueroute.voyage.application.service.FinishVoyageService;
 import at.fhv.blueroute.voyage.application.service.GetVoyagesService;
 import at.fhv.blueroute.voyage.application.service.StartVoyageService;
 import at.fhv.blueroute.voyage.domain.model.Voyage;
+import at.fhv.blueroute.voyage.infrastructure.persistence.JpaVoyageRepository;
 import at.fhv.blueroute.voyage.presentation.dto.StartVoyageRequest;
 import at.fhv.blueroute.voyage.presentation.dto.VoyageResponse;
 import org.springframework.http.ResponseEntity;
@@ -21,13 +22,15 @@ public class VoyageController {
     private final GetVoyagesService getVoyagesService;
     private final FinishVoyageService finishVoyageService;
     private final JpaSessionRepository sessionRepository;
+    private final JpaVoyageRepository voyageRepository;
 
     public VoyageController(StartVoyageService startVoyageService,
-                            GetVoyagesService getVoyagesService, FinishVoyageService finishVoyageService, JpaSessionRepository sessionRepository) {
+                            GetVoyagesService getVoyagesService, FinishVoyageService finishVoyageService, JpaSessionRepository sessionRepository, JpaVoyageRepository voyageRepository) {
         this.startVoyageService = startVoyageService;
         this.getVoyagesService = getVoyagesService;
         this.finishVoyageService = finishVoyageService;
         this.sessionRepository = sessionRepository;
+        this.voyageRepository = voyageRepository;
     }
 
     @PostMapping("/start")
@@ -49,15 +52,27 @@ public class VoyageController {
 
     @PostMapping("/{id}/finish")
     public void finish(@PathVariable Long id) {
-        finishVoyageService.finishVoyage(id);
+
+        Voyage voyage = getVoyageById(id);
+
+        Session session = sessionRepository.findById(voyage.getSessionId())
+                .orElseThrow(() -> new RuntimeException("Session not found"));
+
+        finishVoyageService.finishVoyage(id, session.getCurrentTick());
     }
 
     @GetMapping
     public List<VoyageResponse> getVoyages(@RequestParam Long sessionId) {
 
-        Session session = sessionRepository.findById(sessionId)
-                .orElseThrow();
+        int currentTick = sessionRepository.findById(sessionId)
+                .orElseThrow()
+                .getCurrentTick();
 
-        return getVoyagesService.getAllVoyages(session);
+        return getVoyagesService.getAllVoyages(sessionId, currentTick);
+    }
+
+    private Voyage getVoyageById(Long id) {
+        return voyageRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("Voyage not found"));
     }
 }
