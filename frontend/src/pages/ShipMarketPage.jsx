@@ -25,6 +25,9 @@ function ShipMarketPage() {
     const [toastMessage, setToastMessage] = useState("");
     const [isBuying, setIsBuying] = useState(false);
 
+    const VAT = 0.20;
+    const getGrossPrice = (price) => Math.round(price * (1 + VAT));
+
     const ships = [
         {
             id: "cheap",
@@ -364,7 +367,10 @@ function ShipMarketPage() {
 
                                             </div>
 
-                                            <span className="ship-price">${ship.price}</span>
+                                            <span className="ship-price">
+                                                ${getGrossPrice(ship.price)}
+                                                <span style={{ fontSize: "12px", opacity: 0.7 }}> incl. VAT</span>
+                                            </span>
 
                                             {activeTab === "NEW" && session && (
                                                 <span className="ship-stock">
@@ -449,7 +455,7 @@ function ShipMarketPage() {
                             <h3>Selected Ship</h3>
                             <p>
                                 {activeTab === "NEW" ? selectedShip.name : getShipDisplayName(selectedShip.type)}
-                                {" "}— ${selectedShip.price}
+                                {" "}— ${getGrossPrice(selectedShip.price)}
                             </p>
                         </div>
 
@@ -478,7 +484,9 @@ function ShipMarketPage() {
                             Buy {activeTab === "NEW" ? selectedShip.name : getShipDisplayName(selectedShip.type)}
                         </h2>
 
-                        <p className="modal-price">Price: ${selectedShip.price}</p>
+                        <p className="modal-price">
+                            Price: ${getGrossPrice(selectedShip.price)} (incl. VAT)
+                        </p>
 
                         <form onSubmit={handleBuyShip}>
                             <input

@@ -14,6 +14,7 @@ import at.fhv.blueroute.ship.infrastructure.persistence.PortGoodRepository;
 import at.fhv.blueroute.ship.infrastructure.persistence.ShipCargoRepository;
 import at.fhv.blueroute.ship.presentation.dto.LoadCargoRequest;
 import org.springframework.stereotype.Service;
+import at.fhv.blueroute.common.service.PricingService;
 
 @Service
 public class LoadCargoService {
@@ -24,18 +25,20 @@ public class LoadCargoService {
     private final ShipCargoRepository shipCargoRepository;
     private final GoodRepository goodRepository;
     private final PortRepository portRepository;
+    private final PricingService pricingService;
 
     public LoadCargoService(JpaShipRepository shipRepository,
                             PlayerRepository playerRepository,
                             PortGoodRepository portGoodRepository,
                             ShipCargoRepository shipCargoRepository,
-                            GoodRepository goodRepository, PortRepository portRepository) {
+                            GoodRepository goodRepository, PortRepository portRepository, PricingService pricingService) {
         this.shipRepository = shipRepository;
         this.playerRepository = playerRepository;
         this.portGoodRepository = portGoodRepository;
         this.shipCargoRepository = shipCargoRepository;
         this.goodRepository = goodRepository;
         this.portRepository = portRepository;
+        this.pricingService = pricingService;
     }
 
     public void loadCargo(LoadCargoRequest request) {
@@ -73,9 +76,10 @@ public class LoadCargoService {
             throw new RuntimeException("Not enough stock");
         }
 
-        double totalPrice = portGood.getBuyPrice() * request.getQuantity();
+        double basePrice = portGood.getBuyPrice() * request.getQuantity();
+        double finalPrice = pricingService.applyVAT(basePrice);
 
-        if (player.getBalance() < totalPrice) {
+        if (player.getBalance() < finalPrice) {
             throw new RuntimeException("Not enough money");
         }
 
@@ -109,7 +113,7 @@ public class LoadCargoService {
             cargo.setQuantity(cargo.getQuantity() + request.getQuantity());
         }
 
-        player.setBalance(player.getBalance() - totalPrice);
+        player.setBalance(player.getBalance() - finalPrice);
         portGood.setStock(portGood.getStock() - request.getQuantity());
 
         shipCargoRepository.save(cargo);
