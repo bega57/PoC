@@ -353,8 +353,10 @@
 }
 
 .modal-message {
-    margin: 8px 0 0;
-    color: #93c5fd;
+    margin: 10px 0 0;
+    color: #ef4444;
+    font-weight: 600;
+    font-size: 14px;
 }
 
 .modal-actions {

@@ -56,7 +56,7 @@ export default function VoyagePage() {
     };
 
     const getBarColor = (value) => {
-        if (value <= 10) return "#ef4444";   // red
+        if (value <= 20) return "#ef4444";   // red
         if (value <= 50) return "#f59e0b";   // orange
         return "#22c55e";                    // green
     };
@@ -243,6 +243,16 @@ export default function VoyagePage() {
         }
     };
 
+    const capacity = selectedShip?.cargoCapacity || 0;
+    const used = selectedShip?.usedCapacity || 0;
+
+    const freeCapacity = capacity - used;
+    const percent = capacity > 0 ? (freeCapacity / capacity) * 100 : 0;
+
+    const hasEnoughCapacity =
+        selectedShip && selectedCargo &&
+        freeCapacity >= selectedCargo.requiredCapacity;
+
     return (
         <div className="voyage-page">
             <div className="voyage-overlay"></div>
@@ -338,8 +348,10 @@ export default function VoyagePage() {
                                     </div>
 
                                     <div className="bar capacity-bar">
-                                        <div style={{ width: "100%" }} />
-                                        <span className="bar-text">100%</span>
+                                        <div style={{ width: `${percent}%` }} />
+                                        <span className="bar-text">
+                                            {freeCapacity} / {selectedShip.cargoCapacity}
+                                        </span>
                                     </div>
                                 </div>
                             </div>
@@ -463,7 +475,7 @@ export default function VoyagePage() {
                                     </p>
                                 )}
 
-                                {selectedShip && selectedCargo && selectedShip.cargoCapacity < selectedCargo.requiredCapacity && (
+                                {!hasEnoughCapacity && (
                                     <p style={{ color: "#f87171", marginTop: "10px" }}>
                                         This ship does not have enough cargo capacity for the selected order.
                                     </p>
@@ -483,7 +495,7 @@ export default function VoyagePage() {
                             !selectedCargoId ||
                             availableDestinations.length === 0 ||
                             isShipBusy(selectedShip?.id) ||
-                            (selectedShip && selectedCargo && selectedShip.cargoCapacity < selectedCargo.requiredCapacity)
+                            !hasEnoughCapacity
                         }
                     >
                         Start Voyage
