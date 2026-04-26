@@ -66,6 +66,42 @@ function GamePage() {
     const lastHeartbeatRef = useRef(0);
     const isFetchingRef = useRef(false);
 
+    const sessionIdRef = useRef(null);
+
+    const [smoothProgress, setSmoothProgress] = useState({});
+
+    const fetchVoyagesOnly = async (sessionId, currentTick) => {
+        if (!sessionId) return;
+
+        try {
+            const res = await api.get(
+                `/voyages?sessionId=${sessionId}&tick=${currentTick}`
+            );
+            setVoyages([...res.data]);
+        } catch (err) {
+            console.error(err);
+        }
+    };
+
+    useEffect(() => {
+        const interval = setInterval(() => {
+            setSmoothProgress(prev => {
+                const updated = { ...prev };
+
+                voyages.forEach(v => {
+                    const current = prev[v.id] ?? v.progress ?? 0;
+                    const target = v.progress ?? 0;
+
+                    updated[v.id] = current + (target - current) * 0.15;
+                });
+
+                return updated;
+            });
+        }, 50);
+
+        return () => clearInterval(interval);
+    }, [voyages]);
+
     const sendHeartbeatSafe = () => {
         if (!sessionCode || !storedPlayer?.id) return;
         const now = Date.now();
@@ -135,16 +171,21 @@ function GamePage() {
     }, [session]);
 
     const fetchData = async () => {
-        if (!storedPlayer?.id) {
-            return;
-        }
+        if (!storedPlayer?.id) return;
+
         try {
             const sessionRes = await api.get(`/sessions/${sessionCode}`)
             const sessionData = sessionRes.data;
 
+            const me = sessionData.players.find(p => p.id === storedPlayer.id);
+
+            console.log("MY SHIPS AFTER FETCH:", JSON.stringify(me?.ships, null, 2));
+
             setSession(sessionData);
 
-            const voyagesRes = await api.get(`/voyages?sessionId=${sessionData.id}`);
+            const voyagesRes = await api.get(
+                `/voyages?sessionId=${sessionData.id}&tick=${sessionData.currentTick}`
+            );
             setVoyages(voyagesRes.data);
 
         } catch (err) {
@@ -212,6 +253,12 @@ function GamePage() {
             .catch(err => console.error(err));
     }, []);
 
+    useEffect(() => {
+        if (session?.id) {
+            sessionIdRef.current = session.id;
+        }
+    }, [session]);
+
 
     useEffect(() => {
 
@@ -231,10 +278,10 @@ function GamePage() {
 
                 if (data.type === "TICK") {
                     setSession(prev =>
-                        prev
-                            ? { ...prev, currentTick: data.currentTick }
-                            : prev
+                        prev ? { ...prev, currentTick: data.currentTick } : prev
                     );
+
+                    await fetchVoyagesOnly(sessionIdRef.current, data.currentTick);
 
                     return;
                 }
@@ -247,8 +294,31 @@ function GamePage() {
 
                 if (data.type === "VOYAGE_FINISHED") {
                     console.log("VOYAGE FINISHED EVENT:", data);
-                    await safeFetchData();
-                    return;
+
+                    setSession(prev => {
+                        if (!prev) return prev;
+
+                        return {
+                            ...prev,
+                            players: prev.players.map(p => ({
+                                ...p,
+                                ships: p.ships.map(ship => {
+                                    if (ship.id === data.shipId) {
+                                        return {
+                                            ...ship,
+                                            currentPort: data.destinationPort,
+                                            traveling: false
+                                        };
+                                    }
+                                    return ship;
+                                })
+                            }))
+                        };
+                    });
+
+                    setTimeout(() => {
+                        safeFetchData();
+                    }, 300);
                 }
 
                 if (data.type === "SESSION_PAUSED") {
@@ -439,6 +509,7 @@ function GamePage() {
                 selectedShip={selectedShip}
                 currentPlayer={currentPlayer}
                 myActiveVoyages={myActiveVoyages}
+                smoothProgress={smoothProgress}
             />
 
             <GameSidebar

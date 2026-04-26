@@ -9,17 +9,25 @@ public class SessionResponse {
     private String status;
     private int currentTick;
     private int maxPlayers;
+    private int cheapShipStock;
+    private int mediumShipStock;
+    private int expensiveShipStock;
     private List<PlayerSummaryResponse> players;
 
     public SessionResponse() {
     }
 
-    public SessionResponse(Long id, String sessionCode, String status, int currentTick, int maxPlayers, List<PlayerSummaryResponse> players) {
+    public SessionResponse(Long id, String sessionCode, String status, int currentTick, int maxPlayers,
+                           int cheapShipStock, int mediumShipStock, int expensiveShipStock,
+                           List<PlayerSummaryResponse> players) {
         this.id = id;
         this.sessionCode = sessionCode;
         this.status = status;
         this.currentTick = currentTick;
         this.maxPlayers = maxPlayers;
+        this.cheapShipStock = cheapShipStock;
+        this.mediumShipStock = mediumShipStock;
+        this.expensiveShipStock = expensiveShipStock;
         this.players = players;
     }
 
@@ -41,6 +49,18 @@ public class SessionResponse {
 
     public int getMaxPlayers() {
         return maxPlayers;
+    }
+
+    public int getCheapShipStock() {
+        return cheapShipStock;
+    }
+
+    public int getMediumShipStock() {
+        return mediumShipStock;
+    }
+
+    public int getExpensiveShipStock() {
+        return expensiveShipStock;
     }
 
     public List<PlayerSummaryResponse> getPlayers() {

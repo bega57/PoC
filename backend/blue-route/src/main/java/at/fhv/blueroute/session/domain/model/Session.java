@@ -27,6 +27,15 @@ public class Session {
     @Column(nullable = false)
     private int maxPlayers;
 
+    @Column(nullable = false)
+    private int cheapShipStock;
+
+    @Column(nullable = false)
+    private int mediumShipStock;
+
+    @Column(nullable = false)
+    private int expensiveShipStock;
+
     @OneToMany(mappedBy = "session", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<SessionPlayer> sessionPlayers = new ArrayList<>();
 
@@ -38,6 +47,9 @@ public class Session {
         this.status = status;
         this.currentTick = currentTick;
         this.maxPlayers = maxPlayers;
+        this.cheapShipStock = 20;
+        this.mediumShipStock = 15;
+        this.expensiveShipStock = 10;
     }
 
     public Long getId() {
@@ -64,6 +76,18 @@ public class Session {
         return sessionPlayers;
     }
 
+    public int getCheapShipStock() {
+        return cheapShipStock;
+    }
+
+    public int getMediumShipStock() {
+        return mediumShipStock;
+    }
+
+    public int getExpensiveShipStock() {
+        return expensiveShipStock;
+    }
+
     public void setId(Long id) {
         this.id = id;
     }
@@ -86,6 +110,18 @@ public class Session {
 
     public void setSessionPlayers(List<SessionPlayer> sessionPlayers) {
         this.sessionPlayers = sessionPlayers;
+    }
+
+    public void setCheapShipStock(int cheapShipStock) {
+        this.cheapShipStock = cheapShipStock;
+    }
+
+    public void setMediumShipStock(int mediumShipStock) {
+        this.mediumShipStock = mediumShipStock;
+    }
+
+    public void setExpensiveShipStock(int expensiveShipStock) {
+        this.expensiveShipStock = expensiveShipStock;
     }
 
     public void addPlayer(Player player, boolean host) {

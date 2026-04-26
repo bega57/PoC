@@ -11,7 +11,7 @@ import org.springframework.stereotype.Component;
 import java.time.LocalDateTime;
 import java.util.List;
 
-//@Component
+@Component
 public class VoyageScheduler {
 
     private final JpaVoyageRepository voyageRepository;
@@ -36,7 +36,10 @@ public class VoyageScheduler {
                     .orElseThrow(() -> new RuntimeException("Session not found"));
 
             if (session.getCurrentTick() >= voyage.getArrivalTick()) {
-                finishVoyageService.finishVoyage(voyage.getId());
+                finishVoyageService.finishVoyage(
+                        voyage.getId(),
+                        session.getCurrentTick()
+                );
             }
         }
     }

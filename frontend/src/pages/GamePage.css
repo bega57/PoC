@@ -283,8 +283,8 @@
     left: 40px;
     top: 600px;
 
-    width: auto;
-    max-width: 260px;
+    width: 300px;
+    max-width: 300px;
 
     background: rgba(15, 23, 42, 0.85);
     backdrop-filter: blur(8px);
