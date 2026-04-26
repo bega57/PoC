@@ -23,6 +23,7 @@ import at.fhv.blueroute.ship.infrastructure.persistence.JpaUsedShipOfferReposito
 import at.fhv.blueroute.ship.domain.model.UsedShipOffer;
 import at.fhv.blueroute.ship.infrastructure.persistence.JpaUsedShipOfferRepository;
 import at.fhv.blueroute.ship.presentation.dto.BuyUsedShipRequest;
+import at.fhv.blueroute.common.service.PricingService;
 
 import org.springframework.stereotype.Service;
 
@@ -38,13 +39,14 @@ public class ShipService {
     private final CalculateShipSellPriceService sellPriceService;
     private final SessionRepository sessionRepository;
     private final WebSocketSender webSocketSender;
+    private final PricingService pricingService;
 
     public ShipService(JpaShipRepository shipRepository,
                        JpaUsedShipOfferRepository usedShipOfferRepository,
                        PlayerRepository playerRepository,
                        ShipMapper shipMapper, CalculateShipSellPriceService sellPriceService,
                        SessionRepository sessionRepository,
-                       WebSocketSender webSocketSender) {
+                       WebSocketSender webSocketSender, PricingService pricingService) {
         this.shipRepository = shipRepository;
         this.usedShipOfferRepository = usedShipOfferRepository;
         this.playerRepository = playerRepository;
@@ -52,6 +54,7 @@ public class ShipService {
         this.sellPriceService = sellPriceService;
         this.sessionRepository = sessionRepository;
         this.webSocketSender = webSocketSender;
+        this.pricingService = pricingService;
     }
 
     public ShipResponse buyShip(BuyShipRequest request) {
@@ -85,10 +88,11 @@ public class ShipService {
             }
         }
 
-        double price = shipType.getPrice();
+        double basePrice = shipType.getPrice();
+        double finalPrice = pricingService.applyVAT(basePrice);
         int speed = shipType.getSpeed();
 
-        if (player.getBalance() < price) {
+        if (player.getBalance() < finalPrice) {
             throw new InsufficientBalanceException(player.getId());
         }
 
@@ -102,12 +106,12 @@ public class ShipService {
             player.setCompanyName(request.getCompanyName().trim());
         }
 
-        player.setBalance(player.getBalance() - price);
+        player.setBalance(player.getBalance() - finalPrice);
 
         Ship ship = new Ship(
                 request.getShipName().trim(),
                 shipType,
-                price,
+                finalPrice,
                 speed,
                 player
         );
@@ -207,16 +211,18 @@ public class ShipService {
             throw new IllegalArgumentException("Ship name is required.");
         }
 
-        if (player.getBalance() < offer.getPrice()) {
+        double finalPrice = pricingService.applyVAT(offer.getPrice());
+
+        if (player.getBalance() < finalPrice) {
             throw new InsufficientBalanceException(player.getId());
         }
 
-        player.setBalance(player.getBalance() - offer.getPrice());
+        player.setBalance(player.getBalance() - finalPrice);
 
         Ship ship = new Ship(
                 request.getShipName().trim(),
                 offer.getType(),
-                offer.getPrice(),
+                finalPrice,
                 offer.getType().getSpeed(),
                 player
         );

@@ -121,14 +121,17 @@ function CargoOffersPage() {
                                 <div className="cargo-title-row">
                                     <h2>Cargo {offer.id}</h2>
                                     <div className="cargo-reward">
-                                        {offer.reward} $
+                                        Profit: {offer.reward - Math.round(offer.price * 1.2)} $
                                     </div>
                                 </div>
 
                                 <div className="cargo-stats">
                                     <div className="cargo-stat-block">
                                         <span className="cargo-stat-label">Price</span>
-                                        <span className="cargo-stat-value">{offer.price}</span>
+                                        <span className="cargo-stat-value">
+                                            ${Math.round(offer.price * 1.2)}
+                                            <span style={{ fontSize: "11px", opacity: 0.7 }}> incl. VAT</span>
+                                        </span>
                                     </div>
 
                                     <div className="cargo-stat-block">

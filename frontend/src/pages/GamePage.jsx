@@ -542,6 +542,7 @@ function GamePage() {
                 setShowLeaveModal={setShowLeaveModal}
                 handleLeaveSession={handleLeaveSession}
                 closeLeaveModal={closeLeaveModal}
+                setSession={setSession}
             />
 
         </div>

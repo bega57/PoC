@@ -18,7 +18,8 @@ function GameModals({
                         showLeaveModal,
                         setShowLeaveModal,
                         handleLeaveSession,
-                        closeLeaveModal
+                        closeLeaveModal,
+                        setSession
                     }) {
     return (
         <>
@@ -62,22 +63,31 @@ function GameModals({
                                     port: selectedPort
                                 });
 
+                                setSession(prev => {
+                                    if (!prev) return prev;
+
+                                    return {
+                                        ...prev,
+                                        players: prev.players.map(p => {
+                                            if (p.id !== storedPlayer.id) return p;
+
+                                            return {
+                                                ...p,
+                                                ships: p.ships.map(ship => ({
+                                                    ...ship,
+                                                    currentPort: res.data.currentPort
+                                                }))
+                                            };
+                                        })
+                                    };
+                                });
+
                                 setSelectedShip(prev => ({
                                     ...(prev || {}),
                                     currentPort: res.data.currentPort
                                 }));
 
                                 sessionStorage.setItem(`currentPort-${sessionCode}`, res.data.currentPort);
-
-                                if (currentPlayer) {
-                                    sessionStorage.setItem(
-                                        `player-${sessionCode}`,
-                                        JSON.stringify({
-                                            ...currentPlayer,
-                                            currentPort: res.data.currentPort
-                                        })
-                                    );
-                                }
 
                                 setSelectedPort(null);
                             }}

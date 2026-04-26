@@ -20,6 +20,7 @@ export default function VoyagePage() {
     const [session, setSession] = useState(null);
     const [errorMessage, setErrorMessage] = useState(null);
 
+
     const fetchSession = async () => {
         try {
             const res = await api.get(`/sessions/${sessionCode}`);
@@ -187,6 +188,11 @@ export default function VoyagePage() {
     const selectedCargo = useMemo(() => {
         return filteredCargo.find(item => item.id === Number(selectedCargoId)) || null;
     }, [filteredCargo, selectedCargoId]);
+
+    const VAT = 0.2;
+    const toGross = (price) => Math.round(price * (1 + VAT));
+
+    const grossPrice = selectedCargo ? toGross(selectedCargo.price) : 0;
 
     const handleStartVoyage = async () => {
         if (availableDestinations.length === 0) {
@@ -425,7 +431,7 @@ export default function VoyagePage() {
                                             </p>
 
                                             <div className="cargo-stats">
-                                                <span>💰 {item.price}</span>
+                                                <span>💰 {toGross(item.price)}</span>
                                                 <span>🏆 {item.reward}</span>
                                                 <span>⏱ {item.requiredTicks}</span>
                                             </div>
@@ -451,12 +457,12 @@ export default function VoyagePage() {
                                 <p>From: {selectedShip?.currentPort || "Unknown"}</p>
                                 <p>To: {selectedCargo.destinationPort?.name}</p>
                                 <p>Cargo Order: #{selectedCargo.id}</p>
-                                <p>Price: {selectedCargo.price} Talers</p>
+                                <p>Price: {grossPrice} Talers</p>
                                 <p>Reward: {selectedCargo.reward} Talers</p>
                                 <p>Required Capacity: {selectedCargo.requiredCapacity}</p>
                                 <p>Risk: {selectedCargo.riskLevel}</p>
                                 <p>Description: {selectedCargo.description}</p>
-                                <p>Expected Profit: {selectedCargo.reward - selectedCargo.price} Talers</p>
+                                <p>Expected Profit: {selectedCargo.reward - grossPrice} Talers</p>
                                 {selectedCargo && session && (
                                     <p>
                                         Estimated Duration: {selectedCargo.requiredTicks} days
