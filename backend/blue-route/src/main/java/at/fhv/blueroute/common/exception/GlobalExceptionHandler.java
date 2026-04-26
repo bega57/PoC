@@ -15,6 +15,7 @@ import at.fhv.blueroute.session.application.exception.PlayerAlreadyActiveExcepti
 import at.fhv.blueroute.session.application.exception.PlayerAlreadyInSessionException;
 import at.fhv.blueroute.session.application.exception.SessionPlayerNotFoundException;
 import at.fhv.blueroute.ship.application.exception.ShipOutOfStockException;
+import at.fhv.blueroute.ship.application.exception.ShipCurrentlyTravelingException;
 
 import java.time.LocalDateTime;
 
@@ -181,6 +182,21 @@ public class GlobalExceptionHandler {
     @ExceptionHandler(ShipOutOfStockException.class)
     public ResponseEntity<ErrorResponse> handleShipOutOfStock(
             ShipOutOfStockException ex,
+            HttpServletRequest request
+    ) {
+        ErrorResponse response = new ErrorResponse(
+                ex.getMessage(),
+                HttpStatus.CONFLICT.value(),
+                request.getRequestURI(),
+                LocalDateTime.now()
+        );
+
+        return ResponseEntity.status(HttpStatus.CONFLICT).body(response);
+    }
+
+    @ExceptionHandler(ShipCurrentlyTravelingException.class)
+    public ResponseEntity<ErrorResponse> handleShipCurrentlyTraveling(
+            ShipCurrentlyTravelingException ex,
             HttpServletRequest request
     ) {
         ErrorResponse response = new ErrorResponse(

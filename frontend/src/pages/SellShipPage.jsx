@@ -82,7 +82,8 @@ function SellShipPage() {
 
             await api.post("/ships/sell", {
                 playerId: currentPlayer.id,
-                shipId: selectedShip.id
+                shipId: selectedShip.id,
+                sessionCode:sessionCode
             });
 
             const refreshed = await api.get(`/sessions/${sessionCode}`);
@@ -97,7 +98,7 @@ function SellShipPage() {
             showToast(`Sold ${selectedShip.name} for $${selectedShip.sellPrice}`);
         } catch (error) {
             console.error(error);
-            setMessage("Failed to sell ship.");
+            setMessage(error.response?.data?.message || "Failed to sell ship.");
         } finally {
             setIsSelling(false);
         }

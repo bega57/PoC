@@ -1,24 +1,20 @@
 package at.fhv.blueroute.ship.presentation.dto;
 
-public class SellShipRequest {
+public class BuyUsedShipRequest {
 
     private Long playerId;
-    private Long shipId;
+    private String shipName;
     private String sessionCode;
 
     public Long getPlayerId() {
         return playerId;
     }
 
-    public Long getShipId() {
-        return shipId;
+    public String getShipName() {
+        return shipName;
     }
 
     public String getSessionCode() {
         return sessionCode;
-    }
-
-    public void setSessionCode(String sessionCode) {
-        this.sessionCode = sessionCode;
     }
 }
