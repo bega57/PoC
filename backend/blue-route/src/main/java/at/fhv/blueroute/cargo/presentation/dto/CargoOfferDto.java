@@ -10,6 +10,7 @@ public record CargoOfferDto(
         int requiredCapacity,
         int requiredTicks,
         double fuelConsumption,
+        double conditionDamage,
         String riskLevel
 ) {
 }
