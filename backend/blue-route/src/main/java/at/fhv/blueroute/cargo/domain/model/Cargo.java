@@ -31,6 +31,7 @@ public class Cargo {
     private int requiredTicks;
 
     private double fuelConsumption;
+    private double conditionDamage;
 
     @Column
     private String description;
@@ -69,6 +70,10 @@ public class Cargo {
         return fuelConsumption;
     }
 
+    public double getConditionDamage() {
+        return conditionDamage;
+    }
+
     public int getRequiredTicks() {
         return requiredTicks;
     }
@@ -105,6 +110,10 @@ public class Cargo {
 
     public void setFuelConsumption(double fuelConsumption) {
         this.fuelConsumption = fuelConsumption;
+    }
+
+    public void setConditionDamage(double conditionDamage) {
+        this.conditionDamage = conditionDamage;
     }
 
     public void setDescription(String description) {
