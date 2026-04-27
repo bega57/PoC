@@ -81,10 +81,8 @@ public class SessionService {
 
         session.addPlayer(player, false);
 
-        if (session.getSessionPlayers().stream().anyMatch(sp -> sp.getStatus() == SessionPlayerStatus.ACTIVE)) {
+        if (session.isFull()) {
             session.setStatus(SessionStatus.RUNNING);
-        } else {
-            session.setStatus(SessionStatus.PAUSED);
         }
 
         Session updatedSession = sessionRepository.save(session);
