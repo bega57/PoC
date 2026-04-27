@@ -36,6 +36,9 @@ public class Ship {
 
     private boolean traveling;
 
+
+    private double usedCapacity = 0;
+
     public Ship() {
     }
 
@@ -121,4 +124,13 @@ public class Ship {
     public void setTraveling(boolean traveling) { this.traveling = traveling; }
 
     public void setCargoCapacity(double cargoCapacity) { this.cargoCapacity = cargoCapacity;}
+
+    public double getUsedCapacity() {
+        return usedCapacity;
+    }
+
+    public void setUsedCapacity(double usedCapacity) {
+        this.usedCapacity = usedCapacity;
+    }
+
 }

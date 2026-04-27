@@ -14,6 +14,7 @@ public class ShipResponse {
     private String currentPort;
     private double cargoCapacity;
     private Double sellPrice;
+    private double usedCapacity;
 
 
     public ShipResponse() {
@@ -92,6 +93,14 @@ public class ShipResponse {
 
     public void setSellPrice(Double sellPrice) {
         this.sellPrice = sellPrice;
+    }
+
+    public double getUsedCapacity() {
+        return usedCapacity;
+    }
+
+    public void setUsedCapacity(double usedCapacity) {
+        this.usedCapacity = usedCapacity;
     }
 
 }

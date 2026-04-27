@@ -201,8 +201,8 @@ function CompanyPage() {
                                                     <div className="bar">
                                                         <div style={{ width: `${percent}%` }} />
                                                         <span className="bar-text">
-                        {progress.current} / {progress.total}
-                    </span>
+                                                            {progress.current} / {progress.total}
+                                                        </span>
                                                     </div>
                                                 </div>
                                             );
@@ -242,8 +242,14 @@ function CompanyPage() {
                                             <div className="stat-block">
                                                 <span className="stat-label">Capacity</span>
                                                 <div className="bar small capacity-bar">
-                                                    <div style={{ width: "100%" }} />
-                                                    <span className="bar-text">{ship.cargoCapacity}</span>
+                                                    <div
+                                                        style={{
+                                                            width: `${((ship.cargoCapacity - (ship.usedCapacity || 0)) / ship.cargoCapacity) * 100}%`
+                                                        }}
+                                                    />
+                                                    <span className="bar-text">
+                                                        {ship.cargoCapacity - (ship.usedCapacity || 0)} / {ship.cargoCapacity}
+                                                    </span>
                                                 </div>
                                             </div>
 

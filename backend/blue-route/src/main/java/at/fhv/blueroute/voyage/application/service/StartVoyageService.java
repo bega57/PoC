@@ -84,7 +84,7 @@ public class StartVoyageService {
             );
         }
 
-        if (ship.getCargoCapacity() < cargo.getRequiredCapacity()) {
+        if (ship.getCargoCapacity() - ship.getUsedCapacity() < cargo.getRequiredCapacity()) {
             throw new VoyageException("Ship does not have enough cargo capacity");
         }
 
@@ -147,6 +147,10 @@ public class StartVoyageService {
 
         ship.setTraveling(true);
         ship.setCurrentPort(null);
+        ship.setUsedCapacity(
+                ship.getUsedCapacity() + cargo.getRequiredCapacity()
+        );
+
         shipRepository.save(ship);
 
         Voyage savedVoyage = voyageRepository.save(voyage);

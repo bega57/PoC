@@ -20,13 +20,16 @@ public class FinishVoyageService {
     private final JpaVoyageRepository voyageRepository;
     private final JpaShipRepository shipRepository;
     private final PlayerRepository playerRepository;
+    private final JpaCargoRepository cargoRepository;
 
     public FinishVoyageService(JpaVoyageRepository voyageRepository,
                                JpaShipRepository shipRepository,
-                               PlayerRepository playerRepository) {
+                               PlayerRepository playerRepository,
+                               JpaCargoRepository cargoRepository) {
         this.voyageRepository = voyageRepository;
         this.shipRepository = shipRepository;
         this.playerRepository = playerRepository;
+        this.cargoRepository = cargoRepository;
     }
 
     public void finishVoyage(Long voyageId, int currentTick) {
@@ -47,8 +50,14 @@ public class FinishVoyageService {
         Ship ship = shipRepository.findById(voyage.getShipId())
                 .orElseThrow(() -> new RuntimeException("Ship not found"));
 
+        Cargo cargo = cargoRepository.findById(voyage.getCargoId())
+                .orElseThrow(() -> new RuntimeException("Cargo not found"));
+
         ship.setCurrentPort(voyage.getDestinationPort());
         ship.setTraveling(false);
+        ship.setUsedCapacity(
+                Math.max(0, ship.getUsedCapacity() - cargo.getRequiredCapacity())
+        );
 
         Player owner = ship.getOwner();
         if (owner == null) {
