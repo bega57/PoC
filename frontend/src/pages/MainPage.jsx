@@ -70,6 +70,22 @@ function MainPage() {
         };
     }, [session?.sessionCode]);
 
+    useEffect(() => {
+        const handleBeforeUnload = () => {
+            if (!session?.sessionCode || !player?.id) return;
+
+            localStorage.setItem(`sessionCode-${player.id}`, session.sessionCode);
+            localStorage.setItem("lastSessionCode", session.sessionCode);
+            localStorage.setItem("lastPlayerId", player.id);
+        };
+
+        window.addEventListener("beforeunload", handleBeforeUnload);
+
+        return () => {
+            window.removeEventListener("beforeunload", handleBeforeUnload);
+        };
+    }, [session, player]);
+
     return (
         <div className="main-page">
             <div className="main-overlay"></div>

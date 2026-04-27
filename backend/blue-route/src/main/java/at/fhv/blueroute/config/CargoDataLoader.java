@@ -1,6 +1,7 @@
 package at.fhv.blueroute.config;
 
 import at.fhv.blueroute.cargo.application.service.CalculateCargoValuesService;
+import at.fhv.blueroute.cargo.application.service.CalculateDeteriorationService;
 import at.fhv.blueroute.cargo.application.service.CalculateFuelConsumptionService;
 import at.fhv.blueroute.cargo.domain.model.Cargo;
 import at.fhv.blueroute.cargo.domain.model.RiskLevel;
@@ -29,7 +30,8 @@ public class CargoDataLoader {
     ) {
         return args -> {
 
-            CalculateCargoValuesService valueService = new CalculateCargoValuesService();
+            CalculateCargoValuesService valueService =
+                    new CalculateCargoValuesService(new CalculateDeteriorationService());
             CalculateFuelConsumptionService fuelService = new CalculateFuelConsumptionService();
 
             List<Cargo> existingCargos = cargoRepo.findAll();
@@ -47,7 +49,6 @@ public class CargoDataLoader {
                             cargo.getDestinationPort()
                     );
 
-                    valueService.apply(cargo, distance);
 
                     System.out.println(
                             cargo.getOriginPort().getName() + " -> " +
@@ -61,6 +62,8 @@ public class CargoDataLoader {
                         int ticks = Math.max(1, distance / 10);
                         cargo.setRequiredTicks(ticks);
                     }
+
+                    valueService.apply(cargo, distance);
 
                     double fuel = fuelService.calculate(cargo, distance);
                     cargo.setFuelConsumption(fuel);
@@ -137,19 +140,18 @@ public class CargoDataLoader {
         c.setOriginPort(origin);
         c.setDestinationPort(dest);
 
-
         int distance = DistanceCalculator.calculate(origin, dest);
-
-        CalculateCargoValuesService valueService = new CalculateCargoValuesService();
-        valueService.apply(c, distance);
 
         int requiredTicks = Math.max(1, distance / 10);
         c.setRequiredTicks(requiredTicks);
 
+        CalculateCargoValuesService valueService =
+                new CalculateCargoValuesService(new CalculateDeteriorationService());
+        valueService.apply(c, distance);
+
         CalculateFuelConsumptionService fuelService = new CalculateFuelConsumptionService();
         double fuel = fuelService.calculate(c, distance);
         c.setFuelConsumption(fuel);
-
 
         return c;
     }

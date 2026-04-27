@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import api from "../api/api";
 
 function ResumeSessionForm({ onSessionResumed, onPlayerResumed }) {
@@ -6,6 +6,34 @@ function ResumeSessionForm({ onSessionResumed, onPlayerResumed }) {
     const [playerId, setPlayerId] = useState("");
     const [message, setMessage] = useState("");
     const [isError, setIsError] = useState(false);
+
+    useEffect(() => {
+        const lastSession = localStorage.getItem("lastSessionCode");
+        const lastPlayer = localStorage.getItem("lastPlayerId");
+
+        if (lastSession) setSessionCode(lastSession);
+        if (lastPlayer) setPlayerId(lastPlayer);
+    }, []);
+
+    useEffect(() => {
+        if (!playerId) return;
+
+        const savedSession = localStorage.getItem(`sessionCode-${playerId}`);
+
+        if (savedSession) {
+            setSessionCode(savedSession);
+        }
+    }, [playerId]);
+
+    useEffect(() => {
+        if (!message) return;
+
+        const timer = setTimeout(() => {
+            setMessage("");
+        }, 2000);
+
+        return () => clearTimeout(timer);
+    }, [message]);
 
     const handleResumeSession = async (e) => {
         e.preventDefault();
@@ -37,8 +65,9 @@ function ResumeSessionForm({ onSessionResumed, onPlayerResumed }) {
 
             setMessage(`Resumed session: ${response.data.sessionCode}`);
             setIsError(false);
-            setSessionCode("");
-            setPlayerId("");
+            localStorage.setItem("lastSessionCode", response.data.sessionCode);
+            localStorage.setItem("lastPlayerId", playerId);
+            localStorage.setItem(`sessionCode-${playerId}`, response.data.sessionCode);
         } catch (error) {
             console.error(error);
             setMessage(error.response?.data?.message || "Failed to resume session");
@@ -56,14 +85,16 @@ function ResumeSessionForm({ onSessionResumed, onPlayerResumed }) {
                         type="text"
                         placeholder="Session code"
                         value={sessionCode}
-                        onChange={(e) => setSessionCode(e.target.value)}
+                        onChange={(e) =>
+                            setSessionCode(e.target.value.toUpperCase().replace(/[^A-Z0-9]/g, ""))
+                        }
                     />
 
                     <input
                         type="number"
                         placeholder="Player ID"
                         value={playerId}
-                        onChange={(e) => setPlayerId(e.target.value)}
+                        onChange={(e) => setPlayerId(e.target.value.replace(/[^0-9]/g, ""))}
                     />
                 </div>
 

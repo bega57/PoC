@@ -33,6 +33,7 @@ public class GetCargoOffersService {
                 cargo.getRequiredCapacity(),
                 cargo.getRequiredTicks(),
                 cargo.getFuelConsumption(),
+                cargo.getConditionDamage(),
                 cargo.getRiskLevel() != null ? cargo.getRiskLevel().name() : "LOW"
         );
     }
