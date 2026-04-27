@@ -150,6 +150,11 @@ function CargoOffersPage() {
                                     </div>
 
                                     <div className="cargo-stat-block">
+                                        <span className="cargo-stat-label">Condition</span>
+                                        <span className="cargo-stat-value">{offer.conditionDamage}</span>
+                                    </div>
+
+                                    <div className="cargo-stat-block">
                                         <span className="cargo-stat-label">Risk</span>
                                         <span className="cargo-stat-value">{offer.riskLevel}</span>
                                     </div>

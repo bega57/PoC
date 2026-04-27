@@ -152,6 +152,10 @@ function GameModals({
                         <button
                             className="confirm-btn"
                             onClick={async () => {
+                                localStorage.setItem(`sessionCode-${storedPlayer.id}`, sessionCode);
+                                localStorage.setItem("lastSessionCode", sessionCode);
+                                localStorage.setItem("lastPlayerId", storedPlayer.id);
+
                                 await handleLeaveSession();
                                 closeLeaveModal();
                             }}
