@@ -1,6 +1,7 @@
 package at.fhv.blueroute.cargo.application.service;
 
 import at.fhv.blueroute.cargo.domain.model.Cargo;
+import at.fhv.blueroute.cargo.domain.model.CargoType;
 import at.fhv.blueroute.cargo.domain.model.RiskLevel;
 import org.springframework.stereotype.Service;
 
@@ -15,41 +16,92 @@ public class CalculateCargoValuesService {
 
     public void apply(Cargo cargo, int distance) {
 
-        // Risk based on distance
-        if (distance < 50) {
-            cargo.setRiskLevel(RiskLevel.LOW);
-        } else if (distance < 120) {
-            cargo.setRiskLevel(RiskLevel.MEDIUM);
-        } else {
-            cargo.setRiskLevel(RiskLevel.HIGH);
+        if (cargo.getType() == null) {
+            throw new IllegalArgumentException("Cargo type must not be null.");
         }
 
-        // Price based on distance
-        double price = distance * 50;
+        cargo.setRiskLevel(calculateRiskLevel(cargo.getType()));
+
+        double price = calculatePrice(distance, cargo.getType());
         cargo.setPrice(price);
 
-        // Reward based on risk
-        double reward = price * cargo.getRiskLevel().getFuelMultiplier() + (distance * 10);
+        double reward = calculateReward(price, distance, cargo.getRiskLevel(), cargo.getType());
         cargo.setReward(reward);
 
-        // Capacity
-        cargo.setRequiredCapacity(Math.max(20, distance / 2));
+        cargo.setRequiredCapacity(calculateRequiredCapacity(distance, cargo.getType()));
 
-        // Description
-        String description = switch (cargo.getRiskLevel()) {
-            case LOW -> "Safe delivery";
-            case MEDIUM -> "Moderate risk transport";
-            case HIGH -> "High-risk shipment";
-        };
-
-        description += " from " +
-                cargo.getOriginPort().getName() +
-                " to " +
-                cargo.getDestinationPort().getName();
-
-        cargo.setDescription(description);
+        cargo.setDescription(createDescription(cargo));
 
         double conditionDamage = deteriorationService.calculate(cargo);
         cargo.setConditionDamage(conditionDamage);
+    }
+
+    private RiskLevel calculateRiskLevel(CargoType type) {
+        return switch (type) {
+            case CLOTHES, FOOD -> RiskLevel.LOW;
+            case ELECTRONICS, MEDICINE, MACHINERY -> RiskLevel.MEDIUM;
+            case OIL, LUXURY_GOODS -> RiskLevel.HIGH;
+        };
+    }
+
+    private double calculatePrice(int distance, CargoType type) {
+        double basePrice = distance * 50;
+
+        double typeMultiplier = switch (type) {
+            case CLOTHES -> 0.9;
+            case FOOD -> 1.0;
+            case ELECTRONICS -> 1.2;
+            case MEDICINE -> 1.3;
+            case MACHINERY -> 1.4;
+            case OIL -> 1.5;
+            case LUXURY_GOODS -> 1.7;
+        };
+
+        return basePrice * typeMultiplier;
+    }
+
+    private double calculateReward(double price, int distance, RiskLevel riskLevel, CargoType type) {
+        double typeBonus = switch (type) {
+            case CLOTHES -> 100;
+            case FOOD -> 150;
+            case ELECTRONICS -> 250;
+            case MEDICINE -> 300;
+            case MACHINERY -> 350;
+            case OIL -> 500;
+            case LUXURY_GOODS -> 700;
+        };
+
+        return price * riskLevel.getFuelMultiplier() + (distance * 10) + typeBonus;
+    }
+
+    private int calculateRequiredCapacity(int distance, CargoType type) {
+        int distanceCapacity = Math.max(5, distance / 4);
+
+        int baseCapacity = switch (type) {
+            case LUXURY_GOODS -> 10;
+            case MEDICINE -> 15;
+            case CLOTHES, FOOD, ELECTRONICS -> 20;
+            case MACHINERY -> 45;
+            case OIL -> 60;
+        };
+
+        return Math.max(baseCapacity, distanceCapacity);
+    }
+
+    private String createDescription(Cargo cargo) {
+        String typeDescription = switch (cargo.getType()) {
+            case CLOTHES -> "Clothing shipment";
+            case FOOD -> "Food delivery";
+            case ELECTRONICS -> "Electronics transport";
+            case MEDICINE -> "Medical cargo";
+            case MACHINERY -> "Heavy machinery transport";
+            case OIL -> "Flammable oil shipment";
+            case LUXURY_GOODS -> "Valuable luxury goods shipment";
+        };
+
+        return typeDescription + " from " +
+                cargo.getOriginPort().getName() +
+                " to " +
+                cargo.getDestinationPort().getName();
     }
 }

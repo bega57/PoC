@@ -119,7 +119,7 @@ function CargoOffersPage() {
 
                             <div className="cargo-card-right">
                                 <div className="cargo-title-row">
-                                    <h2>Cargo {offer.id}</h2>
+                                    <h2>{offer.name}</h2>
                                     <div className="cargo-reward">
                                         Profit: {offer.reward - Math.round(offer.price * 1.2)} $
                                     </div>
@@ -152,6 +152,13 @@ function CargoOffersPage() {
                                     <div className="cargo-stat-block">
                                         <span className="cargo-stat-label">Condition</span>
                                         <span className="cargo-stat-value">{offer.conditionDamage}</span>
+                                    </div>
+
+                                    <div className="cargo-stat-block">
+                                        <span className="cargo-stat-label">Type</span>
+                                        <span className="cargo-stat-value">
+                                            {offer.type.replace("_", " ")}
+                                        </span>
                                     </div>
 
                                     <div className="cargo-stat-block">

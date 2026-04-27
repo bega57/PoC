@@ -3,6 +3,7 @@ package at.fhv.blueroute.cargo.presentation.dto;
 public record CargoOfferDto(
         Long id,
         String name,
+        String type,
         String fromPort,
         String toPort,
         double price,

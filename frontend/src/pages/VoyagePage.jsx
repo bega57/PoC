@@ -233,6 +233,8 @@ export default function VoyagePage() {
                 shipName: selectedShip.name,
                 origin: selectedShip.currentPort,
                 destination: selectedCargo?.destinationPort?.name,
+                cargoName: selectedCargo?.name,
+                cargoType: selectedCargo?.type,
                 duration: selectedCargo.requiredTicks,
                 price: selectedCargo?.price,
                 reward: selectedCargo?.reward
@@ -415,8 +417,8 @@ export default function VoyagePage() {
                                     <option value="">Select cargo order</option>
                                     {filteredCargo.map(item => (
                                         <option key={item.id} value={item.id}>
-                                            Order #{item.id} - {item.originPort?.name} → {item.destinationPort?.name}
-                                            - Price: {item.price}
+                                            {item.name} - {item.originPort?.name} → {item.destinationPort?.name}
+                                            - Type: {item.type?.replaceAll("_", " ")}
                                             - Reward: {item.reward}
                                             - Duration: {item.requiredTicks} days
                                         </option>
@@ -436,7 +438,7 @@ export default function VoyagePage() {
                                             }}
                                             onClick={() => setSelectedCargoId(String(item.id))}
                                         >
-                                            <h4>Order #{item.id}</h4>
+                                            <h4>{item.name}</h4>
 
                                             <p className="route">
                                                 {item.originPort?.name} → {item.destinationPort?.name}
@@ -446,6 +448,7 @@ export default function VoyagePage() {
                                                 <span>💰 {toGross(item.price)}</span>
                                                 <span>🏆 {item.reward}</span>
                                                 <span>⏱ {item.requiredTicks}</span>
+                                                <span>📦 {item.type?.replaceAll("_", " ")}</span>
                                             </div>
 
                                             <p style={{ fontSize: "12px", opacity: 0.7 }}>
@@ -468,8 +471,8 @@ export default function VoyagePage() {
                                 <p>Ship: {selectedShip.name}</p>
                                 <p>From: {selectedShip?.currentPort || "Unknown"}</p>
                                 <p>To: {selectedCargo.destinationPort?.name}</p>
-                                <p>Cargo Order: #{selectedCargo.id}</p>
-                                <p>Price: {grossPrice} Talers</p>
+                                <p>Cargo: {selectedCargo.name}</p>
+                                <p>Type: {selectedCargo.type?.replaceAll("_", " ")}</p>                                <p>Price: {grossPrice} Talers</p>
                                 <p>Reward: {selectedCargo.reward} Talers</p>
                                 <p>Required Capacity: {selectedCargo.requiredCapacity}</p>
                                 <p>Risk: {selectedCargo.riskLevel}</p>
