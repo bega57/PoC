@@ -25,7 +25,8 @@ public class GetCargoOffersService {
     private CargoOfferDto toDto(Cargo cargo) {
         return new CargoOfferDto(
                 cargo.getId(),
-                "Cargo " + cargo.getId(),
+                cargo.getName() != null ? cargo.getName() : "Unknown Cargo",
+                cargo.getType() != null ? cargo.getType().name() : "UNKNOWN",
                 cargo.getOriginPort() != null ? cargo.getOriginPort().getName() : "Unknown",
                 cargo.getDestinationPort() != null ? cargo.getDestinationPort().getName() : "Unknown",
                 cargo.getPrice(),

@@ -10,6 +10,13 @@ public class Cargo {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
+    @Column(nullable = false)
+    private String name;
+
+    @Enumerated(EnumType.STRING)
+    @Column(nullable = false)
+    private CargoType type;
+
     @ManyToOne
     @JoinColumn(name = "origin_port")
     private Port originPort;
@@ -40,6 +47,14 @@ public class Cargo {
 
     public Long getId() {
         return id;
+    }
+
+    public String getName() {
+        return name;
+    }
+
+    public CargoType getType() {
+        return type;
     }
 
     public Port getOriginPort() {
@@ -80,6 +95,20 @@ public class Cargo {
 
     public String getDescription() { return description; }
 
+    public void setName(String name) {
+        if (name == null || name.isBlank()) {
+            throw new IllegalArgumentException("Cargo name must not be empty.");
+        }
+        this.name = name;
+    }
+
+    public void setType(CargoType type) {
+        if (type == null) {
+            throw new IllegalArgumentException("Cargo type must not be null.");
+        }
+        this.type = type;
+    }
+
     public void setOriginPort(Port originPort) {
         this.originPort = originPort;
     }
@@ -101,6 +130,9 @@ public class Cargo {
     }
 
     public void setRiskLevel(RiskLevel riskLevel) {
+        if (riskLevel == null) {
+            throw new IllegalArgumentException("Risk level must not be null.");
+        }
         this.riskLevel = riskLevel;
     }
 
