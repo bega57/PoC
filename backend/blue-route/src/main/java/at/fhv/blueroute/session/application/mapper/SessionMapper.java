@@ -48,7 +48,8 @@ public class SessionMapper {
                 player.getShips().stream()
                         .map(ship -> shipMapper.toResponse(
                                 ship,
-                                sellPriceService.calculate(ship)
+                                sellPriceService.calculate(ship),
+                                0
                         ))
                         .toList(),
                 player.getCurrentPort()

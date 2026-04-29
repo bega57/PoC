@@ -6,7 +6,8 @@ import java.util.List;
 import java.util.Optional;
 
 public interface ShipRepository {
-    //Ship save(Ship ship);
-    List<Ship> findByOwnerId(Long ownerId);
 
+    Optional<Ship> findById(Long id);
+    Ship save(Ship ship);
+    List<Ship> findByOwnerId(Long ownerId);
 }

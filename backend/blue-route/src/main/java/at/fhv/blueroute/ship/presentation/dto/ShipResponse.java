@@ -15,6 +15,7 @@ public class ShipResponse {
     private double cargoCapacity;
     private Double sellPrice;
     private double usedCapacity;
+    private double refuelCost;
 
 
     public ShipResponse() {
@@ -103,4 +104,11 @@ public class ShipResponse {
         this.usedCapacity = usedCapacity;
     }
 
+    public double getRefuelCost() {
+        return refuelCost;
+    }
+
+    public void setRefuelCost(double refuelCost) {
+        this.refuelCost = refuelCost;
+    }
 }
