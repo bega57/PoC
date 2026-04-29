@@ -20,8 +20,6 @@ import at.fhv.blueroute.ship.application.exception.ShipOutOfStockException;
 import at.fhv.blueroute.common.websocket.WebSocketSender;
 import at.fhv.blueroute.ship.domain.model.UsedShipOffer;
 import at.fhv.blueroute.ship.infrastructure.persistence.JpaUsedShipOfferRepository;
-import at.fhv.blueroute.ship.domain.model.UsedShipOffer;
-import at.fhv.blueroute.ship.infrastructure.persistence.JpaUsedShipOfferRepository;
 import at.fhv.blueroute.ship.presentation.dto.BuyUsedShipRequest;
 import at.fhv.blueroute.common.service.PricingService;
 
@@ -140,7 +138,7 @@ public class ShipService {
 
         double sellPrice = sellPriceService.calculate(savedShip);
 
-        return shipMapper.toResponse(savedShip, sellPrice);
+        return shipMapper.toResponse(savedShip, sellPrice, 0);
     }
 
     public List<ShipResponse> getShipsByPlayer(Long playerId) {
@@ -148,7 +146,7 @@ public class ShipService {
                 .stream()
                 .map(ship -> {
                     double sellPrice = sellPriceService.calculate(ship);
-                    return shipMapper.toResponse(ship, sellPrice);
+                    return shipMapper.toResponse(ship, sellPrice, 0);
                 })
                 .toList();
     }
@@ -190,7 +188,7 @@ public class ShipService {
         shipRepository.delete(ship);
         playerRepository.save(player);
 
-        return shipMapper.toResponse(ship, sellPrice);
+        return shipMapper.toResponse(ship, sellPrice, 0);
     }
 
     public ShipResponse buyUsedShip(Long offerId, BuyUsedShipRequest request) {
@@ -237,6 +235,6 @@ public class ShipService {
         usedShipOfferRepository.delete(offer);
 
         double sellPrice = sellPriceService.calculate(savedShip);
-        return shipMapper.toResponse(savedShip, sellPrice);
+        return shipMapper.toResponse(savedShip, sellPrice, 0);
     }
 }

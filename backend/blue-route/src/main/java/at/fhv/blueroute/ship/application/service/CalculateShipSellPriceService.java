@@ -10,13 +10,12 @@ public class CalculateShipSellPriceService {
 
         double base = ship.getType().getPrice();
 
-        double minFactor = 0.1;
+        double minFactor = 0.3;
 
         double conditionFactor = Math.max(minFactor, ship.getCondition() / 100.0);
-        double fuelFactor = Math.max(minFactor, ship.getFuelLevel() / 100.0);
 
         double sellPenalty = 0.9;
 
-        return Math.floor(base * conditionFactor * fuelFactor * sellPenalty);
+        return Math.floor(base * conditionFactor * sellPenalty);
     }
 }

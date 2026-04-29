@@ -6,6 +6,6 @@ import org.springframework.data.jpa.repository.JpaRepository;
 
 import java.util.List;
 
-public interface JpaShipRepository extends JpaRepository<Ship, Long>, ShipRepository {
+public interface JpaShipRepository extends JpaRepository<Ship, Long> {
     List<Ship> findByOwnerId(Long ownerId);
 }

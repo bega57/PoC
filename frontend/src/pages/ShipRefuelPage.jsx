@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import api from "../api/api";
-import "./ShipMarketPage.css";
+import "./ShipRefuelPage.css";
 
 function ShipRefuelPage() {
     const navigate = useNavigate();
@@ -25,8 +25,37 @@ function ShipRefuelPage() {
 
     const ships = currentPlayer?.ships || [];
 
-    const handleRefuel = () => {
-        setToast("Refuel functionality coming soon ⛽");
+    const [toastType, setToastType] = useState("success");
+
+    const [fuelAmount, setFuelAmount] = useState(0);
+
+    const [refuelCost, setRefuelCost] = useState(0);
+
+    const VAT = 0.20;
+
+    const netCost = refuelCost / (1 + VAT);
+    const vatAmount = refuelCost - netCost;
+
+    const handleRefuel = async () => {
+        try {
+            await api.post(`/ships/${selectedShip.id}/refuel`, {
+                fuelAmount: fuelAmount
+            });
+
+            setToast("Ship refueled ⛽");
+            setToastType("success");
+
+            const res = await api.get(`/sessions/${sessionCode}`);
+            setSession(res.data);
+            setSelectedShip(null);
+            setFuelAmount(0);
+            window.scrollTo(0, 0);
+
+        } catch (err) {
+            setToast(err.response?.data?.message || "Refuel failed");
+            setToastType("error");
+        }
+
         setTimeout(() => setToast(""), 2000);
     };
 
@@ -43,38 +72,172 @@ function ShipRefuelPage() {
                     <p>Select a ship to refuel.</p>
                 </header>
 
-                {toast && <div className="toast-notification">{toast}</div>}
-
-                <div className="ship-cards">
-                    {ships.map((ship) => (
-                        <button
-                            key={ship.id}
-                            className={`ship-market-card ${selectedShip?.id === ship.id ? "active" : ""}`}
-                            onClick={() => setSelectedShip(ship)}
-                        >
-                            <div className="ship-card-right">
-                                <div className="ship-main-info">
-                                    <div className="ship-title-row">
-                                        <h2>{ship.name}</h2>
-                                    </div>
-                                    <p className="ship-description fuel">
-                                        Fuel: {ship.fuel ?? "N/A"}
-                                    </p>
-                                </div>
-                            </div>
-                        </button>
-                    ))}
-                </div>
-
-                {selectedShip && (
-                    <div className="buy-panel">
-                        <p>Selected: {selectedShip.name}</p>
-                        <button className="buy-button" onClick={handleRefuel}>
-                            Refuel
-                        </button>
+                {toast && (
+                    <div className={`toast-notification ${toastType === "error" ? "toast-error" : ""}`}>
+                        {toast}
                     </div>
                 )}
 
+                <div className="refuel-container">
+                    {ships.map((ship) => (
+                        <div
+                            key={ship.id}
+                            className={`refuel-card ${selectedShip?.id === ship.id ? "active" : ""}`}
+                            onClick={() => {
+                                if (selectedShip?.id !== ship.id) {
+                                    setSelectedShip(ship);
+                                    setFuelAmount(0);
+                                    setRefuelCost(0);
+                                }
+                            }}
+                        >
+                            <div className="refuel-row">
+
+                                {/* LEFT */}
+                                <div className="refuel-left">
+
+                                    <div className="refuel-name">
+                                        {ship.name}
+                                    </div>
+
+                                    <div className="refuel-info-row">
+                                        <span className="refuel-fuel">
+                                            ⛽ {Math.round(ship.fuelLevel ?? 0)}%
+                                        </span>
+
+                                    </div>
+
+                                    <div className="fuel-bar">
+                                        <div
+                                            className="fuel-fill"
+                                            style={{
+                                                width: `${ship.fuelLevel ?? 0}%`,
+                                                background: (() => {
+                                                    const fuel = ship.fuelLevel ?? 0;
+
+                                                    if (fuel <= 20) return "#ef4444";
+                                                    if (fuel <= 50) return "#f59e0b";
+                                                    return "#22c55e";
+                                                })()
+                                            }}
+                                        />
+                                    </div>
+
+                                    {selectedShip?.id === ship.id && (
+                                        <div className="refuel-bottom">
+
+                                            <div className="refuel-section-title">
+                                                Refuel
+                                            </div>
+                                            <div className="refuel-subtitle">
+                                                Adjust how much fuel you want to buy
+                                            </div>
+
+                                            <div className="refuel-box">
+
+                                                <div className="refuel-box-title">Refuel Summary</div>
+
+                                                <div className="refuel-info-grid">
+
+                                                    <div>Fuel to add</div>
+                                                    <div>+{fuelAmount}</div>
+
+                                                    <div>After refuel</div>
+                                                    <div>{Math.min(100, (ship.fuelLevel ?? 0) + fuelAmount)}%</div>
+
+                                                    <div>Net</div>
+                                                    <div>${Math.round(netCost)}</div>
+
+                                                    <div>VAT (20%)</div>
+                                                    <div>${Math.round(vatAmount)}</div>
+
+                                                    <div className="refuel-divider"></div>
+                                                    <div></div>
+
+                                                    <div className="refuel-total-label">Total</div>
+                                                    <div className="refuel-total">
+                                                        ${Math.round(refuelCost)}
+                                                    </div>
+
+                                                </div>
+
+                                                {currentPlayer?.balance < refuelCost && (
+                                                    <div className="refuel-warning">
+                                                        ⚠ Not enough balance
+                                                    </div>
+                                                )}
+
+                                            </div>
+
+                                            <input
+                                                type="range"
+                                                min="0"
+                                                max={Math.max(0, 100 - (ship.fuelLevel ?? 0))}
+                                                value={fuelAmount}
+
+                                                onClick={(e) => e.stopPropagation()}
+
+                                                onChange={async (e) => {
+                                                    const maxFuel = Math.max(0, 100 - (ship.fuelLevel ?? 0));
+                                                    const value = Math.min(maxFuel, Math.max(0, Number(e.target.value)));
+
+                                                    setFuelAmount(value);
+
+                                                    try {
+                                                        const res = await api.get(
+                                                            `/ships/${ship.id}/refuel-cost?fuelAmount=${value}`
+                                                        );
+                                                        setRefuelCost(res.data);
+                                                    } catch {
+                                                        setRefuelCost(0);
+                                                    }
+                                                }}
+                                                className="refuel-slider"
+                                            />
+
+                                            <div className="refuel-actions-row">
+
+                                                <button
+                                                    className="refuel-max-btn"
+                                                    onClick={async (e) => {
+                                                        e.stopPropagation();
+                                                        const maxFuel = Math.max(0, 100 - (ship.fuelLevel ?? 0));
+                                                        setFuelAmount(maxFuel);
+
+                                                        try {
+                                                            const res = await api.get(
+                                                                `/ships/${ship.id}/refuel-cost?fuelAmount=${maxFuel}`
+                                                            );
+                                                            setRefuelCost(res.data);
+                                                        } catch {
+                                                            setRefuelCost(0);
+                                                        }
+                                                    }}
+                                                >
+                                                    MAX
+                                                </button>
+
+                                                <button
+                                                    className="refuel-main-btn"
+                                                    onClick={(e) => {
+                                                        e.stopPropagation();
+                                                        handleRefuel();
+                                                    }}
+                                                    disabled={!fuelAmount}
+                                                >
+                                                    ⛽ Buy Fuel – ${Math.round(refuelCost)}
+                                                </button>
+
+                                            </div>
+
+                                        </div>
+                                    )}
+
+                                </div>
+                            </div>
+                        </div>
+                    ))}
+                </div>
             </div>
         </div>
     );
