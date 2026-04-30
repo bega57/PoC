@@ -152,11 +152,12 @@ function ShipRefuelPage() {
                                                     <div>${Math.round(vatAmount)}</div>
 
                                                     <div className="refuel-divider"></div>
-                                                    <div></div>
 
-                                                    <div className="refuel-total-label">Total</div>
-                                                    <div className="refuel-total">
-                                                        ${Math.round(refuelCost)}
+                                                    <div className="refuel-total-row">
+                                                        <span>Total</span>
+                                                        <span className="refuel-total-value">
+                                                            ${Math.round(refuelCost)}
+                                                        </span>
                                                     </div>
 
                                                 </div>
@@ -223,7 +224,7 @@ function ShipRefuelPage() {
                                                         e.stopPropagation();
                                                         handleRefuel();
                                                     }}
-                                                    disabled={!fuelAmount}
+                                                    disabled={!fuelAmount || currentPlayer?.balance < refuelCost}
                                                 >
                                                     ⛽ Buy Fuel – ${Math.round(refuelCost)}
                                                 </button>

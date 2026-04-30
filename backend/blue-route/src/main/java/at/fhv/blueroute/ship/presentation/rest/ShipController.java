@@ -86,8 +86,19 @@ public class ShipController {
     }
 
     @PostMapping("/{shipId}/repair")
-    public ShipResponse repairShip(@PathVariable Long shipId) {
-        return repairShipService.repair(shipId);
+    public ShipResponse repairShip(
+            @PathVariable Long shipId,
+            @RequestBody RepairShipRequest request
+    ) {
+        return repairShipService.repair(shipId, request.getRepairAmount());
+    }
+
+    @GetMapping("/{id}/repair-cost")
+    public double getRepairCost(
+            @PathVariable Long id,
+            @RequestParam int repairAmount
+    ) {
+        return repairShipService.calculateRepairCost(id, repairAmount);
     }
 
 }
