@@ -58,7 +58,15 @@ function GamePage() {
 
     const [rewardAmount, setRewardAmount] = useState(0);
 
-    const [leaderboard, setLeaderboard] = useState([]);
+    const [leaderboard, setLeaderboard] = useState(() => {
+        const saved = sessionStorage.getItem(`leaderboard-${sessionCode}`);
+        return saved ? JSON.parse(saved) : [];
+    });
+
+    useEffect(() => {
+        console.log("📊 RAW leaderboard:", leaderboard);
+    }, [leaderboard]);
+
     const getLocalLeaderboard = () => {
         return JSON.parse(localStorage.getItem("leaderboard") || "[]");
     };
@@ -285,22 +293,19 @@ function GamePage() {
 
     useEffect(() => {
         if (!isMultiplayer) {
-            setLeaderboard(getLocalLeaderboard());
+            const local = getLocalLeaderboard();
+
+            setLeaderboard(prev =>
+                prev.length > 0 ? prev : local
+            );
         }
     }, [isMultiplayer]);
 
-    const [stableLeaderboard, setStableLeaderboard] = useState([]);
+    const finalLeaderboard = leaderboard ?? [];
 
     useEffect(() => {
-        const t = setTimeout(() => {
-            setStableLeaderboard(prev => {
-                if (JSON.stringify(prev) === JSON.stringify(leaderboard)) return prev;
-                return leaderboard;
-            });
-        }, 80);
-
-        return () => clearTimeout(t);
-    }, [leaderboard]);
+        console.log("🏆 FINAL LEADERBOARD:", finalLeaderboard);
+    }, [finalLeaderboard]);
 
     useEffect(() => {
 
@@ -400,8 +405,22 @@ function GamePage() {
                 }
 
                 if (data.type === "LEADERBOARD_UPDATE") {
-                    if (!data.leaderboard?.every(p => p.username)) return;
-                    setLeaderboard(data.leaderboard);
+
+                    setLeaderboard(prev => {
+                        if (!data.leaderboard?.length) return prev;
+
+                        const updated =
+                            JSON.stringify(prev) === JSON.stringify(data.leaderboard)
+                                ? prev
+                                : data.leaderboard;
+
+                        sessionStorage.setItem(
+                            `leaderboard-${sessionCode}`,
+                            JSON.stringify(updated)
+                        );
+
+                        return updated;
+                    });
                 }
             });
         };
@@ -573,7 +592,7 @@ function GamePage() {
 
             <GameSidebar
                 session={session}
-                leaderboard={stableLeaderboard}
+                leaderboard={finalLeaderboard}
                 sidebarOpen={sidebarOpen}
                 setSidebarOpen={setSidebarOpen}
                 navigate={navigate}

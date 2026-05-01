@@ -84,9 +84,9 @@ function GameSidebar({
                         {/* 🏆 Leaderboard */}
                         <h3 style={{ marginTop: "15px" }}>🏆 Leaderboard</h3>
                         <div className="player-list">
-                            {leaderboard?.length === 0 ? (
+                            {leaderboard.length === 0 ? (
                                 <div className="player-item" style={{ opacity: 0.6 }}>
-                                    No scores yet
+                                    Loading...
                                 </div>
                             ) : (
                                 leaderboard.map((p, index) => (
@@ -106,7 +106,7 @@ function GameSidebar({
                                                 : "transparent"
                                         }}
                                     >
-                                        {getMedal(index)} {p.username || "Player"} – {p.score}
+                                        {p.username && `${getMedal(index)} ${p.username} – ${p.score}`}
                                     </div>
                                 ))
                             )}
