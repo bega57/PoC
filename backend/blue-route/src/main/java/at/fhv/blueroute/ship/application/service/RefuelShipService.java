@@ -48,27 +48,28 @@ public class RefuelShipService {
 
         switch (ship.getType()) {
             case CHEAP -> multiplier = 1.0;
-            case MEDIUM -> multiplier = 1.2;
-            case EXPENSIVE -> multiplier = 1.4;
+            case MEDIUM -> multiplier = 1.1;
+            case EXPENSIVE -> multiplier = 1.25;
             default -> multiplier = 1.0;
         }
 
-        double netPrice = basePrice * multiplier;
+        double netPrice = basePrice * multiplier * 0.6;
         double pricePerUnit = pricingService.applyVAT(netPrice);
 
         double maxByTank = maxFuel - currentFuel;
-        double maxByMoney = Math.floor(player.getBalance() / pricePerUnit);
 
-        double actualFuel = Math.min(requestedFuel, Math.min(maxByTank, maxByMoney));
-
-        if (actualFuel <= 0) {
-            throw new RuntimeException("Not enough money or tank full");
+        if (requestedFuel > maxByTank) {
+            throw new RuntimeException("Fuel exceeds tank capacity");
         }
 
-        double cost = actualFuel * pricePerUnit;
+        double cost = requestedFuel * pricePerUnit;
+
+        if (player.getBalance() < cost) {
+            throw new IllegalArgumentException("Not enough money");
+        }
 
 
-        ship.setFuelLevel(currentFuel + actualFuel);
+        ship.setFuelLevel(Math.min(100.0, currentFuel + requestedFuel));
         player.setBalance(player.getBalance() - cost);
 
         Ship saved = shipRepository.save(ship);
@@ -92,7 +93,7 @@ public class RefuelShipService {
             case EXPENSIVE -> 1.4;
         };
 
-        double netPrice = basePrice * multiplier;
+        double netPrice = basePrice * multiplier * 0.6;
         double pricePerUnit = pricingService.applyVAT(netPrice);
 
         return fuelAmount * pricePerUnit;

@@ -17,6 +17,12 @@ function CompanyPage() {
 
     const storedPlayer = JSON.parse(sessionStorage.getItem(`player-${sessionCode}`));
 
+    const getBarColor = (value) => {
+        if (value <= 20) return "#ef4444";
+        if (value <= 50) return "#f59e0b";
+        return "#22c55e";
+    };
+
     const fetchData = async () => {
         try {
             const sessionResponse = await api.get(`/sessions/${sessionCode}`);
@@ -226,16 +232,18 @@ function CompanyPage() {
 
                                             <div className="stat-block">
                                                 <span className="stat-label">Condition</span>
+
                                                 <div className="bar small">
                                                     <div
                                                         style={{
                                                             width: `${ship.condition}%`,
-                                                            background: ship.condition < 20 ? "#ef4444" :
-                                                                ship.condition < 50 ? "#f59e0b" :
-                                                                    "#22c55e"
+                                                            background: getBarColor(ship.condition)
                                                         }}
                                                     />
-                                                    <span className="bar-text">{ship.condition?.toFixed(0)}%</span>
+
+                                                    <span className="bar-text">
+                                                        {ship.condition?.toFixed(0)}%
+                                                    </span>
                                                 </div>
                                             </div>
 

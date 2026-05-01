@@ -96,11 +96,25 @@ public class SessionTickService {
                             v.getArrivalTick() - v.getStartTick()
                     );
 
-                    double fuelPerTick = cargo.getFuelConsumption() / duration;
+                    double shipFuelMultiplier = switch (ship.getType()) {
+                        case CHEAP -> 1.25;
+                        case MEDIUM -> 1.0;
+                        case EXPENSIVE -> 0.8;
+                    };
+
+                    double shipConditionMultiplier = switch (ship.getType()) {
+                        case CHEAP -> 1.5;
+                        case MEDIUM -> 1.0;
+                        case EXPENSIVE -> 0.7;
+                    };
+
+
+                    double cargoFuelPerTick = (cargo.getFuelConsumption() / duration) * shipFuelMultiplier;
+                    double extraFuelPerTick = 1.0 + (duration * 0.02);
+                    double fuelPerTick = cargoFuelPerTick + extraFuelPerTick;
 
                     double totalDamage = deteriorationService.calculate(cargo);
-
-                    double conditionPerTick = totalDamage / duration;
+                    double conditionPerTick = (totalDamage / duration) * shipConditionMultiplier;
 
                     ship.setFuelLevel(Math.max(0.0, ship.getFuelLevel() - fuelPerTick));
                     ship.setCondition(Math.max(0.0, ship.getCondition() - conditionPerTick));
