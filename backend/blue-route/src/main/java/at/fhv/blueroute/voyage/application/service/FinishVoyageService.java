@@ -59,14 +59,11 @@ public class FinishVoyageService {
                 Math.max(0, ship.getUsedCapacity() - cargo.getRequiredCapacity())
         );
 
-        Player owner = ship.getOwner();
-        if (owner == null) {
-            throw new RuntimeException("Ship owner not found");
-        }
+        Player owner = playerRepository.findById(ship.getOwner().getId())
+                .orElseThrow(() -> new RuntimeException("Player not found"));
 
         if (!voyage.isRewardGranted()) {
             owner.setBalance(owner.getBalance() + voyage.getReward());
-            playerRepository.save(owner);
             voyage.setRewardGranted(true);
         }
 

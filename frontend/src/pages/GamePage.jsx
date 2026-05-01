@@ -58,6 +58,28 @@ function GamePage() {
 
     const [rewardAmount, setRewardAmount] = useState(0);
 
+    const [leaderboard, setLeaderboard] = useState([]);
+    const getLocalLeaderboard = () => {
+        return JSON.parse(localStorage.getItem("leaderboard") || "[]");
+    };
+
+    const saveScore = (score) => {
+        const existing = getLocalLeaderboard();
+
+        const newEntry = {
+            username: currentPlayer?.username,
+            score: score
+        };
+
+        const filtered = existing.filter(e => e.username !== newEntry.username);
+
+        const updated = [...filtered, newEntry]
+            .sort((a, b) => b.score - a.score)
+            .slice(0, 10);
+
+        localStorage.setItem("leaderboard", JSON.stringify(updated));
+    };
+
     const [lastFinishedVoyageId, setLastFinishedVoyageId] = useState(() => {
         const saved = sessionStorage.getItem(`lastFinishedVoyageId-${sessionCode}`);
         return saved ? Number(saved) : null;
@@ -259,6 +281,26 @@ function GamePage() {
         }
     }, [session]);
 
+    const isMultiplayer = session?.maxPlayers > 1;
+
+    useEffect(() => {
+        if (!isMultiplayer) {
+            setLeaderboard(getLocalLeaderboard());
+        }
+    }, [isMultiplayer]);
+
+    const [stableLeaderboard, setStableLeaderboard] = useState([]);
+
+    useEffect(() => {
+        const t = setTimeout(() => {
+            setStableLeaderboard(prev => {
+                if (JSON.stringify(prev) === JSON.stringify(leaderboard)) return prev;
+                return leaderboard;
+            });
+        }, 80);
+
+        return () => clearTimeout(t);
+    }, [leaderboard]);
 
     useEffect(() => {
 
@@ -298,7 +340,7 @@ function GamePage() {
                     setSession(prev => {
                         if (!prev) return prev;
 
-                        return {
+                        const updated = {
                             ...prev,
                             players: prev.players.map(p => ({
                                 ...p,
@@ -314,11 +356,23 @@ function GamePage() {
                                 })
                             }))
                         };
+
+                        if (updated.maxPlayers === 1) {
+                            const myPlayer = updated.players.find(p => p.id === storedPlayer.id);
+
+                            if (myPlayer) {
+                                saveScore(myPlayer.balance);
+                            }
+                        }
+
+                        return updated;
                     });
 
                     setTimeout(() => {
                         safeFetchData();
                     }, 300);
+
+                    return;
                 }
 
                 if (data.type === "SESSION_PAUSED") {
@@ -343,6 +397,11 @@ function GamePage() {
 
                     await safeFetchData();
                     return;
+                }
+
+                if (data.type === "LEADERBOARD_UPDATE") {
+                    if (!data.leaderboard?.every(p => p.username)) return;
+                    setLeaderboard(data.leaderboard);
                 }
             });
         };
@@ -514,6 +573,7 @@ function GamePage() {
 
             <GameSidebar
                 session={session}
+                leaderboard={stableLeaderboard}
                 sidebarOpen={sidebarOpen}
                 setSidebarOpen={setSidebarOpen}
                 navigate={navigate}
