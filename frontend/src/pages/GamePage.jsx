@@ -58,6 +58,34 @@ function GamePage() {
 
     const [rewardAmount, setRewardAmount] = useState(0);
 
+    const [leaderboard, setLeaderboard] = useState(() => {
+        const saved = sessionStorage.getItem(`leaderboard-${sessionCode}`);
+        return saved ? JSON.parse(saved) : null;
+    });
+    const finalLeaderboard = leaderboard;
+
+
+    const getLocalLeaderboard = () => {
+        return JSON.parse(localStorage.getItem("leaderboard") || "[]");
+    };
+
+    const saveScore = (score) => {
+        const existing = getLocalLeaderboard();
+
+        const newEntry = {
+            username: currentPlayer?.username,
+            score: score
+        };
+
+        const filtered = existing.filter(e => e.username !== newEntry.username);
+
+        const updated = [...filtered, newEntry]
+            .sort((a, b) => b.score - a.score)
+            .slice(0, 10);
+
+        localStorage.setItem("leaderboard", JSON.stringify(updated));
+    };
+
     const [lastFinishedVoyageId, setLastFinishedVoyageId] = useState(() => {
         const saved = sessionStorage.getItem(`lastFinishedVoyageId-${sessionCode}`);
         return saved ? Number(saved) : null;
@@ -188,6 +216,17 @@ function GamePage() {
             );
             setVoyages(voyagesRes.data);
 
+            const leaderboardRes = await api.get(`/leaderboard?sessionCode=${sessionCode}`);
+
+            setLeaderboard(prev =>
+                (prev?.length ?? 0) > 0 ? prev : leaderboardRes.data
+            );
+
+            sessionStorage.setItem(
+                `leaderboard-${sessionCode}`,
+                JSON.stringify(leaderboardRes.data)
+            );
+
         } catch (err) {
             console.error(err);
         }
@@ -259,6 +298,17 @@ function GamePage() {
         }
     }, [session]);
 
+    const isMultiplayer = session?.maxPlayers > 1;
+
+    useEffect(() => {
+        if (!isMultiplayer) {
+            const local = getLocalLeaderboard();
+
+            setLeaderboard(prev =>
+                (prev?.length ?? 0) > 0 ? prev : local
+            );
+        }
+    }, [isMultiplayer]);
 
     useEffect(() => {
 
@@ -298,7 +348,7 @@ function GamePage() {
                     setSession(prev => {
                         if (!prev) return prev;
 
-                        return {
+                        const updated = {
                             ...prev,
                             players: prev.players.map(p => ({
                                 ...p,
@@ -314,11 +364,23 @@ function GamePage() {
                                 })
                             }))
                         };
+
+                        if (updated.maxPlayers === 1) {
+                            const myPlayer = updated.players.find(p => p.id === storedPlayer.id);
+
+                            if (myPlayer) {
+                                saveScore(myPlayer.balance);
+                            }
+                        }
+
+                        return updated;
                     });
 
                     setTimeout(() => {
                         safeFetchData();
                     }, 300);
+
+                    return;
                 }
 
                 if (data.type === "SESSION_PAUSED") {
@@ -343,6 +405,25 @@ function GamePage() {
 
                     await safeFetchData();
                     return;
+                }
+
+                if (data.type === "LEADERBOARD_UPDATE") {
+
+                    setLeaderboard(prev => {
+                        if (!data.leaderboard?.length) return prev;
+
+                        const updated =
+                            JSON.stringify(prev) === JSON.stringify(data.leaderboard)
+                                ? prev
+                                : data.leaderboard;
+
+                        sessionStorage.setItem(
+                            `leaderboard-${sessionCode}`,
+                            JSON.stringify(updated)
+                        );
+
+                        return updated;
+                    });
                 }
             });
         };
@@ -514,6 +595,7 @@ function GamePage() {
 
             <GameSidebar
                 session={session}
+                leaderboard={finalLeaderboard}
                 sidebarOpen={sidebarOpen}
                 setSidebarOpen={setSidebarOpen}
                 navigate={navigate}

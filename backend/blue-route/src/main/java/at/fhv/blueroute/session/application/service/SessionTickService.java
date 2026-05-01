@@ -2,11 +2,13 @@ package at.fhv.blueroute.session.application.service;
 
 import at.fhv.blueroute.cargo.application.service.CalculateDeteriorationService;
 import at.fhv.blueroute.cargo.infrastructure.persistence.JpaCargoRepository;
+import at.fhv.blueroute.common.websocket.LeaderboardMessage;
 import at.fhv.blueroute.common.websocket.SessionUpdateMessage;
 import at.fhv.blueroute.common.websocket.WebSocketSender;
 import at.fhv.blueroute.session.domain.model.Session;
 import at.fhv.blueroute.session.domain.model.SessionStatus;
 import at.fhv.blueroute.session.infrastructure.persistence.JpaSessionRepository;
+import at.fhv.blueroute.session.presentation.dto.LeaderboardEntryResponse;
 import at.fhv.blueroute.ship.infrastructure.persistence.JpaShipRepository;
 import at.fhv.blueroute.voyage.application.service.FinishVoyageService;
 import at.fhv.blueroute.voyage.domain.model.VoyageStatus;
@@ -30,6 +32,7 @@ public class SessionTickService {
     private final FinishVoyageService finishVoyageService;
     private final JpaCargoRepository cargoRepository;
     private final CalculateDeteriorationService deteriorationService;
+    private final GetLeaderboardService leaderboardService;
 
     public SessionTickService(
             JpaSessionRepository sessionRepository,
@@ -38,7 +41,7 @@ public class SessionTickService {
             WebSocketSender webSocketSender,
             FinishVoyageService finishVoyageService,
             JpaCargoRepository cargoRepository,
-            CalculateDeteriorationService deteriorationService
+            CalculateDeteriorationService deteriorationService, GetLeaderboardService leaderboardService
     ) {
         this.sessionRepository = sessionRepository;
         this.voyageRepository = voyageRepository;
@@ -47,6 +50,7 @@ public class SessionTickService {
         this.finishVoyageService = finishVoyageService;
         this.cargoRepository = cargoRepository;
         this.deteriorationService = deteriorationService;
+        this.leaderboardService = leaderboardService;
     }
 
     public void processTicks() {
@@ -129,6 +133,18 @@ public class SessionTickService {
                             "TICK",
                             session.getSessionCode(),
                             session.getCurrentTick()
+                    )
+            );
+
+            List<LeaderboardEntryResponse> leaderboard =
+                    leaderboardService.getLeaderboard(session.getSessionCode());
+
+            webSocketSender.sendSessionUpdate(
+                    session.getSessionCode(),
+                    new LeaderboardMessage(
+                            "LEADERBOARD_UPDATE",
+                            session.getSessionCode(),
+                            leaderboard
                     )
             );
         }

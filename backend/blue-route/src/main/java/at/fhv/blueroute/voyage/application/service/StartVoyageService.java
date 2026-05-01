@@ -92,17 +92,20 @@ public class StartVoyageService {
             throw new VoyageException("Ship owner not found");
         }
 
-        if (ship.getOwner().getBalance() < cargo.getPrice()) {
-            throw new VoyageException("Not enough balance to start this voyage");
-        }
-
         if (ship.getFuelLevel() < cargo.getFuelConsumption()) {
             throw new VoyageException("Not enough fuel for this voyage");
         }
 
+        Long playerId = ship.getOwner().getId();
 
-        ship.getOwner().setBalance(ship.getOwner().getBalance() - cargo.getPrice());
-        playerRepository.save(ship.getOwner());
+        var player = playerRepository.findById(playerId)
+                .orElseThrow(() -> new VoyageException("Player not found"));
+
+        if (player.getBalance() < cargo.getPrice()) {
+            throw new VoyageException("Not enough balance to start this voyage");
+        }
+
+        player.setBalance(player.getBalance() - cargo.getPrice());
 
         LocalDateTime now = LocalDateTime.now();
 
