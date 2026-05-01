@@ -60,12 +60,10 @@ function GamePage() {
 
     const [leaderboard, setLeaderboard] = useState(() => {
         const saved = sessionStorage.getItem(`leaderboard-${sessionCode}`);
-        return saved ? JSON.parse(saved) : [];
+        return saved ? JSON.parse(saved) : null;
     });
+    const finalLeaderboard = leaderboard;
 
-    useEffect(() => {
-        console.log("📊 RAW leaderboard:", leaderboard);
-    }, [leaderboard]);
 
     const getLocalLeaderboard = () => {
         return JSON.parse(localStorage.getItem("leaderboard") || "[]");
@@ -218,6 +216,17 @@ function GamePage() {
             );
             setVoyages(voyagesRes.data);
 
+            const leaderboardRes = await api.get(`/leaderboard?sessionCode=${sessionCode}`);
+
+            setLeaderboard(prev =>
+                (prev?.length ?? 0) > 0 ? prev : leaderboardRes.data
+            );
+
+            sessionStorage.setItem(
+                `leaderboard-${sessionCode}`,
+                JSON.stringify(leaderboardRes.data)
+            );
+
         } catch (err) {
             console.error(err);
         }
@@ -296,16 +305,10 @@ function GamePage() {
             const local = getLocalLeaderboard();
 
             setLeaderboard(prev =>
-                prev.length > 0 ? prev : local
+                (prev?.length ?? 0) > 0 ? prev : local
             );
         }
     }, [isMultiplayer]);
-
-    const finalLeaderboard = leaderboard ?? [];
-
-    useEffect(() => {
-        console.log("🏆 FINAL LEADERBOARD:", finalLeaderboard);
-    }, [finalLeaderboard]);
 
     useEffect(() => {
 

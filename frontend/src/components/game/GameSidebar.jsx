@@ -84,9 +84,13 @@ function GameSidebar({
                         {/* 🏆 Leaderboard */}
                         <h3 style={{ marginTop: "15px" }}>🏆 Leaderboard</h3>
                         <div className="player-list">
-                            {leaderboard.length === 0 ? (
+                            {leaderboard === null ? (
                                 <div className="player-item" style={{ opacity: 0.6 }}>
                                     Loading...
+                                </div>
+                            ) : leaderboard.length === 0 ? (
+                                <div className="player-item" style={{ opacity: 0.6 }}>
+                                    No scores yet
                                 </div>
                             ) : (
                                 leaderboard.map((p, index) => (
