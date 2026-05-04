@@ -113,19 +113,16 @@ function GamePage() {
 
     useEffect(() => {
         const interval = setInterval(() => {
-            setSmoothProgress(prev => {
-                const updated = { ...prev };
+            setSmoothProgress(() => {
+                const updated = {};
 
                 voyages.forEach(v => {
-                    const current = prev[v.id] ?? v.progress ?? 0;
-                    const target = v.progress ?? 0;
-
-                    updated[v.id] = current + (target - current) * 0.15;
+                    updated[v.id] = (v.progress ?? 0) * 100;
                 });
 
                 return updated;
             });
-        }, 50);
+        }, 16);
 
         return () => clearInterval(interval);
     }, [voyages]);
