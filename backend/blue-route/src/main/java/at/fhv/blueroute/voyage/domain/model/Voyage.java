@@ -1,5 +1,6 @@
 package at.fhv.blueroute.voyage.domain.model;
 
+import at.fhv.blueroute.event.domain.model.VoyageEventType;
 import jakarta.persistence.*;
 import java.time.LocalDateTime;
 
@@ -36,6 +37,15 @@ public class Voyage {
 
     @Column(nullable = false)
     private Long sessionId;
+
+    @Enumerated(EnumType.STRING)
+    private VoyageEventType pendingEventType;
+
+    private Integer eventTriggerTick;
+
+    private boolean eventTriggered;
+
+    private boolean eventResolved;
 
     @Transient
     public int getDurationInTicks() {
@@ -144,6 +154,40 @@ public class Voyage {
         this.sessionId = sessionId;
     }
 
+    public VoyageEventType getPendingEventType() {
+        return pendingEventType;
+    }
 
+    public void setId(Long id) {
+        this.id = id;
+    }
+
+    public void setPendingEventType(VoyageEventType pendingEventType) {
+        this.pendingEventType = pendingEventType;
+    }
+
+    public Integer getEventTriggerTick() {
+        return eventTriggerTick;
+    }
+
+    public void setEventTriggerTick(Integer eventTriggerTick) {
+        this.eventTriggerTick = eventTriggerTick;
+    }
+
+    public boolean isEventTriggered() {
+        return eventTriggered;
+    }
+
+    public void setEventTriggered(boolean eventTriggered) {
+        this.eventTriggered = eventTriggered;
+    }
+
+    public boolean isEventResolved() {
+        return eventResolved;
+    }
+
+    public void setEventResolved(boolean eventResolved) {
+        this.eventResolved = eventResolved;
+    }
 
 }
