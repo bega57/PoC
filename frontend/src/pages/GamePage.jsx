@@ -117,9 +117,21 @@ function GamePage() {
                 const updated = { ...prev };
 
                 voyages.forEach(v => {
-                    const current = updated[v.id] ?? (v.progress ?? 0) * 100;
+                    const backend = v.progress ?? 0;
+                    const current = (updated[v.id] ?? backend * 100) / 100;
 
-                    updated[v.id] = Math.min(current + 0.2, 100);
+                    const totalTime = v.duration * 5000; // gleich wie Backend
+                    const speed = 16 / totalTime; // 16ms frame
+
+                    let next = current + speed;
+
+                    next = Math.min(next, backend);
+
+                    if (v.status === "FINISHED") {
+                        next = 1;
+                    }
+
+                    updated[v.id] = next * 100;
                 });
 
                 return updated;
