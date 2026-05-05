@@ -385,3 +385,19 @@
     z-index: 1000;
     pointer-events: none;
 }
+
+.voyage-finish-event-box {
+    margin: 18px 0;
+    padding: 14px;
+    border-radius: 12px;
+    background: rgba(15, 23, 42, 0.08);
+    text-align: left;
+}
+
+.voyage-finish-event-box h3 {
+    margin: 0 0 8px;
+}
+
+.voyage-finish-event-box p {
+    margin: 6px 0;
+}

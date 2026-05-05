@@ -36,6 +36,13 @@ public class GetVoyagesService {
         dto.status = v.getStatus().name();
         dto.reward = v.getReward();
 
+        dto.eventResultMessage = v.getEventResultMessage();
+        dto.extraDelayTicks = v.getExtraDelayTicks();
+        dto.extraFuelLoss = v.getExtraFuelLoss();
+        dto.extraConditionLoss = v.getExtraConditionLoss();
+        dto.eventCost = v.getEventCost();
+        dto.rewardLossPercent = v.getRewardLossPercent();
+
         int durationTicks = v.getDurationInTicks();
         dto.duration = durationTicks;
 
