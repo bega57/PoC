@@ -43,8 +43,6 @@ public class GetVoyagesService {
         dto.eventCost = v.getEventCost();
         dto.rewardLossPercent = v.getRewardLossPercent();
 
-        int duration = v.getDurationInTicks();
-        dto.duration = duration;
         int durationTicks = v.getDurationInTicks();
         dto.duration = durationTicks;
 
