@@ -5,15 +5,21 @@ import at.fhv.blueroute.event.application.exception.VoyageEventNotFoundException
 import at.fhv.blueroute.event.domain.model.VoyageEventOption;
 import at.fhv.blueroute.event.domain.model.VoyageEventType;
 import at.fhv.blueroute.player.domain.model.Player;
-import at.fhv.blueroute.player.infrastructure.persistence.JpaPlayerRepository;
 import at.fhv.blueroute.ship.application.exception.InsufficientBalanceException;
 import at.fhv.blueroute.ship.domain.model.Ship;
 import at.fhv.blueroute.ship.infrastructure.persistence.JpaShipRepository;
 import at.fhv.blueroute.voyage.domain.model.Voyage;
 import at.fhv.blueroute.voyage.infrastructure.persistence.JpaVoyageRepository;
+import at.fhv.blueroute.common.websocket.SessionStatusMessage;
+import at.fhv.blueroute.common.websocket.WebSocketSender;
+import at.fhv.blueroute.session.domain.model.Session;
+import at.fhv.blueroute.session.domain.model.SessionStatus;
+import at.fhv.blueroute.session.infrastructure.persistence.JpaSessionRepository;
 import org.springframework.stereotype.Service;
+import jakarta.transaction.Transactional;
 
 @Service
+@Transactional
 public class VoyageEventResolveService {
 
     private static final double EXTRA_FUEL_LOSS_PER_DELAY_TICK = 5.0;
@@ -21,14 +27,17 @@ public class VoyageEventResolveService {
 
     private final JpaVoyageRepository voyageRepository;
     private final JpaShipRepository shipRepository;
-    private final JpaPlayerRepository playerRepository;
+    private final JpaSessionRepository sessionRepository;
+    private final WebSocketSender webSocketSender;
 
     public VoyageEventResolveService(JpaVoyageRepository voyageRepository,
                                      JpaShipRepository shipRepository,
-                                     JpaPlayerRepository playerRepository) {
+                                     JpaSessionRepository sessionRepository,
+                                     WebSocketSender webSocketSender) {
         this.voyageRepository = voyageRepository;
         this.shipRepository = shipRepository;
-        this.playerRepository = playerRepository;
+        this.sessionRepository = sessionRepository;
+        this.webSocketSender = webSocketSender;
     }
 
     public String resolveEvent(Long voyageId, VoyageEventOption selectedOption) {
@@ -40,7 +49,7 @@ public class VoyageEventResolveService {
         }
 
         if (!voyage.isEventTriggered()) {
-            throw new InvalidVoyageEventActionException("Event has not been triggered yet.");
+            voyage.setEventTriggered(true);
         }
 
         if (voyage.isEventResolved()) {
@@ -58,12 +67,6 @@ public class VoyageEventResolveService {
 
         Player player = ship.getOwner();
 
-        if (player == null) {
-            throw new InvalidVoyageEventActionException(
-                    "Ship has no owner. Ship id: " + ship.getId()
-            );
-        }
-
         String resultMessage = applyConsequence(
                 voyage,
                 ship,
@@ -72,11 +75,26 @@ public class VoyageEventResolveService {
                 selectedOption
         );
 
+        voyage.setEventResultMessage(resultMessage);
+
         voyage.setEventResolved(true);
 
         shipRepository.save(ship);
-        playerRepository.save(player);
         voyageRepository.save(voyage);
+
+        Session session = sessionRepository.findById(voyage.getSessionId())
+                .orElseThrow(() -> new InvalidVoyageEventActionException("Session not found for voyage."));
+
+        session.setStatus(SessionStatus.RUNNING);
+
+        webSocketSender.sendSessionUpdate(
+                session.getSessionCode(),
+                new SessionStatusMessage(
+                        "SESSION_RUNNING",
+                        session.getSessionCode(),
+                        "RUNNING"
+                )
+        );
 
         return resultMessage;
     }
@@ -101,15 +119,15 @@ public class VoyageEventResolveService {
             case OPTION_A -> {
                 damageShip(ship, 8);
                 delayVoyage(voyage, ship, 1);
-                yield "The crew puts out the fire. The ship takes light damage and arrives 1 day later.";
+                yield "The crew put out the fire. The ship took light damage and arrived 1 day later.";
             }
             case OPTION_B -> {
                 damageShip(ship, 18);
-                yield "Bold choice. You keep sailing, but the ship takes heavy damage.";
+                yield "Bold choice. You kept sailing, but the ship took heavy damage.";
             }
             case OPTION_C -> {
                 reduceReward(voyage, 25);
-                yield "You throw some oil barrels overboard. The ship is safe, but the reward is reduced.";
+                yield "You threw some oil barrels overboard. The ship was safe, but the reward was reduced.";
             }
         };
     }
@@ -118,15 +136,16 @@ public class VoyageEventResolveService {
         return switch (option) {
             case OPTION_A -> {
                 chargePlayer(player, 500);
-                yield "The pirates accept the bribe and call you honorary captains.";
+                voyage.setEventCost(500.0);
+                yield "The pirates accepted the bribe and called you honorary captains.";
             }
             case OPTION_B -> {
                 delayVoyage(voyage, ship, 2);
-                yield "You escape successfully, but the voyage takes 2 extra days.";
+                yield "You escaped successfully, but the voyage took 2 extra days.";
             }
             case OPTION_C -> {
                 reduceReward(voyage, 15);
-                yield "The cargo is hidden, but some luxury goods are damaged.";
+                yield "The cargo was hidden, but some luxury goods were damaged.";
             }
         };
     }
@@ -135,11 +154,12 @@ public class VoyageEventResolveService {
         return switch (option) {
             case OPTION_A -> {
                 chargePlayer(player, 200);
-                yield "You buy rat traps. Expensive, but the cargo buffet is closed.";
+                voyage.setEventCost(200.0);
+                yield "You bought rat traps. Expensive, but the cargo buffet was closed.";
             }
             case OPTION_B -> {
                 reduceReward(voyage, 20);
-                yield "The rats keep partying. Part of the cargo is lost.";
+                yield "The rats kept partying. Part of the cargo was lost.";
             }
             case OPTION_C -> throw new InvalidVoyageEventActionException("This event only has two options.");
         };
@@ -149,15 +169,16 @@ public class VoyageEventResolveService {
         return switch (option) {
             case OPTION_A -> {
                 delayVoyage(voyage, ship, 1);
-                yield "System reboot successful. Unfortunately, the voyage takes 1 extra day.";
+                yield "System reboot successful. Unfortunately, the voyage took 1 extra day.";
             }
             case OPTION_B -> {
                 chargePlayer(player, 350);
-                yield "The technician removes three USB sticks from a seagull nest. Problem solved.";
+                voyage.setEventCost(350.0);
+                yield "The technician removed three USB sticks from a seagull nest. Problem solved.";
             }
             case OPTION_C -> {
                 damageShip(ship, 12);
-                yield "Ignoring hacker seagulls was not smart. The ship electronics take damage.";
+                yield "Ignoring hacker seagulls was not smart. The ship electronics took damage.";
             }
         };
     }
@@ -166,11 +187,12 @@ public class VoyageEventResolveService {
         return switch (option) {
             case OPTION_A -> {
                 chargePlayer(player, 300);
-                yield "You order replacement medicine. The crew is relieved. Your wallet is not.";
+                voyage.setEventCost(300.0);
+                yield "You ordered replacement medicine. The crew was relieved. Your wallet was not.";
             }
             case OPTION_B -> {
                 reduceReward(voyage, 18);
-                yield "You accept the loss. Less usable medicine arrives at the destination.";
+                yield "You accepted the loss. Less usable medicine arrived at the destination.";
             }
             case OPTION_C -> throw new InvalidVoyageEventActionException("This event only has two options.");
         };
@@ -180,11 +202,11 @@ public class VoyageEventResolveService {
         return switch (option) {
             case OPTION_A -> {
                 delayVoyage(voyage, ship, 2);
-                yield "You sail around the storm. Safe, but the voyage takes 2 extra days.";
+                yield "You sailed around the storm. It was safe, but the voyage took 2 extra days.";
             }
             case OPTION_B -> {
                 damageShip(ship, 15);
-                yield "You sail through the storm. The ship takes damage.";
+                yield "You sailed through the storm. The ship took damage.";
             }
             case OPTION_C -> throw new InvalidVoyageEventActionException("This event only has two options.");
         };
@@ -198,6 +220,10 @@ public class VoyageEventResolveService {
 
         reduceFuel(ship, extraFuelLoss);
         damageShip(ship, extraConditionLoss);
+
+        voyage.setExtraDelayTicks(voyage.getExtraDelayTicks() + ticks);
+        voyage.setExtraFuelLoss(voyage.getExtraFuelLoss() + extraFuelLoss);
+        voyage.setExtraConditionLoss(voyage.getExtraConditionLoss() + extraConditionLoss);
     }
 
     private void damageShip(Ship ship, double damage) {
@@ -215,9 +241,13 @@ public class VoyageEventResolveService {
     private void reduceReward(Voyage voyage, double percent) {
         double factor = (100.0 - percent) / 100.0;
         voyage.setReward(voyage.getReward() * factor);
+        voyage.setRewardLossPercent(voyage.getRewardLossPercent() + percent);
     }
 
     private void chargePlayer(Player player, double amount) {
+        if (player == null) {
+            throw new InvalidVoyageEventActionException("This option requires a ship owner.");
+        }
         double currentBalance = player.getBalance() == null ? 0.0 : player.getBalance();
 
         if (currentBalance < amount) {

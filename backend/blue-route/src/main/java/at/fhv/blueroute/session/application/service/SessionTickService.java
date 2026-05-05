@@ -17,6 +17,7 @@ import org.springframework.stereotype.Service;
 import at.fhv.blueroute.voyage.domain.model.Voyage;
 import at.fhv.blueroute.voyage.infrastructure.persistence.JpaVoyageRepository;
 import at.fhv.blueroute.common.websocket.VoyageFinishedMessage;
+import at.fhv.blueroute.event.application.service.VoyageEventTriggerService;
 
 import java.time.LocalDateTime;
 import java.util.List;
@@ -33,6 +34,7 @@ public class SessionTickService {
     private final JpaCargoRepository cargoRepository;
     private final CalculateDeteriorationService deteriorationService;
     private final GetLeaderboardService leaderboardService;
+    private final VoyageEventTriggerService voyageEventTriggerService;
 
     public SessionTickService(
             JpaSessionRepository sessionRepository,
@@ -41,7 +43,9 @@ public class SessionTickService {
             WebSocketSender webSocketSender,
             FinishVoyageService finishVoyageService,
             JpaCargoRepository cargoRepository,
-            CalculateDeteriorationService deteriorationService, GetLeaderboardService leaderboardService
+            CalculateDeteriorationService deteriorationService,
+            GetLeaderboardService leaderboardService,
+            VoyageEventTriggerService voyageEventTriggerService
     ) {
         this.sessionRepository = sessionRepository;
         this.voyageRepository = voyageRepository;
@@ -51,6 +55,7 @@ public class SessionTickService {
         this.cargoRepository = cargoRepository;
         this.deteriorationService = deteriorationService;
         this.leaderboardService = leaderboardService;
+        this.voyageEventTriggerService = voyageEventTriggerService;
     }
 
     public void processTicks() {
@@ -69,6 +74,12 @@ public class SessionTickService {
 
                 if (v.getStatus() == VoyageStatus.FINISHED) continue;
 
+                voyageEventTriggerService.triggerEventIfNeeded(v, session);
+
+                if (session.getStatus() == SessionStatus.PAUSED) {
+                    break;
+                }
+
                 if (session.getCurrentTick() >= v.getArrivalTick()) {
 
                     finishVoyageService.finishVoyage(
@@ -84,7 +95,13 @@ public class SessionTickService {
                                     v.getId(),
                                     v.getShipId(),
                                     v.getDestinationPort(),
-                                    v.getReward()
+                                    v.getReward(),
+                                    v.getEventResultMessage(),
+                                    v.getExtraDelayTicks(),
+                                    v.getExtraFuelLoss(),
+                                    v.getExtraConditionLoss(),
+                                    v.getEventCost(),
+                                    v.getRewardLossPercent()
                             )
                     );
 

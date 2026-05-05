@@ -13,6 +13,8 @@ import GameSidebar from "../components/game/GameSidebar";
 import GameModals from "../components/game/GameModals";
 import GameStatusBar from "../components/game/GameStatusBar";
 import GameMap from "../components/game/GameMap";
+import VoyageEventModal from "../components/VoyageEventModal";
+import Toast from "../components/Toast";
 
 const geoUrl = "/countries-110m.json";
 
@@ -58,12 +60,20 @@ function GamePage() {
 
     const [rewardAmount, setRewardAmount] = useState(0);
 
+    const [finishedVoyageInfo, setFinishedVoyageInfo] = useState(null);
+
     const [leaderboard, setLeaderboard] = useState(() => {
         const saved = sessionStorage.getItem(`leaderboard-${sessionCode}`);
         return saved ? JSON.parse(saved) : null;
     });
+
+    const [activeEvent, setActiveEvent] = useState(null);
+    const [eventLoading, setEventLoading] = useState(false);
+
     const finalLeaderboard = leaderboard;
 
+    const [toastMessage, setToastMessage] = useState("");
+    const [toastType, setToastType] = useState("success");
 
     const getLocalLeaderboard = () => {
         return JSON.parse(localStorage.getItem("leaderboard") || "[]");
@@ -159,36 +169,6 @@ function GamePage() {
     useEffect(() => {
         if (!session || !storedPlayer) return;
 
-        const myShips = session.players
-            .find(p => p.id === storedPlayer?.id)?.ships || [];
-
-        const myShipIds = myShips.map(s => s.id);
-
-        const newestFinishedVoyage = [...voyages]
-            .filter(v =>
-                myShipIds.includes(v.shipId) &&
-                v.status === "FINISHED"
-            )
-            .sort((a, b) => b.id - a.id)[0];
-
-        if (!newestFinishedVoyage) return;
-
-        if (newestFinishedVoyage.id === lastFinishedVoyageId) return;
-
-        console.log("FINISHED VOYAGE FOUND:", newestFinishedVoyage);
-
-        setRewardAmount(newestFinishedVoyage.reward || 0);
-        setLastFinishedVoyageId(newestFinishedVoyage.id);
-        sessionStorage.setItem(
-            `lastFinishedVoyageId-${sessionCode}`,
-            String(newestFinishedVoyage.id)
-        );
-        setShowRewardPopup(true);
-    }, [voyages, session, sessionCode, storedPlayer, lastFinishedVoyageId]);
-
-    useEffect(() => {
-        if (!session || !storedPlayer) return;
-
         const me = session.players.find(p => p.id === storedPlayer?.id);
         if (!me?.ships?.length) return;
 
@@ -216,16 +196,20 @@ function GamePage() {
             );
             setVoyages(voyagesRes.data);
 
-            const leaderboardRes = await api.get(`/leaderboard?sessionCode=${sessionCode}`);
+            try {
+                const leaderboardRes = await api.get(`/leaderboard?sessionCode=${sessionCode}`);
 
-            setLeaderboard(prev =>
-                (prev?.length ?? 0) > 0 ? prev : leaderboardRes.data
-            );
+                setLeaderboard(prev =>
+                    (prev?.length ?? 0) > 0 ? prev : leaderboardRes.data
+                );
 
-            sessionStorage.setItem(
-                `leaderboard-${sessionCode}`,
-                JSON.stringify(leaderboardRes.data)
-            );
+                sessionStorage.setItem(
+                    `leaderboard-${sessionCode}`,
+                    JSON.stringify(leaderboardRes.data)
+                );
+            } catch (leaderboardError) {
+                console.error("Leaderboard fetch failed:", leaderboardError);
+            }
 
         } catch (err) {
             console.error(err);
@@ -311,6 +295,16 @@ function GamePage() {
     }, [isMultiplayer]);
 
     useEffect(() => {
+        if (!toastMessage) return;
+
+        const timer = setTimeout(() => {
+            setToastMessage("");
+        }, 3000);
+
+        return () => clearTimeout(timer);
+    }, [toastMessage]);
+
+    useEffect(() => {
 
         const socket = new SockJS(`${import.meta.env.VITE_API_BASE_URL}/ws`);
 
@@ -325,6 +319,11 @@ function GamePage() {
             client.subscribe(`/topic/session/${sessionCode}`, async (message) => {
                 const data = JSON.parse(message.body);
                 console.log("RAW WS EVENT:", data);
+
+                if (data.eventType && data.voyageId) {
+                    setActiveEvent(data);
+                    return;
+                }
 
                 if (data.type === "TICK") {
                     setSession(prev =>
@@ -344,6 +343,15 @@ function GamePage() {
 
                 if (data.type === "VOYAGE_FINISHED") {
                     console.log("VOYAGE FINISHED EVENT:", data);
+
+                    setRewardAmount(data.reward || 0);
+                    setFinishedVoyageInfo(data);
+                    setLastFinishedVoyageId(data.voyageId);
+                    sessionStorage.setItem(
+                        `lastFinishedVoyageId-${sessionCode}`,
+                        String(data.voyageId)
+                    );
+                    setShowRewardPopup(true);
 
                     setSession(prev => {
                         if (!prev) return prev;
@@ -437,6 +445,36 @@ function GamePage() {
         };
 
     }, [sessionCode]);
+
+    const handleEventChoice = async (optionIndex) => {
+        if (!activeEvent) {
+            return;
+        }
+
+        const optionMap = ["OPTION_A", "OPTION_B", "OPTION_C"];
+        const selectedOption = optionMap[optionIndex];
+
+        try {
+            setEventLoading(true);
+
+            const response = await api.post(
+                `/voyage-events/${activeEvent.voyageId}/resolve`,
+                { selectedOption }
+            );
+
+            setToastMessage(response.data.message);
+            setToastType("success");
+            setActiveEvent(null);
+
+            await fetchData();
+        } catch (error) {
+            console.error(error);
+            setToastMessage(error.response?.data?.message || "Failed to resolve event.");
+            setToastType("error");
+        } finally {
+            setEventLoading(false);
+        }
+    };
 
     const handlePortHover = async (port) => {
         setHoveredPort(port);
@@ -615,6 +653,8 @@ function GamePage() {
                 showRewardPopup={showRewardPopup}
                 setShowRewardPopup={setShowRewardPopup}
                 rewardAmount={rewardAmount}
+                finishedVoyageInfo={finishedVoyageInfo}
+                setFinishedVoyageInfo={setFinishedVoyageInfo}
                 currentPlayer={currentPlayer}
                 storedPlayer={storedPlayer}
                 setSelectedShip={setSelectedShip}
@@ -626,6 +666,14 @@ function GamePage() {
                 closeLeaveModal={closeLeaveModal}
                 setSession={setSession}
             />
+
+            <VoyageEventModal
+                event={activeEvent}
+                onSelect={handleEventChoice}
+                loading={eventLoading}
+            />
+
+            <Toast message={toastMessage} type={toastType} />
 
         </div>
     );

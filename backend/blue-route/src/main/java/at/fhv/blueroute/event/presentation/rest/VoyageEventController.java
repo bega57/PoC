@@ -7,7 +7,7 @@ import jakarta.validation.Valid;
 import org.springframework.web.bind.annotation.*;
 
 @RestController
-@RequestMapping("/api/voyage-events")
+@RequestMapping("/voyage-events")
 public class VoyageEventController {
 
     private final VoyageEventResolveService voyageEventResolveService;

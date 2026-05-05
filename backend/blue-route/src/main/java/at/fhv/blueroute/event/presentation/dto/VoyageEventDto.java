@@ -10,12 +10,16 @@ public class VoyageEventDto {
     private VoyageEventType eventType;
     private String title;
     private String description;
-    private List<String> options;
+    private List<VoyageEventOptionDto> options;
 
     public VoyageEventDto() {
     }
 
-    public VoyageEventDto(Long voyageId, VoyageEventType eventType, String title, String description, List<String> options) {
+    public VoyageEventDto(Long voyageId,
+                          VoyageEventType eventType,
+                          String title,
+                          String description,
+                          List<VoyageEventOptionDto> options) {
         this.voyageId = voyageId;
         this.eventType = eventType;
         this.title = title;
@@ -55,11 +59,11 @@ public class VoyageEventDto {
         this.description = description;
     }
 
-    public List<String> getOptions() {
+    public List<VoyageEventOptionDto> getOptions() {
         return options;
     }
 
-    public void setOptions(List<String> options) {
+    public void setOptions(List<VoyageEventOptionDto> options) {
         this.options = options;
     }
 }

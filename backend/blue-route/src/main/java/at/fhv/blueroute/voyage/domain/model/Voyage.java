@@ -47,6 +47,14 @@ public class Voyage {
 
     private boolean eventResolved;
 
+    private String eventResultMessage;
+
+    private Integer extraDelayTicks = 0;
+    private Double extraFuelLoss = 0.0;
+    private Double extraConditionLoss = 0.0;
+    private Double eventCost = 0.0;
+    private Double rewardLossPercent = 0.0;
+
     @Transient
     public int getDurationInTicks() {
         return arrivalTick - startTick;
@@ -129,6 +137,53 @@ public class Voyage {
         this.rewardGranted = rewardGranted;
     }
 
+    public String getEventResultMessage() {
+        return eventResultMessage;
+    }
+
+    public void setEventResultMessage(String eventResultMessage) {
+        this.eventResultMessage = eventResultMessage;
+    }
+
+    public Integer getExtraDelayTicks() {
+        return extraDelayTicks;
+    }
+
+    public void setExtraDelayTicks(Integer extraDelayTicks) {
+        this.extraDelayTicks = extraDelayTicks;
+    }
+
+    public Double getExtraFuelLoss() {
+        return extraFuelLoss;
+    }
+
+    public void setExtraFuelLoss(Double extraFuelLoss) {
+        this.extraFuelLoss = extraFuelLoss;
+    }
+
+    public Double getExtraConditionLoss() {
+        return extraConditionLoss;
+    }
+
+    public void setExtraConditionLoss(Double extraConditionLoss) {
+        this.extraConditionLoss = extraConditionLoss;
+    }
+
+    public Double getEventCost() {
+        return eventCost;
+    }
+
+    public void setEventCost(Double eventCost) {
+        this.eventCost = eventCost;
+    }
+
+    public Double getRewardLossPercent() {
+        return rewardLossPercent;
+    }
+
+    public void setRewardLossPercent(Double rewardLossPercent) {
+        this.rewardLossPercent = rewardLossPercent;
+    }
 
     public int getArrivalTick() {
         return arrivalTick;

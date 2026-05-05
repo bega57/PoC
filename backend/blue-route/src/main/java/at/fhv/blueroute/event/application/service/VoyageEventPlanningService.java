@@ -15,14 +15,26 @@ public class VoyageEventPlanningService {
     private final Random random = new Random();
 
     public void planEventForVoyage(Voyage voyage, Cargo cargo, int currentTick) {
+        int voyageDuration = voyage.getArrivalTick() - currentTick;
+
+        if (voyageDuration <= 1) {
+            return;
+        }
+
         if (!shouldEventHappen(cargo.getRiskLevel())) {
             return;
         }
 
         VoyageEventType eventType = chooseEventType(cargo.getType());
 
+        int eventTriggerTick = currentTick + Math.max(1, (int) Math.ceil(voyageDuration / 2.0));
+
+        if (eventTriggerTick >= voyage.getArrivalTick()) {
+            eventTriggerTick = voyage.getArrivalTick() - 1;
+        }
+
         voyage.setPendingEventType(eventType);
-        voyage.setEventTriggerTick(currentTick + 2);
+        voyage.setEventTriggerTick(eventTriggerTick);
         voyage.setEventTriggered(false);
         voyage.setEventResolved(false);
     }
@@ -32,8 +44,8 @@ public class VoyageEventPlanningService {
 
         switch (riskLevel) {
             case LOW -> chance = 25;
-            case MEDIUM -> chance = 45;
-            case HIGH -> chance = 65;
+            case MEDIUM -> chance = 50;
+            case HIGH -> chance = 70;
             default -> chance = 25;
         }
 
