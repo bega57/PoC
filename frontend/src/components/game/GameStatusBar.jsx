@@ -17,7 +17,10 @@ function GameStatusBar({ session, currentPlayer, myActiveVoyages, smoothProgress
             {myActiveVoyages.length > 0 ? (
                 myActiveVoyages.map(v => {
                     const ship = allShips.find(s => s.id === v.shipId);
-                    const progress = Math.min(1, smoothProgress[v.id] ?? v.progress ?? 0);
+                    const progress = Math.min(
+                        1,
+                        (smoothProgress[v.id] ?? (v.progress ?? 0) * 100) / 100
+                    );
 
                     return (
                         <div key={v.id} style={{ marginTop: "8px" }}>
