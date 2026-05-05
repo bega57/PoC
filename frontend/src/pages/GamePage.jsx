@@ -113,11 +113,13 @@ function GamePage() {
 
     useEffect(() => {
         const interval = setInterval(() => {
-            setSmoothProgress(() => {
-                const updated = {};
+            setSmoothProgress(prev => {
+                const updated = { ...prev };
 
                 voyages.forEach(v => {
-                    updated[v.id] = (v.progress ?? 0) * 100;
+                    const current = updated[v.id] ?? (v.progress ?? 0) * 100;
+
+                    updated[v.id] = Math.min(current + 0.2, 100);
                 });
 
                 return updated;
@@ -559,6 +561,7 @@ function GamePage() {
                 session={session}
                 ports={ports}
                 voyages={voyages}
+                smoothProgress={smoothProgress}
                 hoveredPort={hoveredPort}
                 setHoveredPort={setHoveredPort}
                 handlePortHover={handlePortHover}
