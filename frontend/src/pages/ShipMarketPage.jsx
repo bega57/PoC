@@ -286,7 +286,7 @@ function ShipMarketPage() {
                 <div className="market-topbar">
                     <button
                         className="back-button"
-                        onClick={() => navigate(`/market/${sessionCode}`)}
+                        onClick={() => navigate(`/${sessionCode}/market`)}
                     >
                         ← Back
                     </button>

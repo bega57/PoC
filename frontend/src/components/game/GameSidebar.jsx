@@ -40,28 +40,28 @@ function GameSidebar({
 
                     <button
                         className="action-btn"
-                        onClick={() => navigate(`/market/${sessionCode}`)}
+                        onClick={() => navigate(`/${sessionCode}/market`)}
                     >
                         Ship Market
                     </button>
 
                     <button
                         className="action-btn"
-                        onClick={() => navigate(`/cargo-offers/${sessionCode}`)}
+                        onClick={() => navigate(`/${sessionCode}/cargo-offers`)}
                     >
                         Cargo Offers
                     </button>
 
                     <button
                         className="action-btn"
-                        onClick={() => navigate(`/company/${sessionCode}`)}
+                        onClick={() => navigate(`/${sessionCode}/company`)}
                     >
                         Company
                     </button>
 
                     <button
                         className="action-btn"
-                        onClick={() => navigate(`/voyage/${sessionCode}`)}
+                        onClick={() => navigate(`/${sessionCode}/voyage`)}
                     >
                         Voyage
                     </button>

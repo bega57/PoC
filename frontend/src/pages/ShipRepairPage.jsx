@@ -60,7 +60,7 @@ function ShipRepairPage() {
         <div className="market-page">
             <div className="market-content">
 
-                <button className="back-button" onClick={() => navigate(`/market/${sessionCode}`)}>
+                <button className="back-button" onClick={() => navigate(`/${sessionCode}/market`)}>
                     ← Back
                 </button>
 

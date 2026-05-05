@@ -48,7 +48,7 @@ function ShipMarketMenuPage() {
                 <div className="market-topbar">
                     <button
                         className="back-button"
-                        onClick={() => navigate(`/game/${sessionCode}`)}
+                        onClick={() => navigate(`/${sessionCode}/game`)}
                     >
                         ← Back
                     </button>
@@ -73,7 +73,7 @@ function ShipMarketMenuPage() {
                     <button
                         type="button"
                         className="ship-market-card"
-                        onClick={() => navigate(`/market/${sessionCode}/buy`)}
+                        onClick={() => navigate(`/${sessionCode}/market/buy`)}
                     >
                         <div className="ship-card-right">
                             <div className="ship-main-info">
@@ -90,7 +90,7 @@ function ShipMarketMenuPage() {
                     <button
                         type="button"
                         className="ship-market-card"
-                        onClick={() => navigate(`/market/${sessionCode}/sell`)}
+                        onClick={() => navigate(`/${sessionCode}/market/sell`)}
                     >
                         <div className="ship-card-right">
                             <div className="ship-main-info">
@@ -107,7 +107,7 @@ function ShipMarketMenuPage() {
                     <button
                         type="button"
                         className="ship-market-card"
-                        onClick={() => navigate(`/market/${sessionCode}/refuel`)}
+                        onClick={() => navigate(`/${sessionCode}/market/refuel`)}
                     >
                         <div className="ship-card-right">
                             <div className="ship-main-info">
@@ -124,7 +124,7 @@ function ShipMarketMenuPage() {
                     <button
                         type="button"
                         className="ship-market-card"
-                        onClick={() => navigate(`/market/${sessionCode}/repair`)}
+                        onClick={() => navigate(`/${sessionCode}/market/repair`)}
                     >
                         <div className="ship-card-right">
                             <div className="ship-main-info">

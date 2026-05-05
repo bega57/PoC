@@ -6,7 +6,7 @@ function SessionDetails({ session, player }) {
 
     useEffect(() => {
         if (session && session.status === "RUNNING") {
-            navigate(`/game/${session.sessionCode}`);
+            navigate(`/${session.sessionCode}/game`);
         }
     }, [session, navigate]);
 

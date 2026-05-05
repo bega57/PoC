@@ -53,8 +53,9 @@
 .game-container {
     position: relative;
     height: 100vh;
-    width: 100vw;
+    width: 100%;
     overflow: hidden;
+    padding-top: 64px;
 }
 
 .map-container {
@@ -99,6 +100,8 @@
 
     padding: 20px;
     transition: transform 0.3s ease;
+
+    box-sizing: border-box;
 }
 
 .sidebar.closed {
@@ -385,3 +388,4 @@
     z-index: 1000;
     pointer-events: none;
 }
+

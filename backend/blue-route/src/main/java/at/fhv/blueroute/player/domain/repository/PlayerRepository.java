@@ -12,4 +12,5 @@ public interface PlayerRepository {
     Optional<Player> findById(Long id);
 
     Player save(Player player);
+
 }

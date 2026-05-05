@@ -149,7 +149,7 @@ function CompanyPage() {
                 <div className="company-topbar">
                     <button
                         className="back-button"
-                        onClick={() => navigate(`/game/${sessionCode}`)}
+                        onClick={() => navigate(`/${sessionCode}/game`)}
                     >
                         ← Back
                     </button>

@@ -71,7 +71,7 @@ export default function VoyagePage() {
 
         if (!player?.id) {
             alert("No active player found.");
-            navigate(`/game/${sessionCode}`);
+            navigate(`/${sessionCode}/game`);
             return;
         }
 
@@ -531,7 +531,7 @@ export default function VoyagePage() {
                         )}
 
                         <button
-                            onClick={() => navigate(`/game/${sessionCode}`)}
+                            onClick={() => navigate(`/${sessionCode}/game`)}
                         >
                             Back to Game
                         </button>

@@ -7,6 +7,9 @@ import org.springframework.stereotype.Service;
 public class CalculatePlayerScoreService {
 
     public int calculateScore(Player player) {
+        if (player.getBalance() == null) {
+            return 0;
+        }
         return player.getBalance().intValue();
     }
 }

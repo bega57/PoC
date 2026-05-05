@@ -13,6 +13,8 @@ import GameSidebar from "../components/game/GameSidebar";
 import GameModals from "../components/game/GameModals";
 import GameStatusBar from "../components/game/GameStatusBar";
 import GameMap from "../components/game/GameMap";
+import { useContext } from "react";
+import { GameContext } from "../layouts/AppLayout";
 
 const geoUrl = "/countries-110m.json";
 
@@ -20,19 +22,12 @@ function GamePage() {
     const { sessionCode } = useParams();
     const navigate = useNavigate();
 
-    const [session, setSession] = useState(null);
     const [sidebarOpen, setSidebarOpen] = useState(true);
     const [showLeaveModal, setShowLeaveModal] = useState(false);
 
     const [showWelcome, setShowWelcome] = useState(() => {
         return sessionStorage.getItem(`welcomeShown-${sessionCode}`) !== "true";
     });
-
-    const storedPlayer = JSON.parse(
-        sessionStorage.getItem(`player-${sessionCode}`) || "null"
-    );
-
-    const currentPlayer = session?.players?.find(p => p.id === storedPlayer?.id) || null;
 
     const [selectedPort, setSelectedPort] = useState(null);
 
@@ -64,6 +59,8 @@ function GamePage() {
     });
     const finalLeaderboard = leaderboard;
 
+    const { session, setSession, player, setPlayer } = useContext(GameContext);
+    const currentPlayer = player;
 
     const getLocalLeaderboard = () => {
         return JSON.parse(localStorage.getItem("leaderboard") || "[]");
@@ -105,7 +102,7 @@ function GamePage() {
             const res = await api.get(
                 `/voyages?sessionId=${sessionId}&tick=${currentTick}`
             );
-            setVoyages([...res.data]);
+            setVoyages(res.data);
         } catch (err) {
             console.error(err);
         }
@@ -131,14 +128,14 @@ function GamePage() {
     }, [voyages]);
 
     const sendHeartbeatSafe = () => {
-        if (!sessionCode || !storedPlayer?.id) return;
+        if (!sessionCode || !player?.id) return;
         const now = Date.now();
 
         if (now - lastHeartbeatRef.current < 5000) return;
 
         lastHeartbeatRef.current = now;
 
-        api.patch(`/sessions/${sessionCode}/players/${storedPlayer.id}/heartbeat`)
+        api.patch(`/sessions/${sessionCode}/players/${player.id}/heartbeat`)
             .catch(err => console.error("Heartbeat failed:", err));
     };
 
@@ -157,10 +154,10 @@ function GamePage() {
     };
 
     useEffect(() => {
-        if (!session || !storedPlayer) return;
+        if (!session || !player) return;
 
         const myShips = session.players
-            .find(p => p.id === storedPlayer?.id)?.ships || [];
+            .find(p => p.id === player?.id)?.ships || [];
 
         const myShipIds = myShips.map(s => s.id);
 
@@ -184,12 +181,12 @@ function GamePage() {
             String(newestFinishedVoyage.id)
         );
         setShowRewardPopup(true);
-    }, [voyages, session, sessionCode, storedPlayer, lastFinishedVoyageId]);
+    }, [voyages, session, sessionCode, player, lastFinishedVoyageId]);
 
     useEffect(() => {
-        if (!session || !storedPlayer) return;
+        if (!session || !player) return;
 
-        const me = session.players.find(p => p.id === storedPlayer?.id);
+        const me = session.players.find(p => p.id === player?.id);
         if (!me?.ships?.length) return;
 
         const backendShip = me.ships[0];
@@ -199,24 +196,29 @@ function GamePage() {
     }, [session]);
 
     const fetchData = async () => {
-        if (!storedPlayer?.id) return;
 
+        if (!player?.id) return;
         try {
-            const sessionRes = await api.get(`/sessions/${sessionCode}`)
+            const sessionRes = await api.get(`/sessions/${sessionCode}`);
             const sessionData = sessionRes.data;
 
-            const me = sessionData.players.find(p => p.id === storedPlayer.id);
-
-            console.log("MY SHIPS AFTER FETCH:", JSON.stringify(me?.ships, null, 2));
-
             setSession(sessionData);
+
+            const me = sessionData.players.find(p => p.id === player.id);
+            if (!me) return;
+
+            setPlayer(prev => ({
+                ...prev,
+                balance: me.balance,
+                companyName: me.companyName
+            }));
 
             const voyagesRes = await api.get(
                 `/voyages?sessionId=${sessionData.id}&tick=${sessionData.currentTick}`
             );
             setVoyages(voyagesRes.data);
 
-            const leaderboardRes = await api.get(`/leaderboard?sessionCode=${sessionCode}`);
+            const leaderboardRes = await api.get(`/sessions/${sessionCode}/leaderboard`);
 
             setLeaderboard(prev =>
                 (prev?.length ?? 0) > 0 ? prev : leaderboardRes.data
@@ -233,20 +235,21 @@ function GamePage() {
     };
 
     useEffect(() => {
+        if (!player) return;
         fetchData();
-    }, [sessionCode]);
+    }, [sessionCode, player]);
 
     useEffect(() => {
-        if (!sessionCode || !storedPlayer?.id) return;
+        if (!sessionCode || !player?.id) return;
 
         sendHeartbeatSafe();
         const interval = setInterval(sendHeartbeatSafe, 10000);
 
         return () => clearInterval(interval);
-    }, [sessionCode, storedPlayer?.id]);
+    }, [sessionCode, player?.id]);
 
     useEffect(() => {
-        if (!sessionCode || !storedPlayer?.id) return;
+        if (!sessionCode || !player?.id) return;
 
         const handleActivity = () => {
             sendHeartbeatSafe();
@@ -259,10 +262,10 @@ function GamePage() {
             window.removeEventListener("click", handleActivity);
             window.removeEventListener("keydown", handleActivity);
         };
-    }, [sessionCode, storedPlayer?.id]);
+    }, [sessionCode, player?.id]);
 
     useEffect(() => {
-        if (!sessionCode || !storedPlayer?.id) return;
+        if (!sessionCode || !player?.id) return;
 
         const handleVisibility = () => {
             if (document.visibilityState === "visible") {
@@ -275,7 +278,7 @@ function GamePage() {
         return () => {
             document.removeEventListener("visibilitychange", handleVisibility);
         };
-    }, [sessionCode, storedPlayer?.id]);
+    }, [sessionCode, player?.id]);
 
     useEffect(() => {
         const timer = setTimeout(() => {
@@ -327,11 +330,13 @@ function GamePage() {
                 console.log("RAW WS EVENT:", data);
 
                 if (data.type === "TICK") {
-                    setSession(prev =>
-                        prev ? { ...prev, currentTick: data.currentTick } : prev
-                    );
+
 
                     await fetchVoyagesOnly(sessionIdRef.current, data.currentTick);
+
+                    if (data.currentTick % 3 === 0) {
+                        await safeFetchData();
+                    }
 
                     return;
                 }
@@ -345,63 +350,19 @@ function GamePage() {
                 if (data.type === "VOYAGE_FINISHED") {
                     console.log("VOYAGE FINISHED EVENT:", data);
 
-                    setSession(prev => {
-                        if (!prev) return prev;
-
-                        const updated = {
-                            ...prev,
-                            players: prev.players.map(p => ({
-                                ...p,
-                                ships: p.ships.map(ship => {
-                                    if (ship.id === data.shipId) {
-                                        return {
-                                            ...ship,
-                                            currentPort: data.destinationPort,
-                                            traveling: false
-                                        };
-                                    }
-                                    return ship;
-                                })
-                            }))
-                        };
-
-                        if (updated.maxPlayers === 1) {
-                            const myPlayer = updated.players.find(p => p.id === storedPlayer.id);
-
-                            if (myPlayer) {
-                                saveScore(myPlayer.balance);
-                            }
-                        }
-
-                        return updated;
-                    });
-
-                    setTimeout(() => {
-                        safeFetchData();
-                    }, 300);
-
+                    await safeFetchData();
                     return;
                 }
 
                 if (data.type === "SESSION_PAUSED") {
                     console.log("SESSION PAUSED EVENT:", data);
 
-                    setSession(prev =>
-                        prev
-                            ? { ...prev, status: data.status }
-                            : prev
-                    );
+                    await safeFetchData();
                     return;
                 }
 
                 if (data.type === "SESSION_RUNNING") {
                     console.log("SESSION RUNNING EVENT:", data);
-
-                    setSession(prev =>
-                        prev
-                            ? { ...prev, status: data.status }
-                            : prev
-                    );
 
                     await safeFetchData();
                     return;
@@ -463,11 +424,11 @@ function GamePage() {
     };
 
     const handleLeaveSession = async () => {
-        if (!storedPlayer?.id) return;
+        if (!player?.id) return;
 
         try {
             await api.post(`/sessions/${sessionCode}/leave`, {
-                playerId: storedPlayer?.id,
+                playerId: player?.id,
             });
 
             navigate("/");
@@ -497,13 +458,7 @@ function GamePage() {
         }
     };
 
-    if (!storedPlayer) {
-        return (
-            <div style={{ color: "white", padding: "20px" }}>
-                Session data missing. Please return to the lobby.
-            </div>
-        );
-    }
+    if (!player) return null;
 
     if (!session) {
         return (
@@ -514,7 +469,7 @@ function GamePage() {
     }
 
     const myShips = session.players
-        .find(p => p.id === storedPlayer?.id)?.ships || [];
+        .find(p => p.id === player?.id)?.ships || [];
 
     const myShipIds = myShips.map(s => s.id);
 
@@ -526,8 +481,6 @@ function GamePage() {
     const shipPorts = myShips
         .map(ship => ship.currentPort)
         .filter(Boolean);
-
-    const now = Date.now();
 
     const rewards = portCargo.map(c => c.reward);
     const minReward = rewards.length > 0 ? Math.min(...rewards) : 0;
@@ -616,15 +569,14 @@ function GamePage() {
                 setShowRewardPopup={setShowRewardPopup}
                 rewardAmount={rewardAmount}
                 currentPlayer={currentPlayer}
-                storedPlayer={storedPlayer}
                 setSelectedShip={setSelectedShip}
                 sessionCode={sessionCode}
-
+                storedPlayer={player}
+                setSession={setSession}
                 showLeaveModal={showLeaveModal}
                 setShowLeaveModal={setShowLeaveModal}
                 handleLeaveSession={handleLeaveSession}
                 closeLeaveModal={closeLeaveModal}
-                setSession={setSession}
             />
 
         </div>
