@@ -36,26 +36,28 @@ public class GetVoyagesService {
         dto.status = v.getStatus().name();
         dto.reward = v.getReward();
 
-        int duration = v.getDurationInTicks();
-        dto.duration = duration;
+        int durationTicks = v.getDurationInTicks();
+        dto.duration = durationTicks;
 
         if (v.getStatus() == VoyageStatus.RUNNING) {
 
-            int elapsedTicks = currentTick - v.getStartTick();
-            elapsedTicks = Math.max(0, elapsedTicks);
+            long durationMs = durationTicks * 5000L;
 
-            dto.currentDay = Math.min(duration, elapsedTicks + 1);
+            long startMs = v.getStartTime()
+                    .atZone(java.time.ZoneId.systemDefault())
+                    .toInstant()
+                    .toEpochMilli();
 
-            dto.progress = duration > 0
-                    ? Math.min(1.0, (double) (elapsedTicks + 1) / duration)
-                    : 1.0;
+            long now = System.currentTimeMillis();
 
-            System.out.println("DEBUG → startTick=" + v.getStartTick()
-                    + " currentTick=" + currentTick
-                    + " elapsed=" + elapsedTicks);
+            double progress = (double) (now - startMs) / durationMs;
+
+            dto.progress = Math.min(1.0, Math.max(0.0, progress));
+
+            dto.currentDay = (int) Math.ceil(dto.progress * durationTicks);
 
         } else {
-            dto.currentDay = duration;
+            dto.currentDay = durationTicks;
             dto.progress = 1.0;
         }
 
