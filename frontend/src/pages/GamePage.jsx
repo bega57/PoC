@@ -123,11 +123,25 @@ function GamePage() {
 
     useEffect(() => {
         const interval = setInterval(() => {
-            setSmoothProgress(() => {
-                const updated = {};
+            setSmoothProgress(prev => {
+                const updated = { ...prev };
 
                 voyages.forEach(v => {
-                    updated[v.id] = (v.progress ?? 0) * 100;
+                    const backend = v.progress ?? 0;
+                    const current = (updated[v.id] ?? backend * 100) / 100;
+
+                    const totalTime = v.duration * 5000; // gleich wie Backend
+                    const speed = 16 / totalTime; // 16ms frame
+
+                    let next = current + speed;
+
+                    next = Math.min(next, backend);
+
+                    if (v.status === "FINISHED") {
+                        next = 1;
+                    }
+
+                    updated[v.id] = next * 100;
                 });
 
                 return updated;
@@ -597,6 +611,7 @@ function GamePage() {
                 session={session}
                 ports={ports}
                 voyages={voyages}
+                smoothProgress={smoothProgress}
                 hoveredPort={hoveredPort}
                 setHoveredPort={setHoveredPort}
                 handlePortHover={handlePortHover}

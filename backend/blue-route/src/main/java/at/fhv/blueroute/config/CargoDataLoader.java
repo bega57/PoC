@@ -81,122 +81,60 @@ public class CargoDataLoader {
                 return;
             }
 
-            Port rio = getPort(portRepo, "Rio");
-            Port newYork = getPort(portRepo, "New York");
-            Port lagos = getPort(portRepo, "Lagos");
-            Port capeTown = getPort(portRepo, "Cape Town");
             Port london = getPort(portRepo, "London");
-            Port dubai = getPort(portRepo, "Dubai");
-            Port mumbai = getPort(portRepo, "Mumbai");
-            Port singapore = getPort(portRepo, "Singapore");
-            Port tokyo = getPort(portRepo, "Tokyo");
-            Port sydney = getPort(portRepo, "Sydney");
-            Port shanghai = getPort(portRepo, "Shanghai");
-            Port bangkok = getPort(portRepo, "Bangkok");
-            Port jakarta = getPort(portRepo, "Jakarta");
-            Port istanbul = getPort(portRepo, "Istanbul");
-            Port mombasa = getPort(portRepo, "Mombasa");
-            Port losAngeles = getPort(portRepo, "Los Angeles");
             Port hamburg = getPort(portRepo, "Hamburg");
             Port rotterdam = getPort(portRepo, "Rotterdam");
-            Port seoul = getPort(portRepo, "Seoul");
-            Port honolulu = getPort(portRepo, "Honolulu");
+
+            Port newYork = getPort(portRepo, "New York");
+            Port losAngeles = getPort(portRepo, "Los Angeles");
             Port buenosAires = getPort(portRepo, "Buenos Aires");
-            Port lima = getPort(portRepo, "Lima");
-            Port vancouver = getPort(portRepo, "Vancouver");
+
+            Port lagos = getPort(portRepo, "Lagos");
+            Port capeTown = getPort(portRepo, "Cape Town");
+
+            Port dubai = getPort(portRepo, "Dubai");
+            Port singapore = getPort(portRepo, "Singapore");
+            Port tokyo = getPort(portRepo, "Tokyo");
 
             cargoRepo.saveAll(List.of(
+
+                    // EUROPE
                     create(london, hamburg, "Designer Clothes", CargoType.CLOTHES),
-                    create(london, hamburg, "Medical Supplies", CargoType.MEDICINE),
-                    create(london, newYork, "Luxury Watches", CargoType.LUXURY_GOODS),
+                    create(hamburg, rotterdam, "Industrial Goods", CargoType.MACHINERY),
+                    create(rotterdam, london, "Electronics", CargoType.ELECTRONICS),
 
-                    create(hamburg, rotterdam, "Fresh Food", CargoType.FOOD),
-                    create(hamburg, rotterdam, "Crude Oil Barrels", CargoType.OIL),
-                    create(hamburg, newYork, "Industrial Machinery", CargoType.MACHINERY),
+                    // EUROPE -> AMERICA
+                    create(london, newYork, "Luxury Goods", CargoType.LUXURY_GOODS),
+                    create(rotterdam, newYork, "Machinery", CargoType.MACHINERY),
 
-                    create(rotterdam, hamburg, "Clothing Containers", CargoType.CLOTHES),
-                    create(rotterdam, istanbul, "Electronics Pallets", CargoType.ELECTRONICS),
-                    create(rotterdam, istanbul, "Refined Oil", CargoType.OIL),
+                    // AMERICA
+                    create(newYork, losAngeles, "Retail Cargo", CargoType.CLOTHES),
+                    create(losAngeles, buenosAires, "Food Containers", CargoType.FOOD),
+                    create(buenosAires, newYork, "Beef Export", CargoType.FOOD),
 
-                    create(istanbul, dubai, "Spice Crates", CargoType.FOOD),
-                    create(istanbul, rotterdam, "Machine Parts", CargoType.MACHINERY),
-                    create(istanbul, dubai, "Luxury Carpets", CargoType.LUXURY_GOODS),
+                    // EUROPE -> AFRICA
+                    create(london, lagos, "Raw Materials", CargoType.MACHINERY),
+                    create(rotterdam, capeTown, "Oil Cargo", CargoType.OIL),
 
-                    create(dubai, mumbai, "Designer Goods", CargoType.LUXURY_GOODS),
-                    create(dubai, singapore, "Oil Drums", CargoType.OIL),
-                    create(dubai, istanbul, "Medical Equipment", CargoType.MEDICINE),
+                    // AFRICA
+                    create(lagos, capeTown, "Cocoa Trade", CargoType.FOOD),
+                    create(capeTown, lagos, "Mining Equipment", CargoType.MACHINERY),
 
-                    create(mumbai, dubai, "Cotton Clothes", CargoType.CLOTHES),
-                    create(mumbai, singapore, "Smartphones", CargoType.ELECTRONICS),
-                    create(mumbai, singapore, "Heavy Machinery", CargoType.MACHINERY),
+                    // AFRICA -> ASIA
+                    create(capeTown, dubai, "Luxury Minerals", CargoType.LUXURY_GOODS),
+                    create(lagos, dubai, "Oil Shipment", CargoType.OIL),
 
+                    // ASIA
+                    create(dubai, singapore, "Fuel Cargo", CargoType.OIL),
                     create(singapore, tokyo, "Consumer Electronics", CargoType.ELECTRONICS),
-                    create(singapore, dubai, "Frozen Food", CargoType.FOOD),
-                    create(singapore, jakarta, "Luxury Jewelry", CargoType.LUXURY_GOODS),
+                    create(tokyo, singapore, "Tech Parts", CargoType.ELECTRONICS),
 
-                    create(tokyo, seoul, "Gaming Consoles", CargoType.ELECTRONICS),
-                    create(tokyo, shanghai, "Precision Machinery", CargoType.MACHINERY),
-                    create(tokyo, sydney, "Medical Robots", CargoType.MEDICINE),
+                    // GLOBAL LONG ROUTES
+                    create(losAngeles, tokyo, "High Tech Cargo", CargoType.ELECTRONICS),
+                    create(newYork, dubai, "Medical Supplies", CargoType.MEDICINE),
+                    create(london, singapore, "Luxury Trade", CargoType.LUXURY_GOODS),
+                    create(buenosAires, tokyo, "Premium Goods", CargoType.LUXURY_GOODS)
 
-                    create(seoul, tokyo, "Fashion Boxes", CargoType.CLOTHES),
-                    create(seoul, tokyo, "Laptop Components", CargoType.ELECTRONICS),
-                    create(seoul, tokyo, "Luxury Cosmetics", CargoType.LUXURY_GOODS),
-
-                    create(shanghai, bangkok, "Factory Components", CargoType.MACHINERY),
-                    create(shanghai, tokyo, "Electronics Modules", CargoType.ELECTRONICS),
-                    create(shanghai, bangkok, "Textile Rolls", CargoType.CLOTHES),
-
-                    create(bangkok, jakarta, "Rice Bags", CargoType.FOOD),
-                    create(bangkok, shanghai, "Tourist Goods", CargoType.CLOTHES),
-                    create(bangkok, jakarta, "Rare Gemstones", CargoType.LUXURY_GOODS),
-
-                    create(jakarta, singapore, "Tropical Fruit", CargoType.FOOD),
-                    create(jakarta, bangkok, "Rubber Machinery", CargoType.MACHINERY),
-                    create(jakarta, singapore, "Palm Oil", CargoType.OIL),
-
-                    create(sydney, tokyo, "Frozen Meat", CargoType.FOOD),
-                    create(sydney, singapore, "Medical Cargo", CargoType.MEDICINE),
-                    create(sydney, tokyo, "Luxury Wine Crates", CargoType.LUXURY_GOODS),
-
-                    create(newYork, losAngeles, "Fashion Retail Cargo", CargoType.CLOTHES),
-                    create(newYork, tokyo, "Pharmaceutical Cargo", CargoType.MEDICINE),
-                    create(newYork, london, "Luxury Art Pieces", CargoType.LUXURY_GOODS),
-
-                    create(losAngeles, honolulu, "Food Containers", CargoType.FOOD),
-                    create(losAngeles, vancouver, "Electronics Shipment", CargoType.ELECTRONICS),
-                    create(losAngeles, newYork, "Movie Equipment", CargoType.MACHINERY),
-
-                    create(honolulu, losAngeles, "Fresh Pineapples", CargoType.FOOD),
-                    create(honolulu, losAngeles, "Resort Supplies", CargoType.CLOTHES),
-                    create(honolulu, losAngeles, "Luxury Pearls", CargoType.LUXURY_GOODS),
-
-                    create(vancouver, lima, "Timber Equipment", CargoType.MACHINERY),
-                    create(vancouver, losAngeles, "Winter Clothing", CargoType.CLOTHES),
-                    create(vancouver, lima, "Medical Coolers", CargoType.MEDICINE),
-
-                    create(lima, buenosAires, "Coffee Beans", CargoType.FOOD),
-                    create(lima, vancouver, "Mining Equipment", CargoType.MACHINERY),
-                    create(lima, buenosAires, "Silver Jewelry", CargoType.LUXURY_GOODS),
-
-                    create(buenosAires, rio, "Beef Containers", CargoType.FOOD),
-                    create(buenosAires, lima, "Leather Goods", CargoType.CLOTHES),
-                    create(buenosAires, rio, "Premium Antiques", CargoType.LUXURY_GOODS),
-
-                    create(rio, lagos, "Fruit Cargo", CargoType.FOOD),
-                    create(rio, buenosAires, "Carnival Costumes", CargoType.CLOTHES),
-                    create(rio, lagos, "Offshore Oil", CargoType.OIL),
-
-                    create(lagos, capeTown, "Cocoa Bags", CargoType.FOOD),
-                    create(lagos, london, "Raw Materials", CargoType.MACHINERY),
-                    create(lagos, capeTown, "Fuel Containers", CargoType.OIL),
-
-                    create(capeTown, mombasa, "Fruit Boxes", CargoType.FOOD),
-                    create(capeTown, lagos, "Mining Tools", CargoType.MACHINERY),
-                    create(capeTown, mombasa, "Luxury Diamonds", CargoType.LUXURY_GOODS),
-
-                    create(mombasa, capeTown, "Tea Crates", CargoType.FOOD),
-                    create(mombasa, capeTown, "Medical Aid", CargoType.MEDICINE),
-                    create(mombasa, capeTown, "Rare Minerals", CargoType.LUXURY_GOODS)
             ));
             System.out.println("Cargo loaded safely");
         };
