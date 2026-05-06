@@ -1,0 +1,79 @@
+.voyage-event-overlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(5, 12, 24, 0.72);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    z-index: 9999;
+    backdrop-filter: blur(4px);
+}
+
+.voyage-event-modal {
+    width: min(440px, 90vw);
+    background: #0f172a;
+    color: white;
+    border-radius: 18px;
+    padding: 28px;
+    text-align: center;
+    box-shadow: 0 24px 70px rgba(0, 0, 0, 0.45);
+    border: 1px solid rgba(255, 255, 255, 0.12);
+}
+
+.voyage-event-icon {
+    font-size: 42px;
+    margin-bottom: 8px;
+}
+
+.voyage-event-modal h2 {
+    margin: 0 0 12px;
+    font-size: 26px;
+}
+
+.voyage-event-description {
+    font-size: 15px;
+    line-height: 1.5;
+    color: #cbd5e1;
+    margin-bottom: 22px;
+}
+
+.voyage-event-options {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+.voyage-event-option-button {
+    border: none;
+    border-radius: 12px;
+    padding: 13px 16px;
+    background: #2563eb;
+    color: white;
+    font-weight: 600;
+    cursor: pointer;
+    transition: 0.15s ease;
+}
+
+.voyage-event-option-button:hover {
+    background: #1d4ed8;
+    transform: translateY(-1px);
+}
+
+.voyage-event-option-button:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+}
+
+.voyage-event-option-label {
+    display: block;
+    font-size: 16px;
+    font-weight: 700;
+}
+
+.voyage-event-option-consequence {
+    display: block;
+    margin-top: 5px;
+    font-size: 13px;
+    font-weight: 500;
+    opacity: 0.85;
+}

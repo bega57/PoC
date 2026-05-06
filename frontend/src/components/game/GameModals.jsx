@@ -10,6 +10,8 @@ function GameModals({
                         showRewardPopup,
                         setShowRewardPopup,
                         rewardAmount,
+                        finishedVoyageInfo,
+                        setFinishedVoyageInfo,
                         currentPlayer,
                         storedPlayer,
                         selectedShip,
@@ -125,9 +127,42 @@ function GameModals({
                     <div className="welcome-modal">
                         <h2>Voyage completed</h2>
                         <p>You successfully completed your transport order.</p>
-                        <h1>+{rewardAmount} Coins</h1>
 
-                        <button onClick={() => setShowRewardPopup(false)}>
+                        <h1>+{Number(rewardAmount).toFixed(0)} Coins</h1>
+
+                        {finishedVoyageInfo?.eventResultMessage && (
+                            <div className="voyage-finish-event-box">
+                                <h3>Event result</h3>
+                                <p>{finishedVoyageInfo.eventResultMessage}</p>
+
+                                {finishedVoyageInfo.eventCost > 0 && (
+                                    <p>Bribe / event cost: -{finishedVoyageInfo.eventCost} Coins</p>
+                                )}
+
+                                {finishedVoyageInfo.extraDelayTicks > 0 && (
+                                    <p>Delay: +{finishedVoyageInfo.extraDelayTicks} days</p>
+                                )}
+
+                                {finishedVoyageInfo.extraFuelLoss > 0 && (
+                                    <p>Extra fuel used: -{finishedVoyageInfo.extraFuelLoss}</p>
+                                )}
+
+                                {finishedVoyageInfo.extraConditionLoss > 0 && (
+                                    <p>Extra condition loss: -{finishedVoyageInfo.extraConditionLoss}</p>
+                                )}
+
+                                {finishedVoyageInfo.rewardLossPercent > 0 && (
+                                    <p>Reward reduced by {finishedVoyageInfo.rewardLossPercent}%</p>
+                                )}
+                            </div>
+                        )}
+
+                        <button
+                            onClick={() => {
+                                setShowRewardPopup(false);
+                                setFinishedVoyageInfo(null);
+                            }}
+                        >
                             Nice
                         </button>
                     </div>

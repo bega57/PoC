@@ -20,4 +20,11 @@ public class VoyageResponse {
     public double reward;
 
     public List<double[]> route;
+
+    public String eventResultMessage;
+    public Integer extraDelayTicks;
+    public Double extraFuelLoss;
+    public Double extraConditionLoss;
+    public Double eventCost;
+    public Double rewardLossPercent;
 }

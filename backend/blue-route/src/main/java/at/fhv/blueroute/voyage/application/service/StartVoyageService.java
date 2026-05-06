@@ -1,6 +1,6 @@
 package at.fhv.blueroute.voyage.application.service;
 
-import at.fhv.blueroute.cargo.application.service.CalculateDeteriorationService;
+import at.fhv.blueroute.event.application.service.VoyageEventPlanningService;
 import at.fhv.blueroute.cargo.domain.model.Cargo;
 import at.fhv.blueroute.cargo.infrastructure.persistence.JpaCargoRepository;
 import at.fhv.blueroute.player.domain.repository.PlayerRepository;
@@ -29,6 +29,7 @@ public class StartVoyageService {
     private final PlayerRepository playerRepository;
     private final JpaSessionRepository sessionRepository;
     private final WebSocketSender webSocketSender;
+    private final VoyageEventPlanningService voyageEventPlanningService;
 
     public StartVoyageService(
             JpaVoyageRepository voyageRepository,
@@ -36,7 +37,8 @@ public class StartVoyageService {
             JpaCargoRepository cargoRepository,
             PlayerRepository playerRepository,
             JpaSessionRepository sessionRepository,
-            WebSocketSender webSocketSender
+            WebSocketSender webSocketSender,
+            VoyageEventPlanningService voyageEventPlanningService
     ) {
         this.voyageRepository = voyageRepository;
         this.shipRepository = shipRepository;
@@ -44,6 +46,7 @@ public class StartVoyageService {
         this.playerRepository = playerRepository;
         this.sessionRepository = sessionRepository;
         this.webSocketSender = webSocketSender;
+        this.voyageEventPlanningService = voyageEventPlanningService;
     }
 
     public Voyage startVoyage(Long shipId, Long cargoId, String sessionCode) {
@@ -147,6 +150,7 @@ public class StartVoyageService {
         voyage.setReward(cargo.getReward());
         voyage.setRewardGranted(false);
 
+        voyageEventPlanningService.planEventForVoyage(voyage, cargo, currentTick);
 
         ship.setTraveling(true);
         ship.setCurrentPort(null);

@@ -17,6 +17,8 @@ import at.fhv.blueroute.session.domain.repository.SessionRepository;
 import at.fhv.blueroute.session.presentation.dto.SessionResponse;
 import at.fhv.blueroute.session.application.exception.PlayerAlreadyActiveException;
 import at.fhv.blueroute.session.application.exception.PlayerAlreadyInSessionException;
+import at.fhv.blueroute.voyage.domain.model.Voyage;
+import at.fhv.blueroute.voyage.infrastructure.persistence.JpaVoyageRepository;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
@@ -29,15 +31,18 @@ public class SessionService {
     private final PlayerRepository playerRepository;
     private final SessionMapper sessionMapper;
     private final WebSocketSender webSocketSender;
+    private final JpaVoyageRepository voyageRepository;
 
     public SessionService(SessionRepository sessionRepository,
                           PlayerRepository playerRepository,
                           SessionMapper sessionMapper,
-                          WebSocketSender webSocketSender) {
+                          WebSocketSender webSocketSender,
+                          JpaVoyageRepository voyageRepository) {
         this.sessionRepository = sessionRepository;
         this.playerRepository = playerRepository;
         this.sessionMapper = sessionMapper;
         this.webSocketSender = webSocketSender;
+        this.voyageRepository = voyageRepository;
 
     }
 
@@ -187,7 +192,7 @@ public class SessionService {
         boolean hasActivePlayers = session.getSessionPlayers().stream()
                 .anyMatch(sp -> sp.getStatus() == SessionPlayerStatus.ACTIVE);
 
-        if (hasActivePlayers) {
+        if (hasActivePlayers && !hasPendingEvents(session)) {
             session.setStatus(SessionStatus.RUNNING);
         }
 
@@ -225,7 +230,7 @@ public class SessionService {
                 .anyMatch(sp -> sp.getStatus() == SessionPlayerStatus.ACTIVE);
         System.out.println("RESUME 7 - hasActivePlayers: " + hasActivePlayers);
 
-        if (hasActivePlayers) {
+        if (hasActivePlayers && !hasPendingEvents(session)) {
             session.setStatus(SessionStatus.RUNNING);
         }
 
@@ -248,5 +253,11 @@ public class SessionService {
         System.out.println("RESUME 10 - mapped response");
 
         return response;
+    }
+
+    private boolean hasPendingEvents(Session session) {
+        List<Voyage> voyages = voyageRepository.findBySessionId(session.getId());
+        return voyages.stream()
+                .anyMatch(v -> v.getPendingEventType() != null && !v.isEventResolved());
     }
 }

@@ -13,6 +13,8 @@ import GameStatusBar from "../components/game/GameStatusBar";
 import GameMap from "../components/game/GameMap";
 import { useContext } from "react";
 import { GameContext } from "../layouts/AppLayout";
+import VoyageEventModal from "../components/VoyageEventModal";
+import Toast from "../components/Toast";
 
 const geoUrl = "/countries-110m.json";
 
@@ -52,9 +54,17 @@ function GamePage() {
     const [rewardAmount, setRewardAmount] = useState(0);
 
     const [leaderboard, setLeaderboard] = useState([]);
+    const [finishedVoyageInfo, setFinishedVoyageInfo] = useState(null);
+
+    const [activeEvent, setActiveEvent] = useState(null);
+    const [eventLoading, setEventLoading] = useState(false);
+
+    const finalLeaderboard = leaderboard;
 
     const { session, setSession, player, setPlayer } = useContext(GameContext);
     const currentPlayer = player;
+    const [toastMessage, setToastMessage] = useState("");
+    const [toastType, setToastType] = useState("success");
 
     const getLocalLeaderboard = () => {
         return JSON.parse(localStorage.getItem("leaderboard") || "[]");
@@ -108,15 +118,26 @@ function GamePage() {
                 const updated = { ...prev };
 
                 voyages.forEach(v => {
-                    const current = prev[v.id] ?? v.progress ?? 0;
-                    const target = v.progress ?? 0;
+                    const backend = v.progress ?? 0;
+                    const current = (updated[v.id] ?? backend * 100) / 100;
 
-                    updated[v.id] = current + (target - current) * 0.15;
+                    const totalTime = v.duration * 5000; // gleich wie Backend
+                    const speed = 16 / totalTime; // 16ms frame
+
+                    let next = current + speed;
+
+                    next = Math.min(next, backend);
+
+                    if (v.status === "FINISHED") {
+                        next = 1;
+                    }
+
+                    updated[v.id] = next * 100;
                 });
 
                 return updated;
             });
-        }, 50);
+        }, 16);
 
         return () => clearInterval(interval);
     }, [voyages]);
@@ -303,6 +324,36 @@ function GamePage() {
 
 
 
+    const handleEventChoice = async (optionIndex) => {
+        if (!activeEvent) {
+            return;
+        }
+
+        const optionMap = ["OPTION_A", "OPTION_B", "OPTION_C"];
+        const selectedOption = optionMap[optionIndex];
+
+        try {
+            setEventLoading(true);
+
+            const response = await api.post(
+                `/voyage-events/${activeEvent.voyageId}/resolve`,
+                { selectedOption }
+            );
+
+            setToastMessage(response.data.message);
+            setToastType("success");
+            setActiveEvent(null);
+
+            await fetchData();
+        } catch (error) {
+            console.error(error);
+            setToastMessage(error.response?.data?.message || "Failed to resolve event.");
+            setToastType("error");
+        } finally {
+            setEventLoading(false);
+        }
+    };
+
     const handlePortHover = async (port) => {
         setHoveredPort(port);
 
@@ -419,6 +470,7 @@ function GamePage() {
                 session={session}
                 ports={ports}
                 voyages={voyages}
+                smoothProgress={smoothProgress}
                 hoveredPort={hoveredPort}
                 setHoveredPort={setHoveredPort}
                 handlePortHover={handlePortHover}
@@ -472,6 +524,8 @@ function GamePage() {
                 showRewardPopup={showRewardPopup}
                 setShowRewardPopup={setShowRewardPopup}
                 rewardAmount={rewardAmount}
+                finishedVoyageInfo={finishedVoyageInfo}
+                setFinishedVoyageInfo={setFinishedVoyageInfo}
                 currentPlayer={currentPlayer}
                 setSelectedShip={setSelectedShip}
                 sessionCode={sessionCode}
@@ -482,6 +536,14 @@ function GamePage() {
                 handleLeaveSession={handleLeaveSession}
                 closeLeaveModal={closeLeaveModal}
             />
+
+            <VoyageEventModal
+                event={activeEvent}
+                onSelect={handleEventChoice}
+                loading={eventLoading}
+            />
+
+            <Toast message={toastMessage} type={toastType} />
 
         </div>
     );
