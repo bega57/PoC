@@ -2,7 +2,7 @@ import { useState } from "react";
 import api from "../api/api";
 
 function CreateSessionButton({ player, onSessionCreated, showToast }) {
-    const [maxPlayers, setMaxPlayers] = useState(5);
+    const [maxPlayers, setMaxPlayers] = useState(1);
     const [message, setMessage] = useState("");
 
     const handleCreateSession = async (e) => {
@@ -42,29 +42,22 @@ function CreateSessionButton({ player, onSessionCreated, showToast }) {
         <div className="form-card-content">
             <h2>Create Session</h2>
 
-            <form onSubmit={handleCreateSession} onKeyDown={handleFormKeyDown}>
-                <div className="top-section">
-                    <p className="field-label">Choose player count:</p>
+            <form onSubmit={handleCreateSession} className="form create-session-form">
 
-                    <div className="player-count-selector five-options">
-                        {[1, 2, 3, 4, 5].map((count) => (
-                            <button
-                                key={count}
-                                type="button"
-                                className={`count-button ${maxPlayers === count ? "active" : ""}`}
-                                onClick={() => setMaxPlayers(count)}
-                            >
-                                {count}
-                            </button>
-                        ))}
-                    </div>
-
-                    {message && (
-                        <p className="form-message" style={{ color: "#ff6b6b" }}>
-                            {message}
-                        </p>
-                    )}
+                <div className="player-count-selector">
+                    {[1,2,3,4,5].map(count => (
+                        <button
+                            key={count}
+                            type="button"
+                            className={maxPlayers === count ? "active" : ""}
+                            onClick={() => setMaxPlayers(count)}
+                        >
+                            {count}
+                        </button>
+                    ))}
                 </div>
+
+                <p className="form-message">{message || ""}</p>
 
                 <button type="submit" className="main-action-button">
                     Create Session

@@ -35,8 +35,8 @@ public class RepairShipService {
 
         Player player = ship.getOwner();
 
-        double maxCondition = 100.0;
-        double currentCondition = Math.max(0, ship.getCondition());
+        int maxCondition = 100;
+        int currentCondition = Math.max(0, ship.getCondition());
 
         if (repairAmount <= 0) {
             throw new RuntimeException("Invalid repair amount");
@@ -73,7 +73,7 @@ public class RepairShipService {
             throw new IllegalArgumentException("Not enough money");
         }
 
-        ship.setCondition(Math.min(100.0, currentCondition + repairAmount));
+        ship.setCondition(Math.min(100, currentCondition + repairAmount));
         player.setBalance(player.getBalance() - cost);
 
         Ship saved = shipRepository.save(ship);
@@ -91,7 +91,7 @@ public class RepairShipService {
 
         double portMultiplier = 0.9 + (port.getFuelPrice() / 15.0);
 
-        double currentCondition = Math.max(0, ship.getCondition());
+        int currentCondition = Math.max(0, ship.getCondition());
 
         double basePricePerUnit = 1.5;
 

@@ -1,3 +1,5 @@
+import "./GameSidebar.css";
+
 function GameSidebar({
                          sidebarOpen,
                          setSidebarOpen,
@@ -28,10 +30,10 @@ function GameSidebar({
     return (
         <div className={`sidebar ${sidebarOpen ? "open" : "closed"}`}>
             <button
-                className="toggle-btn"
-                onClick={() => setSidebarOpen(!sidebarOpen)}
+                className={`toggle-btn ${sidebarOpen ? "open" : "closed"}`}
+                onClick={() => setSidebarOpen(prev => !prev)}
             >
-                {sidebarOpen ? "❯" : "❮"}
+                {sidebarOpen ? "›" : "‹"}
             </button>
 
             {sidebarOpen && (
@@ -40,28 +42,28 @@ function GameSidebar({
 
                     <button
                         className="action-btn"
-                        onClick={() => navigate(`/${sessionCode}/market`)}
+                        onClick={() => navigate(`/session/${sessionCode}/market`)}
                     >
                         Ship Market
                     </button>
 
                     <button
                         className="action-btn"
-                        onClick={() => navigate(`/${sessionCode}/cargo-offers`)}
+                        onClick={() => navigate(`/session/${sessionCode}/cargo-offers`)}
                     >
                         Cargo Offers
                     </button>
 
                     <button
                         className="action-btn"
-                        onClick={() => navigate(`/${sessionCode}/company`)}
+                        onClick={() => navigate(`/session/${sessionCode}/company`)}
                     >
                         Company
                     </button>
 
                     <button
                         className="action-btn"
-                        onClick={() => navigate(`/${sessionCode}/voyage`)}
+                        onClick={() => navigate(`/session/${sessionCode}/voyage`)}
                     >
                         Voyage
                     </button>

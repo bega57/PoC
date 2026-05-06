@@ -6,11 +6,14 @@
     min-height: 100vh;
     position: relative;
     overflow: hidden;
-    padding: 28px 20px 40px;
+
+    padding: 100px 20px 60px;
+
     background:
             radial-gradient(circle at top left, rgba(59, 130, 246, 0.22), transparent 30%),
             radial-gradient(circle at top right, rgba(14, 165, 233, 0.16), transparent 25%),
             linear-gradient(180deg, #06101f 0%, #09182b 45%, #07111d 100%);
+
     color: #e8f1ff;
     font-family: Arial, sans-serif;
 }
@@ -43,16 +46,50 @@
 .back-button {
     display: inline-flex;
     align-items: center;
-    gap: 5px;
-    padding: 5px 10px;
-    font-size: 13px;
-    color: #93c5fd;
-    background: transparent;
+    gap: 10px;
+
+    padding: 16px 28px;
+
+    border-radius: 18px;
+
     border: 1px solid rgba(96, 165, 250, 0.25);
-    border-radius: 6px;
+
+    background:
+            linear-gradient(
+                    135deg,
+                    rgba(15, 23, 42, 0.98),
+                    rgba(30, 41, 59, 0.92)
+            );
+
+    color: #dbeafe;
+
+    font-size: 18px;
+    font-weight: 700;
+    letter-spacing: 0.3px;
+
     cursor: pointer;
-    transition: 0.15s ease;
-    width: fit-content;
+
+    box-shadow:
+            0 12px 28px rgba(0,0,0,0.4),
+            inset 0 1px 0 rgba(255,255,255,0.05);
+
+    transition: all 0.22s ease;
+}
+
+.back-button:hover {
+    transform: translateY(-2px) scale(1.02);
+
+    border-color: rgba(96,165,250,0.6);
+
+    color: white;
+
+    box-shadow:
+            0 16px 36px rgba(37,99,235,0.28),
+            0 0 24px rgba(59,130,246,0.2);
+}
+
+.back-button:active {
+    transform: scale(0.97);
 }
 
 .back-button:hover {

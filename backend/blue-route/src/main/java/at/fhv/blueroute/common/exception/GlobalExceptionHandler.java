@@ -64,6 +64,8 @@ public class GlobalExceptionHandler {
             Exception ex,
             HttpServletRequest request
     ) {
+
+        ex.printStackTrace();
         ErrorResponse response = new ErrorResponse(
                 "An unexpected error occurred",
                 HttpStatus.INTERNAL_SERVER_ERROR.value(),

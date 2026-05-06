@@ -6,6 +6,7 @@ public class VoyageResponse {
 
     public Long id;
     public Long shipId;
+    public String shipName;
 
     public String originPort;
     public String destinationPort;

@@ -67,12 +67,15 @@ function CargoOffersPage() {
                         className="back-button"
                         onClick={() => navigate(-1)}
                     >
-                        ← Back
+                        🡸 Back to Game
                     </button>
                 </div>
 
                 <div className="cargo-header">
                     <h1>Cargo Offers</h1>
+                    <p className="cargo-subtitle">
+                        Browse profitable trade routes across the world.
+                    </p>
                 </div>
 
                 <div className="cargo-toolbar">
@@ -111,9 +114,11 @@ function CargoOffersPage() {
                                 <div className="cargo-port-box">
                                     <span className="cargo-port-label">FROM PORT</span>
                                     <h2>{offer.fromPort  || "Unknown"}</h2>
-                                    <p className="cargo-destination">
-                                        To: {offer.toPort || "Unknown"}
-                                    </p>
+                                    <div className="cargo-route">
+                                        <span>{offer.fromPort}</span>
+                                        <span className="route-arrow">→</span>
+                                        <span>{offer.toPort}</span>
+                                    </div>
                                 </div>
                             </div>
 
@@ -128,10 +133,9 @@ function CargoOffersPage() {
                                 <div className="cargo-stats">
                                     <div className="cargo-stat-block">
                                         <span className="cargo-stat-label">Price</span>
-                                        <span className="cargo-stat-value">
-                                            ${Math.round(offer.price * 1.2)}
-                                            <span style={{ fontSize: "11px", opacity: 0.7 }}> incl. VAT</span>
-                                        </span>
+                                        <div className={`risk-badge ${offer.riskLevel.toLowerCase()}`}>
+                                            {offer.riskLevel}
+                                        </div>
                                     </div>
 
                                     <div className="cargo-stat-block">

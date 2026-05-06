@@ -1,3 +1,4 @@
+import "../styles/background.css";
 import { useEffect, useState } from "react";
 import { Client } from "@stomp/stompjs";
 import SockJS from "sockjs-client";
@@ -87,14 +88,21 @@ function MainPage() {
     }, [session, player]);
 
     return (
-        <div className="main-page">
+        <div className="main-page ocean-bg">
+            <div className="ships-bg">
+                <div className="ship ship1"></div>
+                <div className="ship ship2"></div>
+            </div>
             <div className="main-overlay"></div>
 
             <Toast message={toast.message} type={toast.type} />
 
             <div className="main-content">
                 <header className="hero-section">
-                    <h1>Blue Route</h1>
+                    <h1 className="main-title">
+                        <span className="blue">BLUE</span>
+                        <span className="white">ROUTE</span>
+                    </h1>
                     <p className="hero-subtitle">
                         Create your player, start a session, and get ready to sail.
                     </p>
@@ -131,7 +139,7 @@ function MainPage() {
                         />
                     </div>
 
-                    <div className="card session-card">
+                    <div className="card session-card details-card">
                         <SessionDetails session={session} player={player} />
                     </div>
                 </div>

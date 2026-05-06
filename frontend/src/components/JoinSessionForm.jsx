@@ -45,7 +45,7 @@ function JoinSessionForm({ player, onSessionJoined, showToast }) {
         <div className="form-card-content">
             <h2>Join Session</h2>
 
-            <form onSubmit={handleJoinSession}>
+            <form onSubmit={handleJoinSession} className="form">
                 <input
                     type="text"
                     placeholder="Enter session code"
@@ -53,16 +53,7 @@ function JoinSessionForm({ player, onSessionJoined, showToast }) {
                     onChange={(e) => setSessionCode(e.target.value)}
                 />
 
-                {message && (
-                    <p
-                        className="form-message"
-                        style={{
-                            color: isError ? "#ff6b6b" : "#4ade80",
-                        }}
-                    >
-                        {message}
-                    </p>
-                )}
+                {message && <p className="form-message">{message}</p>}
 
                 <button type="submit" className="main-action-button">
                     Join Session

@@ -1,4 +1,5 @@
-import { useEffect, useState } from "react";
+import { useState, useContext } from "react";
+import { GameContext } from "../layouts/AppLayout";
 import { useNavigate, useParams } from "react-router-dom";
 import api from "../api/api";
 import "./ShipRefuelPage.css";
@@ -6,22 +7,15 @@ import "./ShipRefuelPage.css";
 function ShipRefuelPage() {
     const navigate = useNavigate();
     const { sessionCode } = useParams();
+    const { session, player } = useContext(GameContext);
 
-    const [session, setSession] = useState(null);
     const [selectedShip, setSelectedShip] = useState(null);
     const [toast, setToast] = useState("");
 
-    useEffect(() => {
-        const fetchSession = async () => {
-            const res = await api.get(`/sessions/${sessionCode}`);
-            setSession(res.data);
-        };
-        fetchSession();
-    }, [sessionCode]);
 
-    const activePlayerId = Number(sessionStorage.getItem(`activePlayerId-${sessionCode}`));
-
-    const currentPlayer = session?.players?.find(p => p.id === activePlayerId);
+    const currentPlayer = session?.players?.find(
+        p => p.id === player?.id
+    );
 
     const ships = currentPlayer?.ships || [];
 
@@ -39,14 +33,13 @@ function ShipRefuelPage() {
     const handleRefuel = async () => {
         try {
             await api.post(`/ships/${selectedShip.id}/refuel`, {
-                fuelAmount: fuelAmount
+                fuelAmount: fuelAmount,
+                sessionCode: sessionCode
             });
 
             setToast("Ship refueled ⛽");
             setToastType("success");
 
-            const res = await api.get(`/sessions/${sessionCode}`);
-            setSession(res.data);
             setSelectedShip(null);
             setFuelAmount(0);
             window.scrollTo(0, 0);
@@ -63,8 +56,8 @@ function ShipRefuelPage() {
         <div className="market-page">
             <div className="market-content">
 
-                <button className="back-button" onClick={() => navigate(`/${sessionCode}/market`)}>
-                    ← Back
+                <button className="back-button" onClick={() => navigate(`/session/${sessionCode}/market`)}>
+                    🡸 Return to Market
                 </button>
 
                 <header className="market-header">
@@ -102,7 +95,7 @@ function ShipRefuelPage() {
 
                                     <div className="refuel-info-row">
                                         <span className="refuel-fuel">
-                                            ⛽ {Math.round(ship.fuelLevel ?? 0)}%
+                                            ⛽ {ship.fuelLevel ?? 0}%
                                         </span>
 
                                     </div>

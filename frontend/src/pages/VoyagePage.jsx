@@ -1,9 +1,9 @@
-import { useEffect, useMemo, useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
-import { Client } from "@stomp/stompjs";
-import SockJS from "sockjs-client";
 import api from "../api/api";
 import "./VoyagePage.css";
+import { useContext } from "react";
+import { GameContext } from "../layouts/AppLayout";
+import { useEffect, useMemo, useState, useRef } from "react";
 
 export default function VoyagePage() {
     const { sessionCode } = useParams();
@@ -17,31 +17,10 @@ export default function VoyagePage() {
     const [voyages, setVoyages] = useState([]);
     const [showVoyageStartedPopup, setShowVoyageStartedPopup] = useState(false);
     const [startedVoyageInfo, setStartedVoyageInfo] = useState(null);
-    const [session, setSession] = useState(null);
+    const { session, player } = useContext(GameContext);
     const [errorMessage, setErrorMessage] = useState(null);
+    const previousPortRef = useRef(null);
 
-
-    const fetchSession = async () => {
-        try {
-            const res = await api.get(`/sessions/${sessionCode}`);
-            const sessionData = res.data;
-
-            setSession(sessionData);
-
-            if (selectedShip) {
-                const updatedShip = sessionData.players
-                    ?.flatMap(p => p.ships || [])
-                    .find(s => s.id === selectedShip.id);
-
-                if (updatedShip) {
-                    setSelectedShip(updatedShip);
-                }
-            }
-
-        } catch (err) {
-            console.error(err);
-        }
-    };
 
     const fetchVoyages = async () => {
         if (!session) return;
@@ -63,15 +42,10 @@ export default function VoyagePage() {
     };
 
     useEffect(() => {
-        fetchSession();
-    }, [sessionCode]);
-
-    useEffect(() => {
-        const player = JSON.parse(sessionStorage.getItem(`player-${sessionCode}`));
 
         if (!player?.id) {
             alert("No active player found.");
-            navigate(`/${sessionCode}/game`);
+            navigate(`/session/${sessionCode}/game`);
             return;
         }
 
@@ -79,89 +53,78 @@ export default function VoyagePage() {
             .then(res => {
                 setShips(res.data);
 
-                if (res.data.length > 0) {
+                if (res.data.length > 0 && !selectedShip) {
                     setSelectedShip(res.data[0]);
                 }
             })
             .catch(err => console.error(err));
-    }, [sessionCode]);
+    }, [sessionCode, player]);
+
 
     useEffect(() => {
-        if (!selectedShip?.currentPort) {
+        if (!player?.id) return;
+
+        api.get(`/ships/player/${player.id}`)
+            .then(res => {
+                setShips(res.data);
+
+                if (selectedShip) {
+                    const updatedShip = res.data.find(
+                        s => s.id === selectedShip.id
+                    );
+
+                    if (updatedShip) {
+                        setSelectedShip(updatedShip);
+                    }
+                }
+            })
+            .catch(err => console.error(err));
+
+    }, [session]);
+
+    useEffect(() => {
+
+        const currentPort = selectedShip?.currentPort;
+
+        if (!currentPort) {
             setAllCargo([]);
             setSelectedDestination("");
             setSelectedCargoId("");
             return;
         }
 
-        api.get(`/cargo?portName=${encodeURIComponent(selectedShip.currentPort)}`)
+        const portChanged =
+            previousPortRef.current !== currentPort;
+
+        previousPortRef.current = currentPort;
+
+        api.get(`/cargo?portName=${encodeURIComponent(currentPort)}`)
             .then(res => {
+
                 setAllCargo(res.data || []);
-                setSelectedDestination("");
-                setSelectedCargoId("");
+
+                if (portChanged) {
+                    setSelectedDestination("");
+                    setSelectedCargoId("");
+                }
+
             })
             .catch(err => {
                 console.error(err);
+
                 setAllCargo([]);
-                setSelectedDestination("");
-                setSelectedCargoId("");
+
+                if (portChanged) {
+                    setSelectedDestination("");
+                    setSelectedCargoId("");
+                }
             });
+
     }, [selectedShip]);
 
     useEffect(() => {
-        const socket = new SockJS(`${import.meta.env.VITE_API_BASE_URL}/ws`);
-
-        const client = new Client({
-            webSocketFactory: () => socket,
-            reconnectDelay: 5000
-        });
-
-        client.onConnect = () => {
-            console.log("VoyagePage WebSocket connected");
-
-            client.subscribe(`/topic/session/${sessionCode}`, async (message) => {
-                const data = JSON.parse(message.body);
-                console.log("VOYAGEPAGE WS EVENT:", data);
-
-                if (data.type === "TICK") {
-                    const res = await api.get(`/sessions/${sessionCode}`);
-                    const sessionData = res.data;
-
-                    setSession(sessionData);
-
-                    const voyagesRes = await api.get(
-                        `/voyages?sessionId=${sessionData.id}&tick=${sessionData.currentTick}`
-                    );
-
-                    setVoyages(voyagesRes.data);
-                }
-
-                if (data.type === "VOYAGE_STARTED") {
-                    console.log("VOYAGE STARTED EVENT:", data);
-                    await fetchSession();
-                    await fetchVoyages();
-                    return;
-                }
-
-                if (data.type === "VOYAGE_FINISHED") {
-                    await fetchSession();
-                    await fetchVoyages();
-                    return;
-                }
-
-                if (data.type === "SESSION_PAUSED" || data.type === "SESSION_RUNNING") {
-                    await fetchSession();
-                    return;
-                }
-            });
-        };
-
-        client.activate();
-
-        return () => {
-            client.deactivate();
-        };
-    }, [sessionCode]);
+        fetchVoyages();
+    }, [session]);
 
     const isShipBusy = (shipId) => {
         return voyages.some(
@@ -226,7 +189,6 @@ export default function VoyagePage() {
                 sessionCode: sessionCode
             });
 
-            await fetchSession();
             await fetchVoyages();
 
             setStartedVoyageInfo({
@@ -265,23 +227,81 @@ export default function VoyagePage() {
         <div className="voyage-page">
             <div className="voyage-overlay"></div>
 
-            <div className="voyage-topbar">
-                <button
-                    className="back-button"
-                    onClick={() => navigate(-1)}
-                >
-                    ← Back
-                </button>
-            </div>
-
             <div className="voyage-content">
+
+                <div className="voyage-topbar">
+                    <button
+                        className="back-button"
+                        onClick={() => navigate(-1)}
+                    >
+                        🡸 Back to Game
+                    </button>
+                </div>
+
                 <header className="voyage-header">
-                    <h1>Voyage Planning</h1>
-                    <p>Select a ship, destination and cargo order.</p>
+                    <h1>Plan Your Next Voyage</h1>
+
+                    <p>
+                        Choose a ship, assign cargo and send your fleet across the seas.
+                    </p>
                 </header>
 
+                <div className="active-voyages-banner">
+
+                    <h3>Active Voyages</h3>
+
+                    <div className="active-voyages-list">
+
+                        {voyages.filter(v => v.status === "RUNNING").length === 0 ? (
+
+                            <p>No ships currently at sea.</p>
+
+                        ) : (
+
+                            voyages
+                                .filter(v => v.status === "RUNNING")
+                                .map(v => {
+
+                                    console.log(v);
+
+                                    return (
+
+                                        <div
+                                            key={v.id}
+                                            className="active-voyage-card"
+                                        >
+
+                                        <div className="active-voyage-top">
+
+                                            <span className="voyage-live-dot"></span>
+
+                                            <span className="voyage-live-text">
+                            EN ROUTE
+                        </span>
+
+                                        </div>
+
+                                        <h4>
+                                            {v.shipName}
+                                        </h4>
+
+                                        <p>
+                                            {v.originPort || "Unknown"} → {v.destinationPort || "Unknown"}
+                                        </p>
+
+                                        </div>
+
+                                    );
+
+                                })
+                        )}
+
+                    </div>
+
+                </div>
+
                 <div className="voyage-cards">
-                    <div className="voyage-card">
+                    <div className="voyage-card ship-card-area">
                         <h2>1. Choose Ship</h2>
 
                         <select
@@ -300,7 +320,6 @@ export default function VoyagePage() {
                                     <option
                                         key={ship.id}
                                         value={ship.id}
-                                        disabled={isShipBusy(ship.id)}
                                     >
                                         {ship.name} {isShipBusy(ship.id) ? "🚫 (busy)" : ""}
                                     </option>
@@ -310,8 +329,32 @@ export default function VoyagePage() {
 
                         {selectedShip && (
                             <div className="voyage-info">
-                                <p><strong>{selectedShip.name}</strong></p>
-                                <p>Current Port: {selectedShip?.currentPort || "Unknown"}</p>
+
+                                <div className="selected-ship-banner">
+
+                                    <div>
+
+                                        <span
+                                            className={`ship-status ${
+                                                isShipBusy(selectedShip.id)
+                                                    ? "busy"
+                                                    : "ready"
+                                            }`}
+                                        >
+                                            {isShipBusy(selectedShip.id)
+                                                ? "BUSY"
+                                                : "READY"}
+                                        </span>
+
+                                        <h3>{selectedShip.name}</h3>
+
+                                        <p>
+                                            Docked at {selectedShip.currentPort}
+                                        </p>
+
+                                    </div>
+
+                                </div>
 
                                 <div className="stat-bar">
                                     <div className="stat-header">
@@ -366,7 +409,7 @@ export default function VoyagePage() {
                         )}
                     </div>
 
-                    <div className="voyage-card">
+                    <div className="voyage-card destination-card-area">
                         <h2>2. Select Destination</h2>
 
                         {!selectedShip ? (
@@ -399,7 +442,7 @@ export default function VoyagePage() {
                         )}
                     </div>
 
-                    <div className="voyage-card">
+                    <div className="voyage-card cargo-card-area">
                         <h2>3. Cargo Orders</h2>
 
                         {!selectedDestination ? (
@@ -417,10 +460,7 @@ export default function VoyagePage() {
                                     <option value="">Select cargo order</option>
                                     {filteredCargo.map(item => (
                                         <option key={item.id} value={item.id}>
-                                            {item.name} - {item.originPort?.name} → {item.destinationPort?.name}
-                                            - Type: {item.type?.replaceAll("_", " ")}
-                                            - Reward: {item.reward}
-                                            - Duration: {item.requiredTicks} days
+                                            {item.name}
                                         </option>
                                     ))}
                                 </select>
@@ -429,11 +469,12 @@ export default function VoyagePage() {
                                     {filteredCargo.map(item => (
                                         <div
                                             key={item.id}
-                                            className="cargo-card"
+                                            className={`cargo-card ${
+                                                item.id === Number(selectedCargoId)
+                                                    ? "selected"
+                                                    : ""
+                                            }`}
                                             style={{
-                                                border: item.id === Number(selectedCargoId)
-                                                    ? "2px solid white"
-                                                    : undefined,
                                                 cursor: "pointer"
                                             }}
                                             onClick={() => setSelectedCargoId(String(item.id))}
@@ -468,30 +509,90 @@ export default function VoyagePage() {
                             <p>Select ship, destination and cargo order</p>
                         ) : (
                             <div className="voyage-info">
-                                <p>Ship: {selectedShip.name}</p>
-                                <p>From: {selectedShip?.currentPort || "Unknown"}</p>
-                                <p>To: {selectedCargo.destinationPort?.name}</p>
-                                <p>Cargo: {selectedCargo.name}</p>
-                                <p>Type: {selectedCargo.type?.replaceAll("_", " ")}</p>                                <p>Price: {grossPrice} Talers</p>
-                                <p>Reward: {selectedCargo.reward} Talers</p>
-                                <p>Required Capacity: {selectedCargo.requiredCapacity}</p>
-                                <p>Risk: {selectedCargo.riskLevel}</p>
-                                <p>Description: {selectedCargo.description}</p>
-                                <p>Expected Profit: {selectedCargo.reward - grossPrice} Talers</p>
-                                {selectedCargo && session && (
-                                    <p>
-                                        Estimated Duration: {selectedCargo.requiredTicks} days
-                                    </p>
-                                )}
+
+                                <div className="voyage-route-hero">
+
+                <span>
+                    {selectedShip?.currentPort}
+                </span>
+
+                                    <div className="route-line">
+                                        <div className="route-dot"></div>
+                                    </div>
+
+                                    <span>
+                    {selectedCargo.destinationPort?.name}
+                </span>
+
+                                </div>
+
+                                <div className="summary-grid">
+
+                                    <div className="summary-item">
+                                        <span>🚢 Ship</span>
+                                        <strong>{selectedShip.name}</strong>
+                                    </div>
+
+                                    <div className="summary-item">
+                                        <span>📦 Cargo</span>
+                                        <strong>{selectedCargo.name}</strong>
+                                    </div>
+
+                                    <div className="summary-item">
+                                        <span>📂 Type</span>
+                                        <strong>
+                                            {selectedCargo.type?.replaceAll("_", " ")}
+                                        </strong>
+                                    </div>
+
+                                    <div className="summary-item">
+                                        <span>💰 Price</span>
+                                        <strong>{grossPrice} Talers</strong>
+                                    </div>
+
+                                    <div className="summary-item">
+                                        <span>🏆 Reward</span>
+                                        <strong>{selectedCargo.reward} Talers</strong>
+                                    </div>
+
+                                    <div className="summary-item">
+                                        <span>📈 Profit</span>
+                                        <strong>
+                                            {selectedCargo.reward - grossPrice} Talers
+                                        </strong>
+                                    </div>
+
+                                    <div className="summary-item">
+                                        <span>📦 Capacity</span>
+                                        <strong>
+                                            {selectedCargo.requiredCapacity}
+                                        </strong>
+                                    </div>
+
+                                    <div className="summary-item">
+                                        <span>⏱ Duration</span>
+                                        <strong>
+                                            {selectedCargo.requiredTicks} days
+                                        </strong>
+                                    </div>
+
+                                    <div className="summary-item full-width">
+                                        <span>📝 Description</span>
+                                        <strong>{selectedCargo.description}</strong>
+                                    </div>
+
+                                </div>
 
                                 {!hasEnoughCapacity && (
                                     <p style={{ color: "#f87171", marginTop: "10px" }}>
                                         This ship does not have enough cargo capacity for the selected order.
                                     </p>
                                 )}
+
                             </div>
                         )}
                     </div>
+
                 </div>
 
                 <div style={{ marginTop: "30px", textAlign: "center" }}>
@@ -531,7 +632,7 @@ export default function VoyagePage() {
                         )}
 
                         <button
-                            onClick={() => navigate(`/${sessionCode}/game`)}
+                            onClick={() => navigate(`/session/${sessionCode}/game`)}
                         >
                             Back to Game
                         </button>

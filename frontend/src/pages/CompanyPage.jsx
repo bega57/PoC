@@ -1,18 +1,18 @@
 import { useEffect, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
-import { Client } from "@stomp/stompjs";
-import SockJS from "sockjs-client";
 import api from "../api/api";
 import cheapSide from "../assets/ships/cheapSide.png";
 import middleSide from "../assets/ships/middleSide.png";
 import expensiveSide from "../assets/ships/expensiveSide.png";
 import "./CompanyPage.css";
+import { useContext } from "react";
+import { GameContext } from "../layouts/AppLayout";
 
 function CompanyPage() {
     const { sessionCode } = useParams();
     const navigate = useNavigate();
 
-    const [session, setSession] = useState(null);
+    const { session } = useContext(GameContext);
     const [voyages, setVoyages] = useState([]);
 
     const storedPlayer = JSON.parse(sessionStorage.getItem(`player-${sessionCode}`));
@@ -23,6 +23,7 @@ function CompanyPage() {
         return "#22c55e";
     };
 
+
     const fetchData = async () => {
         try {
             const sessionResponse = await api.get(`/sessions/${sessionCode}`);
@@ -30,7 +31,6 @@ function CompanyPage() {
 
             const voyagesResponse = await api.get(`/voyages?sessionId=${sessionData.id}`);
 
-            setSession(sessionData);
             setVoyages(voyagesResponse.data);
         } catch (error) {
             console.error("Failed to fetch company data:", error);
@@ -38,47 +38,10 @@ function CompanyPage() {
     };
 
     useEffect(() => {
+        if (!session) return;
+
         fetchData();
-    }, [sessionCode]);
-
-    useEffect(() => {
-        const socket = new SockJS(`${import.meta.env.VITE_API_BASE_URL}/ws`);
-
-        const client = new Client({
-            webSocketFactory: () => socket,
-            reconnectDelay: 5000
-        });
-
-        client.onConnect = () => {
-            console.log("CompanyPage WebSocket connected");
-
-            client.subscribe(`/topic/session/${sessionCode}`, async (message) => {
-                const data = JSON.parse(message.body);
-                console.log("COMPANY WS EVENT:", data);
-
-                if (data.type === "TICK") {
-                    await fetchData();
-                    return;
-                }
-
-                if (data.type === "VOYAGE_STARTED") {
-                    await fetchData();
-                    return;
-                }
-
-                if (data.type === "VOYAGE_FINISHED") {
-                    await fetchData();
-                    return;
-                }
-            });
-        };
-
-        client.activate();
-
-        return () => {
-            client.deactivate();
-        };
-    }, [sessionCode]);
+    }, [session]);
 
     const currentPlayer = session?.players?.find(
         (player) => player.id === storedPlayer?.id
@@ -149,9 +112,9 @@ function CompanyPage() {
                 <div className="company-topbar">
                     <button
                         className="back-button"
-                        onClick={() => navigate(`/${sessionCode}/game`)}
+                        onClick={() => navigate(`/session/${sessionCode}/game`)}
                     >
-                        ← Back
+                        🡸 Back to Game
                     </button>
                 </div>
 
@@ -159,18 +122,6 @@ function CompanyPage() {
                     <h1>Company</h1>
                     <p>Overview of your company and fleet.</p>
                 </header>
-
-                <div className="company-summary">
-                    <div className="summary-card">
-                        <h3>Company Name</h3>
-                        <p>{currentPlayer.companyName || "Not set yet"}</p>
-                    </div>
-
-                    <div className="summary-card">
-                        <h3>Balance</h3>
-                        <p>${currentPlayer.balance}</p>
-                    </div>
-                </div>
 
                 <div className="fleet-section">
                     <h2>Your Ships</h2>
