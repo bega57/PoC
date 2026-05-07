@@ -226,8 +226,8 @@ public class ShipService {
         );
 
         ship.setCargoCapacity(offer.getType().getCapacity());
-        ship.setCondition(offer.getCondition());
-        ship.setFuelLevel(offer.getFuelLevel());
+        ship.setCondition((int) offer.getCondition());
+        ship.setFuelLevel((int) offer.getFuelLevel());
         ship.setCurrentPort(player.getCurrentPort());
 
         playerRepository.save(player);

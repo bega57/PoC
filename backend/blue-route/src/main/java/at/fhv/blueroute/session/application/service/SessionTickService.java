@@ -137,8 +137,11 @@ public class SessionTickService {
                     double totalDamage = deteriorationService.calculate(cargo);
                     double conditionPerTick = (totalDamage / duration) * shipConditionMultiplier;
 
-                    ship.setFuelLevel(Math.max(0.0, ship.getFuelLevel() - fuelPerTick));
-                    ship.setCondition(Math.max(0.0, ship.getCondition() - conditionPerTick));
+                    int newFuel = (int) Math.max(0, ship.getFuelLevel() - fuelPerTick);
+                    ship.setFuelLevel(newFuel);
+
+                    int newCondition = (int) Math.max(0, ship.getCondition() - conditionPerTick);
+                    ship.setCondition(newCondition);
 
                     shipRepository.save(ship);
                 }
