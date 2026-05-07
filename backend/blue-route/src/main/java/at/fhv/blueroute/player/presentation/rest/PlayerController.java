@@ -30,6 +30,11 @@ public class PlayerController {
         return playerService.getPlayerById(id);
     }
 
+    @GetMapping("/me")
+    public PlayerResponse getPlayerBySession(@RequestParam String sessionCode) {
+        return playerService.getPlayerBySessionCode(sessionCode);
+    }
+
     @PostMapping
     public PlayerResponse createPlayer(@Valid @RequestBody PlayerRequest request) {
         return playerService.createPlayer(request);

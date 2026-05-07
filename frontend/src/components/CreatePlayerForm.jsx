@@ -31,15 +31,13 @@ function CreatePlayerForm({ onPlayerCreated, showToast }) {
         <div className="form-card-content">
             <h2>Create Player</h2>
 
-            <form onSubmit={handleCreatePlayer}>
-                <div className="top-section">
-                    <input
-                        type="text"
-                        placeholder="Enter username"
-                        value={username}
-                        onChange={(e) => setUsername(e.target.value)}
-                    />
-                </div>
+            <form onSubmit={handleCreatePlayer} className="form">
+                <input
+                    type="text"
+                    placeholder="Enter username"
+                    value={username}
+                    onChange={(e) => setUsername(e.target.value)}
+                />
 
                 <button type="submit" className="main-action-button">
                     Create Player

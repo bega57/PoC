@@ -6,13 +6,13 @@ function SessionDetails({ session, player }) {
 
     useEffect(() => {
         if (session && session.status === "RUNNING") {
-            navigate(`/game/${session.sessionCode}`);
+            navigate(`/session/${session.sessionCode}/game`);
         }
     }, [session, navigate]);
 
     return (
-        <div style={{ width: "100%" }}>
-            <h2 style={{ textAlign: "left", marginTop: 0, marginBottom: "16px" }}>
+        <div className="details-content">
+            <h2 className="details-title">
                 Details
             </h2>
 

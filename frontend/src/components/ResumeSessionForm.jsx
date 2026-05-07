@@ -79,8 +79,8 @@ function ResumeSessionForm({ onSessionResumed, onPlayerResumed }) {
         <div className="form-card-content">
             <h2>Resume Session</h2>
 
-            <form onSubmit={handleResumeSession}>
-                <div className="resume-input-row">
+            <form onSubmit={handleResumeSession} className="form">
+                <div className="row">
                     <input
                         type="text"
                         placeholder="Session code"
@@ -98,16 +98,7 @@ function ResumeSessionForm({ onSessionResumed, onPlayerResumed }) {
                     />
                 </div>
 
-                {message && (
-                    <p
-                        className="form-message"
-                        style={{
-                            color: isError ? "#ff6b6b" : "#4ade80",
-                        }}
-                    >
-                        {message}
-                    </p>
-                )}
+                {message && <p className="form-message">{message}</p>}
 
                 <button type="submit" className="main-action-button">
                     Resume Session

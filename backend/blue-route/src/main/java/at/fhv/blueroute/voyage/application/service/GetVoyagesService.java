@@ -1,5 +1,6 @@
 package at.fhv.blueroute.voyage.application.service;
 
+import at.fhv.blueroute.ship.infrastructure.persistence.JpaShipRepository;
 import at.fhv.blueroute.voyage.domain.model.Voyage;
 import at.fhv.blueroute.voyage.domain.model.VoyageStatus;
 import at.fhv.blueroute.voyage.infrastructure.persistence.JpaVoyageRepository;
@@ -13,11 +14,14 @@ public class GetVoyagesService {
 
     private final JpaVoyageRepository voyageRepository;
     private final SeaRouteService seaRouteService;
+    private final JpaShipRepository shipRepository;
 
     public GetVoyagesService(JpaVoyageRepository voyageRepository,
-                             SeaRouteService seaRouteService) {
+                             SeaRouteService seaRouteService,
+                             JpaShipRepository shipRepository) {
         this.voyageRepository = voyageRepository;
         this.seaRouteService = seaRouteService;
+        this.shipRepository = shipRepository;
     }
 
     public List<VoyageResponse> getAllVoyages(Long sessionId, int currentTick) {
@@ -31,6 +35,9 @@ public class GetVoyagesService {
 
         dto.id = v.getId();
         dto.shipId = v.getShipId();
+        dto.shipName = shipRepository.findById(v.getShipId())
+                .map(ship -> ship.getName())
+                .orElse("Unknown Ship");
         dto.originPort = v.getOriginPort();
         dto.destinationPort = v.getDestinationPort();
         dto.status = v.getStatus().name();

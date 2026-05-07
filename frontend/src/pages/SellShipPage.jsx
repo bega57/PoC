@@ -1,44 +1,31 @@
-import { useEffect, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import api from "../api/api";
 import cheapSide from "../assets/ships/cheapSide.png";
 import middleSide from "../assets/ships/middleSide.png";
 import expensiveSide from "../assets/ships/expensiveSide.png";
 import "./ShipMarketPage.css";
+import { useEffect, useState, useContext } from "react";
+import { GameContext } from "../layouts/AppLayout";
 
 function SellShipPage() {
     const navigate = useNavigate();
     const { sessionCode } = useParams();
 
-    const [session, setSession] = useState(null);
+    const { session, player } = useContext(GameContext);
     const [selectedShip, setSelectedShip] = useState(null);
 
     const [showSellModal, setShowSellModal] = useState(false);
     const [message, setMessage] = useState("");
     const [toastMessage, setToastMessage] = useState("");
     const [isSelling, setIsSelling] = useState(false);
-    const [ships, setShips] = useState([]);
 
-    useEffect(() => {
-        const fetchSession = async () => {
-            try {
-                const response = await api.get(`/sessions/${sessionCode}`);
-                setSession(response.data);
-            } catch (error) {
-                console.error(error);
-            }
-        };
 
-        fetchSession();
-    }, [sessionCode]);
-
-    const activePlayerId = Number(sessionStorage.getItem(`activePlayerId-${sessionCode}`));
 
     const currentPlayer = session?.players?.find(
-        (player) => player.id === activePlayerId
+        p => p.id === player?.id
     );
 
-    const playerShips = ships;
+    const playerShips = currentPlayer?.ships || [];
 
     useEffect(() => {
         if (playerShips.length > 0 && !selectedShip) {
@@ -46,16 +33,6 @@ function SellShipPage() {
         }
     }, [playerShips, selectedShip]);
 
-    useEffect(() => {
-        if (!activePlayerId) return;
-
-        const fetchShips = async () => {
-            const res = await api.get(`/ships/player/${activePlayerId}`);
-            setShips(res.data);
-        };
-
-        fetchShips();
-    }, [activePlayerId]);
 
     const showToast = (text) => {
         setToastMessage(text);
@@ -86,11 +63,6 @@ function SellShipPage() {
                 sessionCode:sessionCode
             });
 
-            const refreshed = await api.get(`/sessions/${sessionCode}`);
-            setSession(refreshed.data);
-
-            const refreshedShips = await api.get(`/ships/player/${activePlayerId}`);
-            setShips(refreshedShips.data);
 
             setShowSellModal(false);
             setSelectedShip(null);
@@ -126,9 +98,9 @@ function SellShipPage() {
                 <div className="market-topbar">
                     <button
                         className="back-button"
-                        onClick={() => navigate(`/market/${sessionCode}`)}
+                        onClick={() => navigate(`/session/${sessionCode}/market`)}
                     >
-                        ← Back
+                        🡸 Return to Market
                     </button>
                 </div>
 
@@ -136,16 +108,6 @@ function SellShipPage() {
                     <h1>Sell Ship</h1>
                     <p>Select one of your ships to sell.</p>
                 </header>
-
-                <div className="player-balance-bar">
-                    <span>
-                        Player: {currentPlayer.username}
-                        {currentPlayer.companyName
-                            ? ` | Company: ${currentPlayer.companyName}`
-                            : ""}
-                    </span>
-                    <span>Balance: ${currentPlayer.balance}</span>
-                </div>
 
                 {playerShips.length === 0 ? (
                     <p style={{ color: "white", marginTop: "20px" }}>

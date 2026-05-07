@@ -1,7 +1,6 @@
-import { useEffect, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
-import SockJS from "sockjs-client";
-import { Client } from "@stomp/stompjs";
+import { useState, useEffect, useContext } from "react";
+import { GameContext } from "../layouts/AppLayout";
 import api from "../api/api";
 import cheapSide from "../assets/ships/cheapSide.png";
 import middleSide from "../assets/ships/middleSide.png";
@@ -11,8 +10,7 @@ import "./ShipMarketPage.css";
 function ShipMarketPage() {
     const navigate = useNavigate();
     const { sessionCode } = useParams();
-
-    const [session, setSession] = useState(null);
+    const { session, player } = useContext(GameContext);
     const [selectedShip, setSelectedShip] = useState(null);
 
     const [activeTab, setActiveTab] = useState("NEW");
@@ -126,51 +124,11 @@ function ShipMarketPage() {
         }
     };
 
-    useEffect(() => {
-        const fetchSession = async () => {
-            try {
-                const response = await api.get(`/sessions/${sessionCode}`);
-                setSession(response.data);
-            } catch (error) {
-                console.error(error);
-            }
-        };
-
-        fetchSession();
-    }, [sessionCode]);
 
     useEffect(() => {
         fetchUsedShips();
     }, [sessionCode]);
 
-    useEffect(() => {
-        const socket = new SockJS(`${import.meta.env.VITE_API_BASE_URL}/ws`);
-
-        const client = new Client({
-            webSocketFactory: () => socket,
-            reconnectDelay: 5000
-        });
-
-        client.onConnect = () => {
-            console.log("Ship market WebSocket connected");
-
-            client.subscribe(`/topic/session/${sessionCode}`, async (message) => {
-                const data = JSON.parse(message.body);
-                console.log("SHIP MARKET WS EVENT:", data);
-
-                if (data.type === "STOCK_UPDATED") {
-                    const refreshed = await api.get(`/sessions/${sessionCode}`);
-                    setSession(refreshed.data);
-                }
-            });
-        };
-
-        client.activate();
-
-        return () => {
-            client.deactivate();
-        };
-    }, [sessionCode]);
 
     useEffect(() => {
         if (activeTab === "NEW" && !selectedShip) {
@@ -190,10 +148,8 @@ function ShipMarketPage() {
         return <div style={{ color: "white", padding: "20px" }}>Loading market...</div>;
     }
 
-    const activePlayerId = Number(sessionStorage.getItem(`activePlayerId-${sessionCode}`));
-
     const currentPlayer = session?.players?.find(
-        (player) => player.id === activePlayerId
+        (p) => p.id === player?.id
     );
 
     const playerNeedsCompanyName = !currentPlayer?.companyName || !currentPlayer.companyName.trim();
@@ -252,9 +208,6 @@ function ShipMarketPage() {
                 await fetchUsedShips();
             }
 
-            const refreshed = await api.get(`/sessions/${sessionCode}`);
-            setSession(refreshed.data);
-
             setShowBuyModal(false);
             setShipName("");
             setCompanyName("");
@@ -286,9 +239,9 @@ function ShipMarketPage() {
                 <div className="market-topbar">
                     <button
                         className="back-button"
-                        onClick={() => navigate(`/market/${sessionCode}`)}
+                        onClick={() => navigate(`/session/${sessionCode}/market`)}
                     >
-                        ← Back
+                        🡸 Return to Market
                     </button>
                 </div>
 
@@ -323,15 +276,6 @@ function ShipMarketPage() {
                     </button>
                 </div>
 
-                {session && currentPlayer && (
-                    <div className="player-balance-bar">
-                        <span>
-                            Player: {currentPlayer.username}
-                            {currentPlayer.companyName ? `    | Company name: ${currentPlayer.companyName}` : ""}
-                        </span>
-                        <span>Balance: ${currentPlayer.balance}</span>
-                    </div>
-                )}
 
                 {activeTab === "USED" && usedShips.length === 0 ? (
                     <div className="empty-market-message">

@@ -1,31 +1,39 @@
 import { Routes, Route } from "react-router-dom";
+import LandingPage from "./pages/LandingPage";
 import MainPage from "./pages/MainPage";
 import GamePage from "./pages/GamePage";
 import ShipMarketPage from "./pages/ShipMarketPage";
 import ShipMarketMenuPage from "./pages/ShipMarketMenuPage";
 import CompanyPage from "./pages/CompanyPage";
 import VoyagePage from "./pages/VoyagePage";
-
-import "./App.css";
-import SellShipPage from "./pages/SellShipPage.jsx";
-import ShipRefuelPage from "./pages/ShipRefuelPage.jsx";
-import ShipRepairPage from "./pages/ShipRepairPage.jsx";
+import SellShipPage from "./pages/SellShipPage";
+import ShipRefuelPage from "./pages/ShipRefuelPage";
+import ShipRepairPage from "./pages/ShipRepairPage";
 import CargoOffersPage from "./pages/CargoOffersPage";
+import InfoPage from "./pages/InfoPage";
+import AppLayout from "./layouts/AppLayout";
 
 function App() {
     return (
         <Routes>
-            <Route path="/" element={<MainPage />} />
-            <Route path="/game/:sessionCode" element={<GamePage />} />
-            <Route path="/market/:sessionCode" element={<ShipMarketMenuPage />} />
-            <Route path="/market/:sessionCode/buy" element={<ShipMarketPage />} />
-            <Route path="/company/:sessionCode" element={<CompanyPage />} />
-            <Route path="/market/:sessionCode/sell" element={<SellShipPage />} />
-            <Route path="/voyage/:sessionCode" element={<VoyagePage />} />
-            <Route path="/market/:sessionCode/refuel" element={<ShipRefuelPage />} />
-            <Route path="/market/:sessionCode/repair" element={<ShipRepairPage />} />
-            <Route path="/cargo-offers/:sessionCode"  element={<CargoOffersPage />}
-            />
+
+            <Route path="/" element={<LandingPage />} />
+            <Route path="/info" element={<InfoPage />} />
+
+            <Route path="/main" element={<MainPage />} />
+
+            <Route path="/session/:sessionCode" element={<AppLayout />}>
+                <Route path="game" element={<GamePage />} />
+                <Route path="market" element={<ShipMarketMenuPage />} />
+                <Route path="market/buy" element={<ShipMarketPage />} />
+                <Route path="market/sell" element={<SellShipPage />} />
+                <Route path="market/refuel" element={<ShipRefuelPage />} />
+                <Route path="market/repair" element={<ShipRepairPage />} />
+                <Route path="company" element={<CompanyPage />} />
+                <Route path="voyage" element={<VoyagePage />} />
+                <Route path="cargo-offers" element={<CargoOffersPage />} />
+            </Route>
+
         </Routes>
     );
 }

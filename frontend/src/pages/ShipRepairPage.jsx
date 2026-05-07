@@ -1,27 +1,21 @@
-import { useEffect, useState } from "react";
+import { useState, useContext } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import api from "../api/api";
 import "./ShipRepairPage.css";
+import { GameContext } from "../layouts/AppLayout";
 
 function ShipRepairPage() {
     const navigate = useNavigate();
     const { sessionCode } = useParams();
 
-    const [session, setSession] = useState(null);
+    const { session, player } = useContext(GameContext);
+
     const [selectedShip, setSelectedShip] = useState(null);
     const [toast, setToast] = useState("");
 
-    useEffect(() => {
-        const fetchSession = async () => {
-            const res = await api.get(`/sessions/${sessionCode}`);
-            setSession(res.data);
-        };
-        fetchSession();
-    }, [sessionCode]);
-
-    const activePlayerId = Number(sessionStorage.getItem(`activePlayerId-${sessionCode}`));
-
-    const currentPlayer = session?.players?.find(p => p.id === activePlayerId);
+    const currentPlayer = session?.players?.find(
+        p => p.id === player?.id
+    );
 
     const ships = currentPlayer?.ships || [];
 
@@ -33,18 +27,15 @@ function ShipRepairPage() {
     const netCost = repairCost / (1 + VAT);
     const vatAmount = repairCost - netCost;
 
-    const [pricePerUnit, setPricePerUnit] = useState(0);
 
     const handleRepair = async () => {
         try {
             await api.post(`/ships/${selectedShip.id}/repair`, {
-                repairAmount: repairAmount
+                repairAmount: repairAmount,
+                sessionCode: sessionCode
             });
 
             setToast("Ship repaired 🔧");
-
-            const res = await api.get(`/sessions/${sessionCode}`);
-            setSession(res.data);
 
             setSelectedShip(null);
             setRepairAmount(0);
@@ -60,8 +51,8 @@ function ShipRepairPage() {
         <div className="market-page">
             <div className="market-content">
 
-                <button className="back-button" onClick={() => navigate(`/market/${sessionCode}`)}>
-                    ← Back
+                <button className="back-button" onClick={() => navigate(`/session/${sessionCode}/market`)}>
+                    🡸 Return to Market
                 </button>
 
                 <header className="market-header">
@@ -81,15 +72,6 @@ function ShipRepairPage() {
                                     setSelectedShip(ship);
                                     setRepairAmount(0);
                                     setRepairCost(0);
-
-                                    try {
-                                        const res = await api.get(
-                                            `/ships/${ship.id}/repair-cost?repairAmount=1`
-                                        );
-                                        setPricePerUnit(res.data);
-                                    } catch {
-                                        setPricePerUnit(0);
-                                    }
                                 }
                             }}
                         >
@@ -102,7 +84,7 @@ function ShipRepairPage() {
                                     </div>
 
                                     <div className="repair-fuel">
-                                        🔧 {Math.round(ship.condition ?? 0)}%
+                                        🔧 {ship.condition ?? 0}%
                                     </div>
 
                                     <div className="fuel-bar">

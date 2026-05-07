@@ -7,11 +7,12 @@ function GameStatusBar({ session, currentPlayer, myActiveVoyages, smoothProgress
     return (
         <div className="status-bar">
 
-            {/* TOP LINE */}
-            <p>
-                <GameDay tick={session.currentTick} />
-                {"  "}💰 {currentPlayer?.balance ?? "?"}
-            </p>
+            <div className="status-header">
+                Fleet Status
+                <span style={{ marginLeft: "6px", opacity: 0.6 }}>
+                    ({myActiveVoyages.length})
+                </span>
+            </div>
 
             {/* SHIPS */}
             {myActiveVoyages.length > 0 ? (

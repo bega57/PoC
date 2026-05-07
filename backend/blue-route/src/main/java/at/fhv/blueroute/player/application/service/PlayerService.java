@@ -6,6 +6,8 @@ import at.fhv.blueroute.player.domain.model.Player;
 import at.fhv.blueroute.player.domain.repository.PlayerRepository;
 import at.fhv.blueroute.player.presentation.dto.PlayerRequest;
 import at.fhv.blueroute.player.presentation.dto.PlayerResponse;
+import at.fhv.blueroute.session.domain.model.Session;
+import at.fhv.blueroute.session.domain.repository.SessionRepository;
 import at.fhv.blueroute.ship.domain.model.Ship;
 import at.fhv.blueroute.ship.infrastructure.persistence.JpaShipRepository;
 import org.springframework.stereotype.Service;
@@ -18,13 +20,16 @@ public class PlayerService {
     private final PlayerRepository playerRepository;
     private final PlayerMapper playerMapper;
     private final JpaShipRepository shipRepository;
+    private final SessionRepository sessionRepository;
 
     public PlayerService(PlayerRepository playerRepository,
                          PlayerMapper playerMapper,
-                         JpaShipRepository shipRepository) {
+                         JpaShipRepository shipRepository,
+                         SessionRepository sessionRepository) {
         this.playerRepository = playerRepository;
         this.playerMapper = playerMapper;
         this.shipRepository = shipRepository;
+        this.sessionRepository = sessionRepository;
     }
 
     public List<PlayerResponse> getAllPlayers() {
@@ -75,6 +80,18 @@ public class PlayerService {
                 .orElseThrow(() -> new PlayerNotFoundException(playerId));
 
         playerRepository.save(player);
+    }
+
+    public PlayerResponse getPlayerBySessionCode(String sessionCode) {
+        Session session = sessionRepository.findBySessionCode(sessionCode)
+                .orElseThrow(() -> new RuntimeException("Session not found: " + sessionCode));
+
+        Player player = session.getSessionPlayers().stream()
+                .findFirst()
+                .orElseThrow(() -> new RuntimeException("No player in session"))
+                .getPlayer();
+
+        return playerMapper.toResponse(player);
     }
 
 }

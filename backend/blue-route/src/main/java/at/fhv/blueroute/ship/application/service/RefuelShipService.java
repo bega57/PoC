@@ -30,10 +30,13 @@ public class RefuelShipService {
         Ship ship = shipRepository.findById(shipId)
                 .orElseThrow(() -> new RuntimeException("Ship not found"));
 
+        System.out.println("SHIP = " + ship.getName());
+        System.out.println("OWNER = " + ship.getOwner());
+
         Player player = ship.getOwner();
 
-        double maxFuel = 100.0;
-        double currentFuel = ship.getFuelLevel();
+        int maxFuel = 100;
+        int currentFuel = ship.getFuelLevel();
 
         if (requestedFuel <= 0) {
             throw new RuntimeException("Invalid fuel amount");
@@ -56,10 +59,10 @@ public class RefuelShipService {
         double netPrice = basePrice * multiplier * 0.6;
         double pricePerUnit = pricingService.applyVAT(netPrice);
 
-        double maxByTank = maxFuel - currentFuel;
+        int maxByTank = (int) Math.floor(maxFuel - currentFuel);
 
         if (requestedFuel > maxByTank) {
-            throw new RuntimeException("Fuel exceeds tank capacity");
+            throw new IllegalArgumentException("Fuel exceeds tank capacity");
         }
 
         double cost = requestedFuel * pricePerUnit;
@@ -69,7 +72,7 @@ public class RefuelShipService {
         }
 
 
-        ship.setFuelLevel(Math.min(100.0, currentFuel + requestedFuel));
+        ship.setFuelLevel(Math.min(100, currentFuel + requestedFuel));
         player.setBalance(player.getBalance() - cost);
 
         Ship saved = shipRepository.save(ship);

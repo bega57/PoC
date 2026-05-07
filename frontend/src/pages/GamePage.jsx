@@ -1,8 +1,7 @@
-import { useEffect, useState } from "react";
-import { useRef } from "react";
+import { useEffect, useState, useRef, useContext } from "react";
 import { useNavigate, useParams } from "react-router-dom";
-import { Client } from "@stomp/stompjs";
 import SockJS from "sockjs-client";
+import { Client } from "@stomp/stompjs";
 import api from "../api/api";
 import "./GamePage.css";
 import "leaflet/dist/leaflet.css";
@@ -13,6 +12,7 @@ import GameSidebar from "../components/game/GameSidebar";
 import GameModals from "../components/game/GameModals";
 import GameStatusBar from "../components/game/GameStatusBar";
 import GameMap from "../components/game/GameMap";
+import { GameContext } from "../layouts/AppLayout";
 import VoyageEventModal from "../components/VoyageEventModal";
 import Toast from "../components/Toast";
 
@@ -22,19 +22,12 @@ function GamePage() {
     const { sessionCode } = useParams();
     const navigate = useNavigate();
 
-    const [session, setSession] = useState(null);
     const [sidebarOpen, setSidebarOpen] = useState(true);
     const [showLeaveModal, setShowLeaveModal] = useState(false);
 
     const [showWelcome, setShowWelcome] = useState(() => {
         return sessionStorage.getItem(`welcomeShown-${sessionCode}`) !== "true";
     });
-
-    const storedPlayer = JSON.parse(
-        sessionStorage.getItem(`player-${sessionCode}`) || "null"
-    );
-
-    const currentPlayer = session?.players?.find(p => p.id === storedPlayer?.id) || null;
 
     const [selectedPort, setSelectedPort] = useState(null);
 
@@ -60,6 +53,8 @@ function GamePage() {
 
     const [rewardAmount, setRewardAmount] = useState(0);
 
+    const { session, setSession, player, setPlayer } = useContext(GameContext);
+    const currentPlayer = player;
     const [finishedVoyageInfo, setFinishedVoyageInfo] = useState(null);
 
     const [leaderboard, setLeaderboard] = useState(() => {
@@ -69,8 +64,6 @@ function GamePage() {
 
     const [activeEvent, setActiveEvent] = useState(null);
     const [eventLoading, setEventLoading] = useState(false);
-
-    const finalLeaderboard = leaderboard;
 
     const [toastMessage, setToastMessage] = useState("");
     const [toastType, setToastType] = useState("success");
@@ -115,7 +108,7 @@ function GamePage() {
             const res = await api.get(
                 `/voyages?sessionId=${sessionId}&tick=${currentTick}`
             );
-            setVoyages([...res.data]);
+            setVoyages(res.data);
         } catch (err) {
             console.error(err);
         }
@@ -152,14 +145,14 @@ function GamePage() {
     }, [voyages]);
 
     const sendHeartbeatSafe = () => {
-        if (!sessionCode || !storedPlayer?.id) return;
+        if (!sessionCode || !player?.id) return;
         const now = Date.now();
 
         if (now - lastHeartbeatRef.current < 5000) return;
 
         lastHeartbeatRef.current = now;
 
-        api.patch(`/sessions/${sessionCode}/players/${storedPlayer.id}/heartbeat`)
+        api.patch(`/sessions/${sessionCode}/players/${player.id}/heartbeat`)
             .catch(err => console.error("Heartbeat failed:", err));
     };
 
@@ -178,9 +171,40 @@ function GamePage() {
     };
 
     useEffect(() => {
-        if (!session || !storedPlayer) return;
+        if (!session || !player) return;
 
-        const me = session.players.find(p => p.id === storedPlayer?.id);
+        const myShips = session.players
+            .find(p => p.id === player?.id)?.ships || [];
+
+        const myShipIds = myShips.map(s => s.id);
+
+        const newestFinishedVoyage = [...voyages]
+            .filter(v =>
+                myShipIds.includes(v.shipId) &&
+                v.status === "FINISHED"
+            )
+            .sort((a, b) => b.id - a.id)[0];
+
+        if (!newestFinishedVoyage) return;
+
+        if (newestFinishedVoyage.id === lastFinishedVoyageId) return;
+
+        console.log("FINISHED VOYAGE FOUND:", newestFinishedVoyage);
+
+        setRewardAmount(newestFinishedVoyage.reward || 0);
+        setLastFinishedVoyageId(newestFinishedVoyage.id);
+        sessionStorage.setItem(
+            `lastFinishedVoyageId-${sessionCode}`,
+            String(newestFinishedVoyage.id)
+        );
+        setShowRewardPopup(true);
+    }, [voyages, session, sessionCode, player, lastFinishedVoyageId]);
+
+    useEffect(() => {
+        if (!session || !player) return;
+
+        const me = session.players.find(p => p.id === player?.id);
+
         if (!me?.ships?.length) return;
 
         const backendShip = me.ships[0];
@@ -190,22 +214,31 @@ function GamePage() {
     }, [session]);
 
     const fetchData = async () => {
-        if (!storedPlayer?.id) return;
 
+        if (!player?.id) return;
         try {
-            const sessionRes = await api.get(`/sessions/${sessionCode}`)
+            const sessionRes = await api.get(`/sessions/${sessionCode}`);
             const sessionData = sessionRes.data;
 
-            const me = sessionData.players.find(p => p.id === storedPlayer.id);
-
-            console.log("MY SHIPS AFTER FETCH:", JSON.stringify(me?.ships, null, 2));
-
             setSession(sessionData);
+
+            const me = sessionData.players.find(p => p.id === player.id);
+            if (!me) return;
+
+            setPlayer(prev => ({
+                ...prev,
+                balance: me.balance,
+                companyName: me.companyName
+            }));
 
             const voyagesRes = await api.get(
                 `/voyages?sessionId=${sessionData.id}&tick=${sessionData.currentTick}`
             );
             setVoyages(voyagesRes.data);
+
+            const leaderboardRes = await api.get(`/sessions/${sessionCode}/leaderboard`);
+
+            setLeaderboard(leaderboardRes.data);
 
             try {
                 const leaderboardRes = await api.get(`/leaderboard?sessionCode=${sessionCode}`);
@@ -228,20 +261,21 @@ function GamePage() {
     };
 
     useEffect(() => {
+        if (!player) return;
         fetchData();
-    }, [sessionCode]);
+    }, [sessionCode, player]);
 
     useEffect(() => {
-        if (!sessionCode || !storedPlayer?.id) return;
+        if (!sessionCode || !player?.id) return;
 
         sendHeartbeatSafe();
         const interval = setInterval(sendHeartbeatSafe, 10000);
 
         return () => clearInterval(interval);
-    }, [sessionCode, storedPlayer?.id]);
+    }, [sessionCode, player?.id]);
 
     useEffect(() => {
-        if (!sessionCode || !storedPlayer?.id) return;
+        if (!sessionCode || !player?.id) return;
 
         const handleActivity = () => {
             sendHeartbeatSafe();
@@ -254,10 +288,10 @@ function GamePage() {
             window.removeEventListener("click", handleActivity);
             window.removeEventListener("keydown", handleActivity);
         };
-    }, [sessionCode, storedPlayer?.id]);
+    }, [sessionCode, player?.id]);
 
     useEffect(() => {
-        if (!sessionCode || !storedPlayer?.id) return;
+        if (!sessionCode || !player?.id) return;
 
         const handleVisibility = () => {
             if (document.visibilityState === "visible") {
@@ -270,7 +304,7 @@ function GamePage() {
         return () => {
             document.removeEventListener("visibilitychange", handleVisibility);
         };
-    }, [sessionCode, storedPlayer?.id]);
+    }, [sessionCode, player?.id]);
 
     useEffect(() => {
         const timer = setTimeout(() => {
@@ -385,7 +419,7 @@ function GamePage() {
                         };
 
                         if (updated.maxPlayers === 1) {
-                            const myPlayer = updated.players.find(p => p.id === storedPlayer.id);
+                            const myPlayer = updated.players.find(p => p.id === player.id);
 
                             if (myPlayer) {
                                 saveScore(myPlayer.balance);
@@ -450,12 +484,10 @@ function GamePage() {
         client.activate();
 
         return () => {
-            if (client.active) {
-                client.deactivate();
-            }
+            client.deactivate();
         };
+    }, [sessionCode, player?.id]);
 
-    }, [sessionCode]);
 
     const handleEventChoice = async (optionIndex) => {
         if (!activeEvent) {
@@ -512,11 +544,11 @@ function GamePage() {
     };
 
     const handleLeaveSession = async () => {
-        if (!storedPlayer?.id) return;
+        if (!player?.id) return;
 
         try {
             await api.post(`/sessions/${sessionCode}/leave`, {
-                playerId: storedPlayer?.id,
+                playerId: player?.id,
             });
 
             navigate("/");
@@ -546,13 +578,7 @@ function GamePage() {
         }
     };
 
-    if (!storedPlayer) {
-        return (
-            <div style={{ color: "white", padding: "20px" }}>
-                Session data missing. Please return to the lobby.
-            </div>
-        );
-    }
+    if (!player) return null;
 
     if (!session) {
         return (
@@ -563,7 +589,7 @@ function GamePage() {
     }
 
     const myShips = session.players
-        .find(p => p.id === storedPlayer?.id)?.ships || [];
+        .find(p => p.id === player?.id)?.ships || [];
 
     const myShipIds = myShips.map(s => s.id);
 
@@ -575,8 +601,6 @@ function GamePage() {
     const shipPorts = myShips
         .map(ship => ship.currentPort)
         .filter(Boolean);
-
-    const now = Date.now();
 
     const rewards = portCargo.map(c => c.reward);
     const minReward = rewards.length > 0 ? Math.min(...rewards) : 0;
@@ -645,7 +669,7 @@ function GamePage() {
 
             <GameSidebar
                 session={session}
-                leaderboard={finalLeaderboard}
+                leaderboard={leaderboard}
                 sidebarOpen={sidebarOpen}
                 setSidebarOpen={setSidebarOpen}
                 navigate={navigate}
@@ -668,15 +692,14 @@ function GamePage() {
                 finishedVoyageInfo={finishedVoyageInfo}
                 setFinishedVoyageInfo={setFinishedVoyageInfo}
                 currentPlayer={currentPlayer}
-                storedPlayer={storedPlayer}
                 setSelectedShip={setSelectedShip}
                 sessionCode={sessionCode}
-
+                storedPlayer={player}
+                setSession={setSession}
                 showLeaveModal={showLeaveModal}
                 setShowLeaveModal={setShowLeaveModal}
                 handleLeaveSession={handleLeaveSession}
                 closeLeaveModal={closeLeaveModal}
-                setSession={setSession}
             />
 
             <VoyageEventModal
