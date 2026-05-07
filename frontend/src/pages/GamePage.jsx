@@ -240,20 +240,10 @@ function GamePage() {
 
             setLeaderboard(leaderboardRes.data);
 
-            try {
-                const leaderboardRes = await api.get(`/leaderboard?sessionCode=${sessionCode}`);
-
-                setLeaderboard(prev =>
-                    (prev?.length ?? 0) > 0 ? prev : leaderboardRes.data
-                );
-
-                sessionStorage.setItem(
-                    `leaderboard-${sessionCode}`,
-                    JSON.stringify(leaderboardRes.data)
-                );
-            } catch (leaderboardError) {
-                console.error("Leaderboard fetch failed:", leaderboardError);
-            }
+            sessionStorage.setItem(
+                `leaderboard-${sessionCode}`,
+                JSON.stringify(leaderboardRes.data)
+            );
 
         } catch (err) {
             console.error(err);
