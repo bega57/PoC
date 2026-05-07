@@ -27,6 +27,7 @@ function GameMap({
                      session,
                      ports,
                      voyages,
+                     smoothProgress,
                      hoveredPort,
                      setHoveredPort,
                      handlePortHover,
@@ -222,7 +223,10 @@ function GameMap({
 
                     if (voyage) {
 
-                        const progress = voyage.progress ?? 0;
+                        const progress = Math.min(
+                            1,
+                            (smoothProgress[voyage.id] ?? (voyage.progress ?? 0) * 100) / 100
+                        );
 
                         console.log("FRONTEND PROGRESS:", progress);
 

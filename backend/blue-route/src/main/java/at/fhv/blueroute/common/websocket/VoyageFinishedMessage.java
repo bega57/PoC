@@ -8,17 +8,42 @@ public class VoyageFinishedMessage {
     private Long shipId;
     private String destinationPort;
     private double reward;
+    private String eventResultMessage;
+    private Integer extraDelayTicks;
+    private Double extraFuelLoss;
+    private Double extraConditionLoss;
+    private Double eventCost;
+    private Double rewardLossPercent;
 
     public VoyageFinishedMessage() {
     }
 
-    public VoyageFinishedMessage(String type, String sessionCode, Long voyageId, Long shipId, String destinationPort, double reward) {
+    public VoyageFinishedMessage(
+            String type,
+            String sessionCode,
+            Long voyageId,
+            Long shipId,
+            String destinationPort,
+            double reward,
+            String eventResultMessage,
+            Integer extraDelayTicks,
+            Double extraFuelLoss,
+            Double extraConditionLoss,
+            Double eventCost,
+            Double rewardLossPercent
+    ) {
         this.type = type;
         this.sessionCode = sessionCode;
         this.voyageId = voyageId;
         this.shipId = shipId;
         this.destinationPort = destinationPort;
         this.reward = reward;
+        this.eventResultMessage = eventResultMessage;
+        this.extraDelayTicks = extraDelayTicks;
+        this.extraFuelLoss = extraFuelLoss;
+        this.extraConditionLoss = extraConditionLoss;
+        this.eventCost = eventCost;
+        this.rewardLossPercent = rewardLossPercent;
     }
 
     public String getType() {
@@ -43,6 +68,30 @@ public class VoyageFinishedMessage {
 
     public double getReward() {
         return reward;
+    }
+
+    public String getEventResultMessage() {
+        return eventResultMessage;
+    }
+
+    public Integer getExtraDelayTicks() {
+        return extraDelayTicks;
+    }
+
+    public Double getExtraFuelLoss() {
+        return extraFuelLoss;
+    }
+
+    public Double getExtraConditionLoss() {
+        return extraConditionLoss;
+    }
+
+    public Double getEventCost() {
+        return eventCost;
+    }
+
+    public Double getRewardLossPercent() {
+        return rewardLossPercent;
     }
 
     public void setType(String type) {

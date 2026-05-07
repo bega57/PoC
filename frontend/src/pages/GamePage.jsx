@@ -1,6 +1,7 @@
-import { useEffect, useState } from "react";
-import { useRef } from "react";
+import { useEffect, useState, useRef, useContext } from "react";
 import { useNavigate, useParams } from "react-router-dom";
+import SockJS from "sockjs-client";
+import { Client } from "@stomp/stompjs";
 import api from "../api/api";
 import "./GamePage.css";
 import "leaflet/dist/leaflet.css";
@@ -11,8 +12,9 @@ import GameSidebar from "../components/game/GameSidebar";
 import GameModals from "../components/game/GameModals";
 import GameStatusBar from "../components/game/GameStatusBar";
 import GameMap from "../components/game/GameMap";
-import { useContext } from "react";
 import { GameContext } from "../layouts/AppLayout";
+import VoyageEventModal from "../components/VoyageEventModal";
+import Toast from "../components/Toast";
 
 const geoUrl = "/countries-110m.json";
 
@@ -51,10 +53,20 @@ function GamePage() {
 
     const [rewardAmount, setRewardAmount] = useState(0);
 
-    const [leaderboard, setLeaderboard] = useState([]);
-
     const { session, setSession, player, setPlayer } = useContext(GameContext);
     const currentPlayer = player;
+    const [finishedVoyageInfo, setFinishedVoyageInfo] = useState(null);
+
+    const [leaderboard, setLeaderboard] = useState(() => {
+        const saved = sessionStorage.getItem(`leaderboard-${sessionCode}`);
+        return saved ? JSON.parse(saved) : null;
+    });
+
+    const [activeEvent, setActiveEvent] = useState(null);
+    const [eventLoading, setEventLoading] = useState(false);
+
+    const [toastMessage, setToastMessage] = useState("");
+    const [toastType, setToastType] = useState("success");
 
     const getLocalLeaderboard = () => {
         return JSON.parse(localStorage.getItem("leaderboard") || "[]");
@@ -108,15 +120,26 @@ function GamePage() {
                 const updated = { ...prev };
 
                 voyages.forEach(v => {
-                    const current = prev[v.id] ?? v.progress ?? 0;
-                    const target = v.progress ?? 0;
+                    const backend = v.progress ?? 0;
+                    const current = (updated[v.id] ?? backend * 100) / 100;
 
-                    updated[v.id] = current + (target - current) * 0.15;
+                    const totalTime = v.duration * 5000; // gleich wie Backend
+                    const speed = 16 / totalTime; // 16ms frame
+
+                    let next = current + speed;
+
+                    next = Math.min(next, backend);
+
+                    if (v.status === "FINISHED") {
+                        next = 1;
+                    }
+
+                    updated[v.id] = next * 100;
                 });
 
                 return updated;
             });
-        }, 50);
+        }, 16);
 
         return () => clearInterval(interval);
     }, [voyages]);
@@ -181,6 +204,7 @@ function GamePage() {
         if (!session || !player) return;
 
         const me = session.players.find(p => p.id === player?.id);
+
         if (!me?.ships?.length) return;
 
         const backendShip = me.ships[0];
@@ -216,6 +240,20 @@ function GamePage() {
 
             setLeaderboard(leaderboardRes.data);
 
+            try {
+                const leaderboardRes = await api.get(`/leaderboard?sessionCode=${sessionCode}`);
+
+                setLeaderboard(prev =>
+                    (prev?.length ?? 0) > 0 ? prev : leaderboardRes.data
+                );
+
+                sessionStorage.setItem(
+                    `leaderboard-${sessionCode}`,
+                    JSON.stringify(leaderboardRes.data)
+                );
+            } catch (leaderboardError) {
+                console.error("Leaderboard fetch failed:", leaderboardError);
+            }
 
         } catch (err) {
             console.error(err);
@@ -301,7 +339,185 @@ function GamePage() {
         }
     }, [isMultiplayer]);
 
+    useEffect(() => {
+        if (!toastMessage) return;
 
+        const timer = setTimeout(() => {
+            setToastMessage("");
+        }, 3000);
+
+        return () => clearTimeout(timer);
+    }, [toastMessage]);
+
+    useEffect(() => {
+
+        const socket = new SockJS(`${import.meta.env.VITE_API_BASE_URL}/ws`);
+
+        const client = new Client({
+            webSocketFactory: () => socket,
+            reconnectDelay: 5000
+        });
+
+        client.onConnect = () => {
+            console.log("WebSocket connected");
+
+            client.subscribe(`/topic/session/${sessionCode}`, async (message) => {
+                const data = JSON.parse(message.body);
+                console.log("RAW WS EVENT:", data);
+
+                if (data.eventType && data.voyageId) {
+                    setActiveEvent(data);
+                    return;
+                }
+
+                if (data.type === "TICK") {
+                    setSession(prev =>
+                        prev ? { ...prev, currentTick: data.currentTick } : prev
+                    );
+
+                    await fetchVoyagesOnly(sessionIdRef.current, data.currentTick);
+
+                    return;
+                }
+
+                if (data.type === "VOYAGE_STARTED") {
+                    console.log("VOYAGE STARTED EVENT:", data);
+                    await safeFetchData();
+                    return;
+                }
+
+                if (data.type === "VOYAGE_FINISHED") {
+                    console.log("VOYAGE FINISHED EVENT:", data);
+
+                    setRewardAmount(data.reward || 0);
+                    setFinishedVoyageInfo(data);
+                    setLastFinishedVoyageId(data.voyageId);
+                    sessionStorage.setItem(
+                        `lastFinishedVoyageId-${sessionCode}`,
+                        String(data.voyageId)
+                    );
+                    setShowRewardPopup(true);
+
+                    setSession(prev => {
+                        if (!prev) return prev;
+
+                        const updated = {
+                            ...prev,
+                            players: prev.players.map(p => ({
+                                ...p,
+                                ships: p.ships.map(ship => {
+                                    if (ship.id === data.shipId) {
+                                        return {
+                                            ...ship,
+                                            currentPort: data.destinationPort,
+                                            traveling: false
+                                        };
+                                    }
+                                    return ship;
+                                })
+                            }))
+                        };
+
+                        if (updated.maxPlayers === 1) {
+                            const myPlayer = updated.players.find(p => p.id === player.id);
+
+                            if (myPlayer) {
+                                saveScore(myPlayer.balance);
+                            }
+                        }
+
+                        return updated;
+                    });
+
+                    setTimeout(() => {
+                        safeFetchData();
+                    }, 300);
+
+                    return;
+                }
+
+                if (data.type === "SESSION_PAUSED") {
+                    console.log("SESSION PAUSED EVENT:", data);
+
+                    setSession(prev =>
+                        prev
+                            ? { ...prev, status: data.status }
+                            : prev
+                    );
+                    return;
+                }
+
+                if (data.type === "SESSION_RUNNING") {
+                    console.log("SESSION RUNNING EVENT:", data);
+
+                    setSession(prev =>
+                        prev
+                            ? { ...prev, status: data.status }
+                            : prev
+                    );
+
+                    await safeFetchData();
+                    return;
+                }
+
+                if (data.type === "LEADERBOARD_UPDATE") {
+
+                    setLeaderboard(prev => {
+                        if (!data.leaderboard?.length) return prev;
+
+                        const updated =
+                            JSON.stringify(prev) === JSON.stringify(data.leaderboard)
+                                ? prev
+                                : data.leaderboard;
+
+                        sessionStorage.setItem(
+                            `leaderboard-${sessionCode}`,
+                            JSON.stringify(updated)
+                        );
+
+                        return updated;
+                    });
+                }
+            });
+        };
+
+        client.activate();
+
+        return () => {
+            client.deactivate();
+        };
+    }, [sessionCode, player?.id]);
+
+
+    const handleEventChoice = async (optionIndex) => {
+        if (!activeEvent) {
+            return;
+        }
+
+        const optionMap = ["OPTION_A", "OPTION_B", "OPTION_C"];
+        const selectedOption = optionMap[optionIndex];
+
+        try {
+            setEventLoading(true);
+
+            const response = await api.post(
+                `/voyage-events/${activeEvent.voyageId}/resolve`,
+                { selectedOption }
+            );
+
+            setToastMessage(response.data.message);
+            setToastType("success");
+            setActiveEvent(null);
+
+            await fetchData();
+        } catch (error) {
+            console.error(error);
+            setToastMessage(error.response?.data?.message || "Failed to resolve event.");
+            setToastType("error");
+        } finally {
+            setEventLoading(false);
+        }
+    };
 
     const handlePortHover = async (port) => {
         setHoveredPort(port);
@@ -419,6 +635,7 @@ function GamePage() {
                 session={session}
                 ports={ports}
                 voyages={voyages}
+                smoothProgress={smoothProgress}
                 hoveredPort={hoveredPort}
                 setHoveredPort={setHoveredPort}
                 handlePortHover={handlePortHover}
@@ -472,6 +689,8 @@ function GamePage() {
                 showRewardPopup={showRewardPopup}
                 setShowRewardPopup={setShowRewardPopup}
                 rewardAmount={rewardAmount}
+                finishedVoyageInfo={finishedVoyageInfo}
+                setFinishedVoyageInfo={setFinishedVoyageInfo}
                 currentPlayer={currentPlayer}
                 setSelectedShip={setSelectedShip}
                 sessionCode={sessionCode}
@@ -482,6 +701,14 @@ function GamePage() {
                 handleLeaveSession={handleLeaveSession}
                 closeLeaveModal={closeLeaveModal}
             />
+
+            <VoyageEventModal
+                event={activeEvent}
+                onSelect={handleEventChoice}
+                loading={eventLoading}
+            />
+
+            <Toast message={toastMessage} type={toastType} />
 
         </div>
     );
