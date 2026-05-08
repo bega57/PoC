@@ -54,7 +54,7 @@ function ShipMarketPage() {
             type: "EXPENSIVE",
             name: "Galleon",
             image: expensiveSide,
-            price: 60000,
+            price: 42000,
             speed: 80,
             capacity: 180,
             fuel: 50,
