@@ -1,6 +1,7 @@
-import { useEffect, useState } from "react";
-import { useRef } from "react";
+import { useEffect, useState, useRef, useContext } from "react";
 import { useNavigate, useParams } from "react-router-dom";
+import SockJS from "sockjs-client";
+import { Client } from "@stomp/stompjs";
 import api from "../api/api";
 import "./GamePage.css";
 import "leaflet/dist/leaflet.css";
@@ -11,7 +12,6 @@ import GameSidebar from "../components/game/GameSidebar";
 import GameModals from "../components/game/GameModals";
 import GameStatusBar from "../components/game/GameStatusBar";
 import GameMap from "../components/game/GameMap";
-import { useContext } from "react";
 import { GameContext } from "../layouts/AppLayout";
 import VoyageEventModal from "../components/VoyageEventModal";
 import Toast from "../components/Toast";
@@ -53,16 +53,18 @@ function GamePage() {
 
     const [rewardAmount, setRewardAmount] = useState(0);
 
-    const [leaderboard, setLeaderboard] = useState([]);
+    const { session, setSession, player, setPlayer } = useContext(GameContext);
+    const currentPlayer = player;
     const [finishedVoyageInfo, setFinishedVoyageInfo] = useState(null);
+
+    const [leaderboard, setLeaderboard] = useState(() => {
+        const saved = sessionStorage.getItem(`leaderboard-${sessionCode}`);
+        return saved ? JSON.parse(saved) : null;
+    });
 
     const [activeEvent, setActiveEvent] = useState(null);
     const [eventLoading, setEventLoading] = useState(false);
 
-    const finalLeaderboard = leaderboard;
-
-    const { session, setSession, player, setPlayer } = useContext(GameContext);
-    const currentPlayer = player;
     const [toastMessage, setToastMessage] = useState("");
     const [toastType, setToastType] = useState("success");
 
@@ -202,6 +204,7 @@ function GamePage() {
         if (!session || !player) return;
 
         const me = session.players.find(p => p.id === player?.id);
+
         if (!me?.ships?.length) return;
 
         const backendShip = me.ships[0];
@@ -237,6 +240,10 @@ function GamePage() {
 
             setLeaderboard(leaderboardRes.data);
 
+            sessionStorage.setItem(
+                `leaderboard-${sessionCode}`,
+                JSON.stringify(leaderboardRes.data)
+            );
 
         } catch (err) {
             console.error(err);
@@ -322,6 +329,154 @@ function GamePage() {
         }
     }, [isMultiplayer]);
 
+    useEffect(() => {
+        if (!toastMessage) return;
+
+        const timer = setTimeout(() => {
+            setToastMessage("");
+        }, 3000);
+
+        return () => clearTimeout(timer);
+    }, [toastMessage]);
+
+    useEffect(() => {
+
+        const socket = new SockJS(`${import.meta.env.VITE_API_BASE_URL}/ws`);
+
+        const client = new Client({
+            webSocketFactory: () => socket,
+            reconnectDelay: 5000
+        });
+
+        client.onConnect = () => {
+            console.log("WebSocket connected");
+
+            client.subscribe(`/topic/session/${sessionCode}`, async (message) => {
+                const data = JSON.parse(message.body);
+                console.log("RAW WS EVENT:", data);
+
+                if (data.eventType && data.voyageId) {
+                    setActiveEvent(data);
+                    return;
+                }
+
+                if (data.type === "TICK") {
+                    setSession(prev =>
+                        prev ? { ...prev, currentTick: data.currentTick } : prev
+                    );
+
+                    await fetchVoyagesOnly(sessionIdRef.current, data.currentTick);
+
+                    return;
+                }
+
+                if (data.type === "VOYAGE_STARTED") {
+                    console.log("VOYAGE STARTED EVENT:", data);
+                    await safeFetchData();
+                    return;
+                }
+
+                if (data.type === "VOYAGE_FINISHED") {
+                    console.log("VOYAGE FINISHED EVENT:", data);
+
+                    setRewardAmount(data.reward || 0);
+                    setFinishedVoyageInfo(data);
+                    setLastFinishedVoyageId(data.voyageId);
+                    sessionStorage.setItem(
+                        `lastFinishedVoyageId-${sessionCode}`,
+                        String(data.voyageId)
+                    );
+                    setShowRewardPopup(true);
+
+                    setSession(prev => {
+                        if (!prev) return prev;
+
+                        const updated = {
+                            ...prev,
+                            players: prev.players.map(p => ({
+                                ...p,
+                                ships: p.ships.map(ship => {
+                                    if (ship.id === data.shipId) {
+                                        return {
+                                            ...ship,
+                                            currentPort: data.destinationPort,
+                                            traveling: false
+                                        };
+                                    }
+                                    return ship;
+                                })
+                            }))
+                        };
+
+                        if (updated.maxPlayers === 1) {
+                            const myPlayer = updated.players.find(p => p.id === player.id);
+
+                            if (myPlayer) {
+                                saveScore(myPlayer.balance);
+                            }
+                        }
+
+                        return updated;
+                    });
+
+                    setTimeout(() => {
+                        safeFetchData();
+                    }, 300);
+
+                    return;
+                }
+
+                if (data.type === "SESSION_PAUSED") {
+                    console.log("SESSION PAUSED EVENT:", data);
+
+                    setSession(prev =>
+                        prev
+                            ? { ...prev, status: data.status }
+                            : prev
+                    );
+                    return;
+                }
+
+                if (data.type === "SESSION_RUNNING") {
+                    console.log("SESSION RUNNING EVENT:", data);
+
+                    setSession(prev =>
+                        prev
+                            ? { ...prev, status: data.status }
+                            : prev
+                    );
+
+                    await safeFetchData();
+                    return;
+                }
+
+                if (data.type === "LEADERBOARD_UPDATE") {
+
+                    setLeaderboard(prev => {
+                        if (!data.leaderboard?.length) return prev;
+
+                        const updated =
+                            JSON.stringify(prev) === JSON.stringify(data.leaderboard)
+                                ? prev
+                                : data.leaderboard;
+
+                        sessionStorage.setItem(
+                            `leaderboard-${sessionCode}`,
+                            JSON.stringify(updated)
+                        );
+
+                        return updated;
+                    });
+                }
+            });
+        };
+
+        client.activate();
+
+        return () => {
+            client.deactivate();
+        };
+    }, [sessionCode, player?.id]);
 
 
     const handleEventChoice = async (optionIndex) => {

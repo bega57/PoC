@@ -227,14 +227,14 @@ public class VoyageEventResolveService {
     }
 
     private void damageShip(Ship ship, double damage) {
-        double currentCondition = ship.getCondition() == null ? 100.0 : ship.getCondition();
-        double newCondition = Math.max(0, currentCondition - damage);
+        int currentCondition = ship.getCondition() == null ? 100 : ship.getCondition();
+        int newCondition = (int) Math.max(0, currentCondition - damage);
         ship.setCondition(newCondition);
     }
 
     private void reduceFuel(Ship ship, double amount) {
-        double currentFuel = ship.getFuelLevel() == null ? 100.0 : ship.getFuelLevel();
-        double newFuelLevel = Math.max(0, currentFuel - amount);
+        int currentFuel = ship.getFuelLevel() == null ? 100 : ship.getFuelLevel();
+        int newFuelLevel = (int) Math.max(0, currentFuel - amount);
         ship.setFuelLevel(newFuelLevel);
     }
 

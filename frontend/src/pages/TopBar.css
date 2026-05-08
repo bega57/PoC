@@ -1,0 +1,180 @@
+.topbar {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+
+    height: 64px;
+    padding: 0 24px;
+
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+
+    background: linear-gradient(
+            180deg,
+            rgba(5, 15, 30, 0.95),
+            rgba(5, 15, 30, 0.85)
+    );
+
+    backdrop-filter: blur(14px);
+
+    border-bottom: 1px solid rgba(255,255,255,0.06);
+    box-shadow: 0 8px 30px rgba(0,0,0,0.5);
+
+    z-index: 9999;
+    color: #e6f0ff;
+}
+
+/* LEFT */
+.tb-left {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+}
+
+.logo {
+    font-weight: 700;
+    font-size: 16px;
+    color: #60a5fa;
+}
+
+.logo span {
+    color: white;
+}
+
+/* SESSION CHIP */
+.chip {
+    padding: 6px 10px;
+    border-radius: 10px;
+    font-size: 13px;
+
+    background: rgba(255,255,255,0.05);
+    border: 1px solid rgba(255,255,255,0.08);
+
+    cursor: pointer;
+    transition: 0.2s;
+}
+
+.chip:hover {
+    background: rgba(96,165,250,0.15);
+}
+
+/* CENTER */
+.tb-center {
+    position: absolute;
+    left: 50%;
+    transform: translateX(-50%);
+
+    font-weight: 500;
+    opacity: 0.9;
+}
+
+/* RIGHT */
+.tb-right {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+}
+
+.card {
+    padding: 6px 10px;
+    border-radius: 10px;
+
+    display: flex;
+    flex-direction: column;
+
+    min-width: auto;
+    height: 38px;
+
+    justify-content: center;
+}
+
+.card-label {
+    font-size: 9px;
+    opacity: 0.5;
+    margin-bottom: 0;
+    line-height: 1;
+}
+
+.card-main {
+    font-size: 13px;
+    font-weight: 600;
+    line-height: 1.2;
+}
+
+/* COMPANY STYLE */
+.card.company {
+    box-shadow: 0 0 15px rgba(59,130,246,0.25);
+}
+
+/* BALANCE STYLE */
+.card.balance {
+    color: #34d399;
+    box-shadow: 0 0 18px rgba(16,185,129,0.35);
+}
+
+/* AVATAR */
+.avatar {
+    width: 36px;
+    height: 36px;
+    border-radius: 50%;
+
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    background: rgba(255,255,255,0.08);
+    font-weight: 600;
+}
+
+
+.brand {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+.logo-img {
+    width: 36px;
+    height: 36px;
+}
+
+.brand-text {
+    font-weight: 800;
+    font-size: 20px;
+    letter-spacing: 0.6px;
+}
+
+.blue {
+    color: #3b82f6;
+}
+
+.white {
+    color: #ffffff;
+}
+
+.card.company {
+    border: 1px solid rgba(59,130,246,0.4);
+    box-shadow: 0 0 20px rgba(59,130,246,0.25);
+}
+
+.card.balance {
+    border: 1px solid rgba(16,185,129,0.4);
+    box-shadow: 0 0 20px rgba(16,185,129,0.35);
+}
+
+.tb-right {
+    display: flex;
+    align-items: center;
+    gap: 10px; /* weniger spacing */
+}
+
+.player-info {
+    margin-left: 8px;
+    padding: 6px 12px;
+    border-radius: 10px;
+
+    background: rgba(255,255,255,0.04);
+    border: 1px solid rgba(255,255,255,0.08);
+}

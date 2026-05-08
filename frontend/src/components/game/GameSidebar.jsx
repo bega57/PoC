@@ -97,7 +97,7 @@ function GameSidebar({
                             ) : (
                                 leaderboard.map((p, index) => (
                                     <div
-                                        key={p.playerId ?? p.username}
+                                        key={`${p.playerId ?? p.username ?? "player"}-${index}`}
                                         className="player-item"
                                         style={{
                                             fontWeight: index < 3 ? "bold" : "normal",
