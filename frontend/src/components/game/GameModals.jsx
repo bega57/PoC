@@ -1,4 +1,5 @@
 import api from "../../api/api.js";
+import RetroModal from "../ui/RetroModal";
 
 function GameModals({
                         showWelcome,
@@ -26,13 +27,16 @@ function GameModals({
     return (
         <>
             {showWelcome && (
-                <div className="welcome-overlay">
-                    <div className="welcome-modal">
+                <RetroModal
+                    title="Welcome"
+                    onClose={() => setShowWelcome(false)}
+                >
                         <h2>⚓ Welcome aboard, {currentPlayer?.username || storedPlayer?.username}!</h2>
                         <p>You start with:</p>
                         <h1>40.000 Coins</h1>
 
                         <button
+                            className="retro-button"
                             onClick={() => {
                                 setShowWelcome(false);
                                 setShowPortInstructionModal(true);
@@ -41,17 +45,18 @@ function GameModals({
                         >
                             Start Playing
                         </button>
-                    </div>
-                </div>
+                </RetroModal>
             )}
 
             {selectedPort && (
-                <div className="welcome-overlay">
-                    <div className="welcome-modal">
+                <RetroModal
+                    title="Select Main Port"
+                    onClose={() => setSelectedPort(null)}
+                >
                         <h2>Select {selectedPort} as your main port?</h2>
 
                         <button
-                            className="confirm-btn"
+                            className="retro-button"
                             onClick={async () => {
                                 const existing = sessionStorage.getItem(`currentPort-${sessionCode}`);
 
@@ -97,38 +102,43 @@ function GameModals({
                             Confirm
                         </button>
 
-                        <button
-                            className="cancel-btn"
-                            onClick={() => setSelectedPort(null)}
-                        >
-                            Cancel
-                        </button>
-                    </div>
-                </div>
+                    <button className="retro-button secondary">
+                        Cancel
+                    </button>
+                </RetroModal>
             )}
 
             {showPortInstructionModal && (
-                <div className="welcome-overlay">
-                    <div className="welcome-modal">
+                <RetroModal
+                    title="Main Port"
+                    onClose={() => setShowPortInstructionModal(false)}
+                >
                         <h2>🌍 Choose your main port</h2>
                         <p>
                             Click on any red port on the map to select your starting location.
                         </p>
 
-                        <button onClick={() => setShowPortInstructionModal(false)}>
+                        <button
+                            className="retro-button"
+                            onClick={() => setShowPortInstructionModal(false)}>
                             Got it
                         </button>
-                    </div>
-                </div>
+                </RetroModal>
             )}
 
             {showRewardPopup && (
-                <div className="welcome-overlay">
-                    <div className="welcome-modal">
-                        <h2>Voyage completed</h2>
+                <RetroModal
+                    title="Voyage Complete"
+                    onClose={() => {
+                        setShowRewardPopup(false);
+                        setFinishedVoyageInfo(null);
+                    }}
+                >
                         <p>You successfully completed your transport order.</p>
 
-                        <h1>+{Number(rewardAmount).toFixed(0)} Coins</h1>
+                    <h1 className="reward-amount">
+                        +{Number(rewardAmount).toFixed(0)} Coins
+                    </h1>
 
                         {finishedVoyageInfo?.eventResultMessage && (
                             <div className="voyage-finish-event-box">
@@ -158,6 +168,7 @@ function GameModals({
                         )}
 
                         <button
+                            className="retro-button"
                             onClick={() => {
                                 setShowRewardPopup(false);
                                 setFinishedVoyageInfo(null);
@@ -165,14 +176,14 @@ function GameModals({
                         >
                             Nice
                         </button>
-                    </div>
-                </div>
+                </RetroModal>
             )}
 
             {showLeaveModal && (
-                <div className="welcome-overlay">
-                    <div className="welcome-modal">
-                        <h2>Leave Session?</h2>
+                <RetroModal
+                    title="Leave Session"
+                    onClose={() => setShowLeaveModal(false)}
+                >
                         <p>
                             You can resume this session later with the following details:
                         </p>
@@ -185,7 +196,7 @@ function GameModals({
                         </p>
 
                         <button
-                            className="confirm-btn"
+                            className="retro-button"
                             onClick={async () => {
                                 localStorage.setItem(`sessionCode-${storedPlayer.id}`, sessionCode);
                                 localStorage.setItem("lastSessionCode", sessionCode);
@@ -198,14 +209,13 @@ function GameModals({
                             Leave Session
                         </button>
 
-                        <button
-                            className="cancel-btn"
-                            onClick={() => setShowLeaveModal(false)}
-                        >
-                            Cancel
-                        </button>
-                    </div>
-                </div>
+                    <button
+                        className="retro-button secondary"
+                        onClick={() => setShowLeaveModal(false)}
+                    >
+                        Cancel
+                    </button>
+                </RetroModal>
             )}
         </>
     );

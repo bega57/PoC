@@ -4,6 +4,7 @@ import "./VoyagePage.css";
 import { useContext } from "react";
 import { GameContext } from "../layouts/AppLayout";
 import { useEffect, useMemo, useState, useRef } from "react";
+import RetroModal from "../components/ui/RetroModal";
 
 export default function VoyagePage() {
     const { sessionCode } = useParams();
@@ -614,9 +615,10 @@ export default function VoyagePage() {
             </div>
 
             {showVoyageStartedPopup && (
-                <div className="welcome-overlay">
-                    <div className="welcome-modal">
-                        <h2>Voyage started</h2>
+                <RetroModal
+                    title="Voyage Started"
+                    onClose={() => setShowVoyageStartedPopup(false)}
+                >
                         <p>Your ship is now on its way.</p>
 
                         {startedVoyageInfo && (
@@ -631,26 +633,29 @@ export default function VoyagePage() {
                             </>
                         )}
 
-                        <button
-                            onClick={() => navigate(`/session/${sessionCode}/game`)}
-                        >
-                            Back to Game
-                        </button>
-                    </div>
-                </div>
+                    <button
+                        className="retro-button"
+                        onClick={() => navigate(`/session/${sessionCode}/game`)}
+                    >
+                        Back to Game
+                    </button>
+                </RetroModal>
             )}
 
             {errorMessage && (
-                <div className="welcome-overlay">
-                    <div className="welcome-modal">
-                        <h2>🚫 Error</h2>
+                <RetroModal
+                    title="Error"
+                    onClose={() => setErrorMessage(null)}
+                >
                         <p>{errorMessage}</p>
 
-                        <button onClick={() => setErrorMessage(null)}>
-                            OK
-                        </button>
-                    </div>
-                </div>
+                    <button
+                        className="retro-button"
+                        onClick={() => setErrorMessage(null)}
+                    >
+                        OK
+                    </button>
+                </RetroModal>
             )}
 
 

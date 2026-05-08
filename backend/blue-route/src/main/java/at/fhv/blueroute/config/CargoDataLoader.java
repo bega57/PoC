@@ -171,7 +171,7 @@ public class CargoDataLoader {
         public static int calculate(Port a, Port b) {
             double dx = a.getLatitude() - b.getLatitude();
             double dy = a.getLongitude() - b.getLongitude();
-            return (int) Math.sqrt(dx * dx + dy * dy);
+            return (int) (Math.sqrt(dx * dx + dy * dy) * 100);
         }
     }
 
