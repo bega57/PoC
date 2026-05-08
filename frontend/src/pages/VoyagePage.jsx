@@ -157,6 +157,10 @@ export default function VoyagePage() {
 
     const grossPrice = selectedCargo ? toGross(selectedCargo.price) : 0;
 
+    const formatNumber = (value) => {
+        return Number(value).toLocaleString("de-DE");
+    };
+
     const handleStartVoyage = async () => {
         if (availableDestinations.length === 0) {
             setErrorMessage("No cargo available from this port");
@@ -547,18 +551,18 @@ export default function VoyagePage() {
 
                                     <div className="summary-item">
                                         <span>💰 Price</span>
-                                        <strong>{grossPrice} Talers</strong>
+                                        <strong>{formatNumber(grossPrice)} Talers</strong>
                                     </div>
 
                                     <div className="summary-item">
                                         <span>🏆 Reward</span>
-                                        <strong>{selectedCargo.reward} Talers</strong>
+                                        <strong>{formatNumber(selectedCargo.reward)} Talers</strong>
                                     </div>
 
                                     <div className="summary-item">
                                         <span>📈 Profit</span>
                                         <strong>
-                                            {selectedCargo.reward - grossPrice} Talers
+                                            {formatNumber(selectedCargo.reward - grossPrice)} Talers
                                         </strong>
                                     </div>
 
@@ -573,6 +577,20 @@ export default function VoyagePage() {
                                         <span>⏱ Duration</span>
                                         <strong>
                                             {selectedCargo.requiredTicks} days
+                                        </strong>
+                                    </div>
+
+                                    <div className="summary-item">
+                                        <span>⛽ Fuel Consumption</span>
+                                        <strong>
+                                            {selectedCargo.fuelConsumption}%
+                                        </strong>
+                                    </div>
+
+                                    <div className="summary-item">
+                                        <span>🔧 Ship Deterioration</span>
+                                        <strong>
+                                            {selectedCargo.conditionDamage}%
                                         </strong>
                                     </div>
 

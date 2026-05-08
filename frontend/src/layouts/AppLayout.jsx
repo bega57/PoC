@@ -54,6 +54,14 @@ function AppLayout() {
 
                 console.log("GLOBAL EVENT:", data);
 
+                if (data.type === "TICK") {
+                    setSession(prev =>
+                        prev ? { ...prev, currentTick: data.currentTick } : prev
+                    );
+
+                    return;
+                }
+
                 if (
                     data.type === "SHIP_BOUGHT" ||
                     data.type === "SHIP_SOLD" ||
