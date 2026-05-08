@@ -43,10 +43,10 @@ public class VoyageEventPlanningService {
         int chance;
 
         switch (riskLevel) {
-            case LOW -> chance = 25;
-            case MEDIUM -> chance = 50;
-            case HIGH -> chance = 70;
-            default -> chance = 25;
+            case LOW -> chance = 100;
+            case MEDIUM -> chance = 100;
+            case HIGH -> chance = 100;
+            default -> chance = 100;
         }
 
         return random.nextInt(100) < chance;

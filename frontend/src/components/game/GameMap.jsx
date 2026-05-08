@@ -4,6 +4,7 @@ import {
     Geography,
     Marker
 } from "react-simple-maps";
+import "./GameMap.css";
 
 function getPositionOnRoute(route, progress) {
     if (!route || route.length < 2) return null;
@@ -57,8 +58,21 @@ function GameMap({
 
             {showPortInstruction && (
                 <div className="port-instruction-popup">
-                    ⚠️ Don't forget to pick a main port <br />
-                    (You cannot change this later)
+
+                    <div className="port-instruction-title">
+                        Main Port Required
+                    </div>
+
+                    <div className="port-instruction-divider"></div>
+
+                    <div className="port-instruction-text">
+                        ⚠️ Don't forget to pick a main port
+                    </div>
+
+                    <div className="port-instruction-subtext">
+                        You cannot change this later
+                    </div>
+
                 </div>
             )}
 
@@ -74,11 +88,18 @@ function GameMap({
                             <Geography
                                 key={geo.rsmKey}
                                 geography={geo}
-                                fill="#243447"
-                                stroke="#1b2838"
+                                fill="#18314f"
+                                stroke="#2f4f73"
                                 style={{
-                                    default: { fill: "#243447", outline: "none" },
-                                    hover: { fill: "#243447", outline: "none" },
+                                    default: {
+                                        fill: "#18314f",
+                                        outline: "none",
+                                        transition: "0.2s"
+                                    },
+                                    hover: {
+                                        fill: "#18314f",
+                                        outline: "none"
+                                    },
                                     pressed: { outline: "none" }
                                 }}
                             />
@@ -112,6 +133,7 @@ function GameMap({
                             )}
 
                             <circle
+                                className="port-dot"
                                 r={port.name === mainPort ? 6 : 5}
                                 fill={
                                     port.name === mainPort
@@ -129,6 +151,7 @@ function GameMap({
                             textAnchor={port.name === "London" ? "end" : "start"}
                             style={{
                                 fontSize: "11px",
+                                textShadow: "0 0 6px rgba(255,255,255,0.25)",
                                 fill: "#e2e8f0",
                                 fontWeight: "600",
                                 letterSpacing: "0.3px"
@@ -148,9 +171,9 @@ function GameMap({
                             <rect
                                 width={boxWidth}
                                 height={90}
-                                fill="#0f172a"
-                                stroke="#475569"
-                                rx={10}
+                                fill="#10284d"
+                                stroke="#5fa8ff"
+                                rx={2}
                             />
 
                             <text x={10} y={18} fill="#e2e8f0" fontSize="11" fontWeight="600">
@@ -194,16 +217,17 @@ function GameMap({
 
                                 <>
                                     <image
+                                        className="ship-icon"
                                         href={getShipImage(ship)}
-                                        width={36}
-                                        height={36}
-                                        x={-18}
-                                        y={-18}
+                                        width={52}
+                                        height={52}
+                                        x={-26}
+                                        y={-26}
                                     />
 
                                     {player.ships?.length > 0 && (
                                         <text
-                                            y={16}
+                                            y={24}
                                             textAnchor="middle"
                                             style={{
                                                 fill: "#cfe8ff",
@@ -255,15 +279,16 @@ function GameMap({
 
                                 <>
                                     <image
+                                        className="ship-icon"
                                         href={getShipImage(ship)}
-                                        width={24}
-                                        height={24}
-                                        x={-12}
-                                        y={-12}
+                                        width={40}
+                                        height={40}
+                                        x={-20}
+                                        y={-20}
                                     />
 
                                     <text
-                                        y={16}
+                                        y={20}
                                         textAnchor="middle"
                                         style={{
                                             fill: "#cfe8ff",
