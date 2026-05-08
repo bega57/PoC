@@ -22,6 +22,7 @@ import at.fhv.blueroute.ship.domain.model.UsedShipOffer;
 import at.fhv.blueroute.ship.infrastructure.persistence.JpaUsedShipOfferRepository;
 import at.fhv.blueroute.ship.presentation.dto.BuyUsedShipRequest;
 import at.fhv.blueroute.common.service.PricingService;
+import at.fhv.blueroute.player.client.PlayerServiceClient;
 
 import org.springframework.stereotype.Service;
 
@@ -38,13 +39,16 @@ public class ShipService {
     private final SessionRepository sessionRepository;
     private final WebSocketSender webSocketSender;
     private final PricingService pricingService;
+    private final PlayerServiceClient playerServiceClient;
 
     public ShipService(JpaShipRepository shipRepository,
                        JpaUsedShipOfferRepository usedShipOfferRepository,
                        PlayerRepository playerRepository,
                        ShipMapper shipMapper, CalculateShipSellPriceService sellPriceService,
                        SessionRepository sessionRepository,
-                       WebSocketSender webSocketSender, PricingService pricingService) {
+                       WebSocketSender webSocketSender,
+                       PricingService pricingService,
+                       PlayerServiceClient playerServiceClient) {
         this.shipRepository = shipRepository;
         this.usedShipOfferRepository = usedShipOfferRepository;
         this.playerRepository = playerRepository;
@@ -53,6 +57,7 @@ public class ShipService {
         this.sessionRepository = sessionRepository;
         this.webSocketSender = webSocketSender;
         this.pricingService = pricingService;
+        this.playerServiceClient = playerServiceClient;
     }
 
     public ShipResponse buyShip(BuyShipRequest request) {
@@ -104,7 +109,11 @@ public class ShipService {
             player.setCompanyName(request.getCompanyName().trim());
         }
 
-        player.setBalance(player.getBalance() - finalPrice);
+        playerServiceClient.updateBalance(
+                player.getId(),
+                -finalPrice,
+                "SHIP_PURCHASE"
+        );
 
         Ship ship = new Ship(
                 request.getShipName().trim(),

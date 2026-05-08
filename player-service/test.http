@@ -1,0 +1,24 @@
+POST http://localhost:8081/players
+Content-Type: application/json
+
+{
+  "username": "Ali",
+  "companyName": "Direktech Shipping"
+}
+
+###
+
+GET http://localhost:8081/players
+
+###
+PATCH http://localhost:8081/players/6/balance
+Content-Type: application/json
+
+{
+  "amount": -5000,
+  "reason": "SHIP_PURCHASE"
+}
+
+###
+GET http://localhost:8081/players/6
+
