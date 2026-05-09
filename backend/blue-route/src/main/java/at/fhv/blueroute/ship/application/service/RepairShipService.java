@@ -1,13 +1,13 @@
 package at.fhv.blueroute.ship.application.service;
 
 import at.fhv.blueroute.common.service.PricingService;
+import at.fhv.blueroute.player.client.PlayerServiceClient;
 import at.fhv.blueroute.port.domain.model.Port;
 import at.fhv.blueroute.port.infrastructure.persistence.JpaPortRepository;
 import at.fhv.blueroute.ship.domain.model.Ship;
 import at.fhv.blueroute.ship.domain.repository.ShipRepository;
 import at.fhv.blueroute.ship.presentation.dto.ShipResponse;
 import at.fhv.blueroute.ship.application.mapper.ShipMapper;
-import at.fhv.blueroute.player.domain.model.Player;
 import org.springframework.stereotype.Service;
 
 @Service
@@ -17,12 +17,18 @@ public class RepairShipService {
     private final ShipMapper shipMapper;
     private final PricingService pricingService;
     private final JpaPortRepository portRepository;
+    private final PlayerServiceClient playerServiceClient;
 
-    public RepairShipService(ShipRepository shipRepository, ShipMapper shipMapper, PricingService pricingService, JpaPortRepository portRepository) {
+    public RepairShipService(ShipRepository shipRepository,
+                             ShipMapper shipMapper,
+                             PricingService pricingService,
+                             JpaPortRepository portRepository,
+                             PlayerServiceClient playerServiceClient) {
         this.shipRepository = shipRepository;
         this.shipMapper = shipMapper;
         this.pricingService = pricingService;
         this.portRepository = portRepository;
+        this.playerServiceClient = playerServiceClient;
     }
 
     public ShipResponse repair(Long shipId, int repairAmount) {
@@ -32,8 +38,6 @@ public class RepairShipService {
 
         Port port = portRepository.findByName(ship.getCurrentPort())
                 .orElseThrow(() -> new RuntimeException("Port not found"));
-
-        Player player = ship.getOwner();
 
         int maxCondition = 100;
         int currentCondition = Math.max(0, ship.getCondition());
@@ -69,13 +73,12 @@ public class RepairShipService {
         double pricePerUnitGross = pricingService.applyVAT(pricePerUnit);
         double cost = repairAmount * pricePerUnitGross;
 
-        if (player.getBalance() < cost) {
-            throw new IllegalArgumentException("Not enough money");
-        }
-
         ship.setCondition(Math.min(100, currentCondition + repairAmount));
-        player.setBalance(player.getBalance() - cost);
-
+        playerServiceClient.updateBalance(
+                ship.getOwnerId(),
+                -cost,
+                "SHIP_REPAIR"
+        );
         Ship saved = shipRepository.save(ship);
 
         return shipMapper.toResponse(saved, 0, cost);

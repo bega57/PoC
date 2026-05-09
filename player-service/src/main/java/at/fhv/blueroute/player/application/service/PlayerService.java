@@ -1,5 +1,6 @@
 package at.fhv.blueroute.player.application.service;
 
+import at.fhv.blueroute.player.application.exception.InsufficientBalanceException;
 import at.fhv.blueroute.player.application.exception.PlayerNotFoundException;
 import at.fhv.blueroute.player.application.mapper.PlayerMapper;
 import at.fhv.blueroute.player.domain.model.Player;
@@ -52,7 +53,7 @@ public class PlayerService {
         double newBalance = player.getBalance() + amount;
 
         if (newBalance < 0) {
-            throw new IllegalStateException("Player has insufficient balance for: " + reason);
+            throw new InsufficientBalanceException(playerId);
         }
 
         player.setBalance(newBalance);

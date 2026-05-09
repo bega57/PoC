@@ -1,10 +1,8 @@
 package at.fhv.blueroute.voyage.application.service;
 
-import at.fhv.blueroute.cargo.application.service.CalculateDeteriorationService;
 import at.fhv.blueroute.cargo.domain.model.Cargo;
 import at.fhv.blueroute.cargo.infrastructure.persistence.JpaCargoRepository;
-import at.fhv.blueroute.player.domain.model.Player;
-import at.fhv.blueroute.player.domain.repository.PlayerRepository;
+import at.fhv.blueroute.player.client.PlayerServiceClient;
 import at.fhv.blueroute.ship.domain.model.Ship;
 import at.fhv.blueroute.ship.infrastructure.persistence.JpaShipRepository;
 import at.fhv.blueroute.voyage.domain.model.Voyage;
@@ -19,16 +17,16 @@ public class FinishVoyageService {
 
     private final JpaVoyageRepository voyageRepository;
     private final JpaShipRepository shipRepository;
-    private final PlayerRepository playerRepository;
+    private final PlayerServiceClient playerServiceClient;
     private final JpaCargoRepository cargoRepository;
 
     public FinishVoyageService(JpaVoyageRepository voyageRepository,
                                JpaShipRepository shipRepository,
-                               PlayerRepository playerRepository,
+                               PlayerServiceClient playerServiceClient,
                                JpaCargoRepository cargoRepository) {
         this.voyageRepository = voyageRepository;
         this.shipRepository = shipRepository;
-        this.playerRepository = playerRepository;
+        this.playerServiceClient = playerServiceClient;
         this.cargoRepository = cargoRepository;
     }
 
@@ -59,11 +57,14 @@ public class FinishVoyageService {
                 Math.max(0, ship.getUsedCapacity() - cargo.getRequiredCapacity())
         );
 
-        Player owner = playerRepository.findById(ship.getOwner().getId())
-                .orElseThrow(() -> new RuntimeException("Player not found"));
-
         if (!voyage.isRewardGranted()) {
-            owner.setBalance(owner.getBalance() + voyage.getReward());
+
+            playerServiceClient.updateBalance(
+                    ship.getOwnerId(),
+                    voyage.getReward(),
+                    "VOYAGE_REWARD"
+            );
+
             voyage.setRewardGranted(true);
         }
 

@@ -1,6 +1,7 @@
 package at.fhv.blueroute.player.client;
 
 import at.fhv.blueroute.player.client.dto.BalanceUpdateRequest;
+import at.fhv.blueroute.player.client.dto.PlayerResponse;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpHeaders;
@@ -34,10 +35,23 @@ public class PlayerServiceClient {
         HttpEntity<BalanceUpdateRequest> entity =
                 new HttpEntity<>(request, headers);
 
-        restTemplate.postForObject(
-                url,
-                entity,
-                Void.class
-        );
+        try {
+            restTemplate.postForObject(
+                    url,
+                    entity,
+                    Void.class
+            );
+        } catch (org.springframework.web.client.HttpClientErrorException.BadRequest ex) {
+            throw new RuntimeException("Player service rejected balance update: " + ex.getResponseBodyAsString());
+        } catch (org.springframework.web.client.HttpClientErrorException.NotFound ex) {
+            throw new RuntimeException("Player not found in player service: " + playerId);
+        } catch (org.springframework.web.client.ResourceAccessException ex) {
+            throw new RuntimeException("Player service is currently not reachable.");
+        }
+    }
+
+    public PlayerResponse getPlayer(Long playerId) {
+        String url = playerServiceUrl + "/players/" + playerId;
+        return restTemplate.getForObject(url, PlayerResponse.class);
     }
 }

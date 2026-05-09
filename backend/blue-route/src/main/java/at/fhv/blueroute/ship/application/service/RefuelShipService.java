@@ -1,13 +1,14 @@
 package at.fhv.blueroute.ship.application.service;
 
 import at.fhv.blueroute.common.service.PricingService;
-import at.fhv.blueroute.player.domain.model.Player;
 import at.fhv.blueroute.port.domain.model.Port;
 import at.fhv.blueroute.port.infrastructure.persistence.JpaPortRepository;
 import at.fhv.blueroute.ship.application.mapper.ShipMapper;
 import at.fhv.blueroute.ship.domain.model.Ship;
 import at.fhv.blueroute.ship.domain.repository.ShipRepository;
 import at.fhv.blueroute.ship.presentation.dto.ShipResponse;
+import at.fhv.blueroute.player.client.PlayerServiceClient;
+
 import org.springframework.stereotype.Service;
 
 @Service
@@ -17,12 +18,18 @@ public class RefuelShipService {
     private final ShipMapper shipMapper;
     private final JpaPortRepository portRepository;
     private final PricingService pricingService;
+    private final PlayerServiceClient playerServiceClient;
 
-    public RefuelShipService(ShipRepository shipRepository, ShipMapper shipMapper, JpaPortRepository portRepository, PricingService pricingService) {
+    public RefuelShipService(ShipRepository shipRepository,
+                             ShipMapper shipMapper,
+                             JpaPortRepository portRepository,
+                             PricingService pricingService,
+                             PlayerServiceClient playerServiceClient) {
         this.shipRepository = shipRepository;
         this.shipMapper = shipMapper;
         this.portRepository = portRepository;
         this.pricingService = pricingService;
+        this.playerServiceClient = playerServiceClient;
     }
 
     public ShipResponse refuel(Long shipId, int requestedFuel) {
@@ -30,10 +37,6 @@ public class RefuelShipService {
         Ship ship = shipRepository.findById(shipId)
                 .orElseThrow(() -> new RuntimeException("Ship not found"));
 
-        System.out.println("SHIP = " + ship.getName());
-        System.out.println("OWNER = " + ship.getOwner());
-
-        Player player = ship.getOwner();
 
         int maxFuel = 100;
         int currentFuel = ship.getFuelLevel();
@@ -67,14 +70,12 @@ public class RefuelShipService {
 
         double cost = requestedFuel * pricePerUnit;
 
-        if (player.getBalance() < cost) {
-            throw new IllegalArgumentException("Not enough money");
-        }
-
-
         ship.setFuelLevel(Math.min(100, currentFuel + requestedFuel));
-        player.setBalance(player.getBalance() - cost);
-
+        playerServiceClient.updateBalance(
+                ship.getOwnerId(),
+                -cost,
+                "REFUEL"
+        );
         Ship saved = shipRepository.save(ship);
 
         return shipMapper.toResponse(saved, 0, cost);

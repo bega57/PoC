@@ -1,6 +1,5 @@
 package at.fhv.blueroute.ship.domain.model;
 
-import at.fhv.blueroute.player.domain.model.Player;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import jakarta.persistence.*;
 
@@ -28,9 +27,8 @@ public class Ship {
     private Integer condition;
     private Integer fuelLevel;
 
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "owner_id")
-    private Player owner;
+    @Column(name = "owner_id")
+    private Long ownerId;
 
     private String currentPort;
 
@@ -42,13 +40,12 @@ public class Ship {
     public Ship() {
     }
 
-    public Ship(String name, ShipType type, Double price, Integer speed, Player owner) {
+    public Ship(String name, ShipType type, Double price, Integer speed, Long ownerId) {
         this.name = name;
         this.type = type;
         this.price = price;
         this.speed = speed;
-        this.owner = owner;
-
+        this.ownerId = ownerId;
         this.condition = 100;
         this.fuelLevel = 100;
     }
@@ -73,10 +70,9 @@ public class Ship {
         return speed;
     }
 
-    public Player getOwner() {
-        return owner;
+    public Long getOwnerId() {
+        return ownerId;
     }
-
     public double getCargoCapacity() { return cargoCapacity;}
 
     public void setName(String name) {
@@ -95,12 +91,15 @@ public class Ship {
         this.speed = speed;
     }
 
-    public void setOwner(Player owner) {
-        this.owner = owner;
+    public void setOwnerId(Long ownerId) {
+        this.ownerId = ownerId;
     }
-
     public Integer getCondition() {
         return condition;
+    }
+
+    public void setId(Long id) {
+        this.id = id;
     }
 
     public void setCondition(Integer condition) {

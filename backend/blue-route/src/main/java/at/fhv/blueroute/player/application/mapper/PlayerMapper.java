@@ -30,14 +30,7 @@ public class PlayerMapper {
                 player.getUsername(),
                 player.getCompanyName(),
                 player.getBalance(),
-                (player.getShips() == null ? List.<at.fhv.blueroute.ship.domain.model.Ship>of() : player.getShips())
-                        .stream()
-                        .map(ship -> shipMapper.toResponse(
-                                ship,
-                                sellPriceService.calculate(ship),
-                                0
-                        ))
-                        .toList(),
+                List.of(),
                 player.getCurrentPort()
         );
     }

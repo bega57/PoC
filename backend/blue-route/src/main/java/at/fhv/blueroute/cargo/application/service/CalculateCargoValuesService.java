@@ -45,44 +45,51 @@ public class CalculateCargoValuesService {
     }
 
     private double calculatePrice(int distance, CargoType type) {
-        double basePrice = distance * 50;
+        double basePrice = distance * 0.25;
 
         double typeMultiplier = switch (type) {
-            case CLOTHES -> 0.9;
-            case FOOD -> 1.0;
-            case ELECTRONICS -> 1.2;
-            case MEDICINE -> 1.3;
-            case MACHINERY -> 1.4;
-            case OIL -> 1.5;
-            case LUXURY_GOODS -> 1.7;
+            case CLOTHES -> 0.8;
+            case FOOD -> 0.9;
+            case ELECTRONICS -> 1.0;
+            case MEDICINE -> 1.1;
+            case MACHINERY -> 1.2;
+            case OIL -> 1.3;
+            case LUXURY_GOODS -> 1.5;
         };
 
-        return basePrice * typeMultiplier;
+        return Math.round(basePrice * typeMultiplier);
     }
 
     private double calculateReward(double price, int distance, RiskLevel riskLevel, CargoType type) {
-        double typeBonus = switch (type) {
-            case CLOTHES -> 100;
-            case FOOD -> 150;
-            case ELECTRONICS -> 250;
-            case MEDICINE -> 300;
-            case MACHINERY -> 350;
-            case OIL -> 500;
-            case LUXURY_GOODS -> 700;
+        double riskBonus = switch (riskLevel) {
+            case LOW -> 1.3;
+            case MEDIUM -> 1.6;
+            case HIGH -> 2.0;
         };
 
-        return price * riskLevel.getFuelMultiplier() + (distance * 10) + typeBonus;
+        double typeBonus = switch (type) {
+            case CLOTHES -> 150;
+            case FOOD -> 200;
+            case ELECTRONICS -> 300;
+            case MEDICINE -> 350;
+            case MACHINERY -> 450;
+            case OIL -> 600;
+            case LUXURY_GOODS -> 800;
+        };
+
+        return Math.round(price * riskBonus + typeBonus);
     }
 
     private int calculateRequiredCapacity(int distance, CargoType type) {
-        int distanceCapacity = Math.max(5, distance / 4);
+
+        int distanceCapacity = Math.max(5, distance / 80);
 
         int baseCapacity = switch (type) {
             case LUXURY_GOODS -> 10;
             case MEDICINE -> 15;
             case CLOTHES, FOOD, ELECTRONICS -> 20;
-            case MACHINERY -> 45;
-            case OIL -> 60;
+            case MACHINERY -> 35;
+            case OIL -> 45;
         };
 
         return Math.max(baseCapacity, distanceCapacity);

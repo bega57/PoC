@@ -1,11 +1,13 @@
 package at.fhv.blueroute.session.application.service;
 
-import at.fhv.blueroute.player.application.service.CalculatePlayerScoreService;
 import at.fhv.blueroute.player.domain.model.Player;
 import at.fhv.blueroute.session.domain.model.Session;
 import at.fhv.blueroute.session.domain.model.SessionPlayer;
 import at.fhv.blueroute.session.domain.repository.SessionRepository;
 import at.fhv.blueroute.session.presentation.dto.LeaderboardEntryResponse;
+import at.fhv.blueroute.player.client.PlayerServiceClient;
+import at.fhv.blueroute.player.client.dto.PlayerResponse;
+
 import org.springframework.stereotype.Service;
 
 import java.util.Collections;
@@ -15,12 +17,12 @@ import java.util.List;
 public class GetLeaderboardService {
 
     private final SessionRepository sessionRepository;
-    private final CalculatePlayerScoreService scoreService;
+    private final PlayerServiceClient playerServiceClient;
 
     public GetLeaderboardService(SessionRepository sessionRepository,
-                                 CalculatePlayerScoreService scoreService) {
+                                 PlayerServiceClient playerServiceClient) {
         this.sessionRepository = sessionRepository;
-        this.scoreService = scoreService;
+        this.playerServiceClient = playerServiceClient;
     }
 
     public List<LeaderboardEntryResponse> getLeaderboard(String sessionCode) {
@@ -33,11 +35,13 @@ public class GetLeaderboardService {
                 : session.getSessionPlayers())
                 .stream()
                 .map(sp -> {
-                    Player player = sp.getPlayer();
+                    Long playerId = sp.getPlayer().getId();
+
+                    PlayerResponse player = playerServiceClient.getPlayer(playerId);
 
                     if (player == null || player.getUsername() == null) return null;
 
-                    int score = scoreService.calculateScore(player);
+                    int score = player.getBalance() == null ? 0 : player.getBalance().intValue();
 
                     return new LeaderboardEntryResponse(
                             player.getId(),

@@ -3,7 +3,7 @@ package at.fhv.blueroute.voyage.application.service;
 import at.fhv.blueroute.event.application.service.VoyageEventPlanningService;
 import at.fhv.blueroute.cargo.domain.model.Cargo;
 import at.fhv.blueroute.cargo.infrastructure.persistence.JpaCargoRepository;
-import at.fhv.blueroute.player.domain.repository.PlayerRepository;
+import at.fhv.blueroute.player.client.PlayerServiceClient;
 import at.fhv.blueroute.session.domain.model.Session;
 import at.fhv.blueroute.session.infrastructure.persistence.JpaSessionRepository;
 import at.fhv.blueroute.ship.domain.model.Ship;
@@ -26,27 +26,27 @@ public class StartVoyageService {
     private final JpaVoyageRepository voyageRepository;
     private final JpaShipRepository shipRepository;
     private final JpaCargoRepository cargoRepository;
-    private final PlayerRepository playerRepository;
     private final JpaSessionRepository sessionRepository;
     private final WebSocketSender webSocketSender;
     private final VoyageEventPlanningService voyageEventPlanningService;
+    private final PlayerServiceClient playerServiceClient;
 
     public StartVoyageService(
             JpaVoyageRepository voyageRepository,
             JpaShipRepository shipRepository,
             JpaCargoRepository cargoRepository,
-            PlayerRepository playerRepository,
             JpaSessionRepository sessionRepository,
             WebSocketSender webSocketSender,
-            VoyageEventPlanningService voyageEventPlanningService
+            VoyageEventPlanningService voyageEventPlanningService,
+            PlayerServiceClient playerServiceClient
     ) {
         this.voyageRepository = voyageRepository;
         this.shipRepository = shipRepository;
         this.cargoRepository = cargoRepository;
-        this.playerRepository = playerRepository;
         this.sessionRepository = sessionRepository;
         this.webSocketSender = webSocketSender;
         this.voyageEventPlanningService = voyageEventPlanningService;
+        this.playerServiceClient = playerServiceClient;
     }
 
     public Voyage startVoyage(Long shipId, Long cargoId, String sessionCode) {
@@ -91,7 +91,7 @@ public class StartVoyageService {
             throw new VoyageException("Ship does not have enough cargo capacity");
         }
 
-        if (ship.getOwner() == null) {
+        if (ship.getOwnerId() == null) {
             throw new VoyageException("Ship owner not found");
         }
 
@@ -99,17 +99,13 @@ public class StartVoyageService {
             throw new VoyageException("Not enough fuel for this voyage");
         }
 
-        Long playerId = ship.getOwner().getId();
+        Long playerId = ship.getOwnerId();
 
-        var player = playerRepository.findById(playerId)
-                .orElseThrow(() -> new VoyageException("Player not found"));
-
-        if (player.getBalance() < cargo.getPrice()) {
-            throw new VoyageException("Not enough balance to start this voyage");
-        }
-
-        player.setBalance(player.getBalance() - cargo.getPrice());
-
+        playerServiceClient.updateBalance(
+                playerId,
+                -cargo.getPrice(),
+                "VOYAGE_START"
+        );
         LocalDateTime now = LocalDateTime.now();
 
         Voyage voyage = new Voyage();

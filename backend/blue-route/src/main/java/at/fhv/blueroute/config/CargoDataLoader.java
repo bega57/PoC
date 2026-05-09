@@ -58,10 +58,9 @@ public class CargoDataLoader {
                                     " | Risk: " + cargo.getRiskLevel()
                     );
 
-                    if (cargo.getRequiredTicks() == 0) {
-                        int ticks = Math.max(1, distance / 10);
-                        cargo.setRequiredTicks(ticks);
-                    }
+                    int ticks = Math.max(2, (int) Math.ceil(distance / 1400.0));
+                    cargo.setRequiredTicks(ticks);
+
                     if (cargo.getName() == null || cargo.getName().isBlank()) {
                         cargo.setName("Unknown Cargo");
                     }
@@ -152,7 +151,7 @@ public class CargoDataLoader {
 
         int distance = DistanceCalculator.calculate(origin, dest);
 
-        int requiredTicks = Math.max(1, distance / 10);
+        int requiredTicks = Math.max(2, (int) Math.ceil(distance / 1400.0));
         c.setRequiredTicks(requiredTicks);
 
         CalculateCargoValuesService valueService =
