@@ -1,14 +1,10 @@
 package at.fhv.blueroute.ship.application.service;
 
-import at.fhv.blueroute.common.service.PricingService;
-import at.fhv.blueroute.port.domain.model.Port;
-import at.fhv.blueroute.port.infrastructure.persistence.JpaPortRepository;
 import at.fhv.blueroute.ship.application.mapper.ShipMapper;
 import at.fhv.blueroute.ship.domain.model.Ship;
 import at.fhv.blueroute.ship.domain.repository.ShipRepository;
+import at.fhv.blueroute.ship.player.client.PlayerServiceClient;
 import at.fhv.blueroute.ship.presentation.dto.ShipResponse;
-import at.fhv.blueroute.player.client.PlayerServiceClient;
-
 import org.springframework.stereotype.Service;
 
 @Service
@@ -16,19 +12,15 @@ public class RefuelShipService {
 
     private final ShipRepository shipRepository;
     private final ShipMapper shipMapper;
-    private final JpaPortRepository portRepository;
-    private final PricingService pricingService;
     private final PlayerServiceClient playerServiceClient;
 
-    public RefuelShipService(ShipRepository shipRepository,
-                             ShipMapper shipMapper,
-                             JpaPortRepository portRepository,
-                             PricingService pricingService,
-                             PlayerServiceClient playerServiceClient) {
+    public RefuelShipService(
+            ShipRepository shipRepository,
+            ShipMapper shipMapper,
+            PlayerServiceClient playerServiceClient
+    ) {
         this.shipRepository = shipRepository;
         this.shipMapper = shipMapper;
-        this.portRepository = portRepository;
-        this.pricingService = pricingService;
         this.playerServiceClient = playerServiceClient;
     }
 
@@ -37,7 +29,6 @@ public class RefuelShipService {
         Ship ship = shipRepository.findById(shipId)
                 .orElseThrow(() -> new RuntimeException("Ship not found"));
 
-
         int maxFuel = 100;
         int currentFuel = ship.getFuelLevel();
 
@@ -45,10 +36,7 @@ public class RefuelShipService {
             throw new RuntimeException("Invalid fuel amount");
         }
 
-        Port port = portRepository.findByName(ship.getCurrentPort())
-                .orElseThrow(() -> new RuntimeException("Port not found"));
-
-        double basePrice = port.getFuelPrice();
+        double basePrice = 5.0;
 
         double multiplier;
 
@@ -60,7 +48,7 @@ public class RefuelShipService {
         }
 
         double netPrice = basePrice * multiplier * 0.6;
-        double pricePerUnit = pricingService.applyVAT(netPrice);
+        double pricePerUnit = netPrice * 1.2;
 
         int maxByTank = (int) Math.floor(maxFuel - currentFuel);
 
@@ -71,11 +59,13 @@ public class RefuelShipService {
         double cost = requestedFuel * pricePerUnit;
 
         ship.setFuelLevel(Math.min(100, currentFuel + requestedFuel));
+
         playerServiceClient.updateBalance(
                 ship.getOwnerId(),
                 -cost,
                 "REFUEL"
         );
+
         Ship saved = shipRepository.save(ship);
 
         return shipMapper.toResponse(saved, 0, cost);
@@ -86,10 +76,7 @@ public class RefuelShipService {
         Ship ship = shipRepository.findById(shipId)
                 .orElseThrow(() -> new RuntimeException("Ship not found"));
 
-        Port port = portRepository.findByName(ship.getCurrentPort())
-                .orElseThrow(() -> new RuntimeException("Port not found"));
-
-        double basePrice = port.getFuelPrice();
+        double basePrice = 5.0;
 
         double multiplier = switch (ship.getType()) {
             case CHEAP -> 1.0;
@@ -98,7 +85,7 @@ public class RefuelShipService {
         };
 
         double netPrice = basePrice * multiplier * 0.6;
-        double pricePerUnit = pricingService.applyVAT(netPrice);
+        double pricePerUnit = netPrice * 1.2;
 
         return fuelAmount * pricePerUnit;
     }

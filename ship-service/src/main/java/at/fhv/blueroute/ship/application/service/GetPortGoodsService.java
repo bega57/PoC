@@ -1,7 +1,6 @@
 package at.fhv.blueroute.ship.application.service;
 
 import at.fhv.blueroute.ship.domain.model.Good;
-import at.fhv.blueroute.ship.domain.model.PortGood;
 import at.fhv.blueroute.ship.infrastructure.persistence.GoodRepository;
 import at.fhv.blueroute.ship.infrastructure.persistence.PortGoodRepository;
 import at.fhv.blueroute.ship.presentation.dto.PortGoodResponse;

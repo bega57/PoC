@@ -37,6 +37,20 @@ services:
     ports:
       - "8081:8081"
 
+  ship-service:
+    build: ./ship-service
+    container_name: blueroute-ship-service
+    depends_on:
+      - postgres
+      - player-service
+    environment:
+      SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/blueroute
+      SPRING_DATASOURCE_USERNAME: postgres
+      SPRING_DATASOURCE_PASSWORD: postgres
+      PLAYER_SERVICE_URL: http://player-service:8081
+    ports:
+      - "8082:8082"
+
   frontend:
     build:
       context: ./frontend

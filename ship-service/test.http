@@ -1,0 +1,39 @@
+POST http://localhost:8081/players
+Content-Type: application/json
+
+{
+  "username": "Begum"
+}
+
+###
+
+POST http://localhost:8082/ships/buy
+Content-Type: application/json
+
+{
+  "playerId": 1,
+  "shipType": "CHEAP",
+  "shipName": "Titanic"
+}
+
+###
+
+GET http://localhost:8082/ships/player/1
+
+###
+
+POST http://localhost:8082/ships/1/repair
+Content-Type: application/json
+
+{
+  "repairAmount": 10
+}
+
+###
+
+POST http://localhost:8082/ships/1/refuel
+Content-Type: application/json
+
+{
+  "fuelAmount": 10
+}
