@@ -1,8 +1,8 @@
 package at.fhv.blueroute.player.presentation.rest;
 
-import at.fhv.blueroute.player.application.service.PlayerService;
+import at.fhv.blueroute.player.client.PlayerServiceClient;
+import at.fhv.blueroute.player.client.dto.PlayerResponse;
 import at.fhv.blueroute.player.presentation.dto.PlayerRequest;
-import at.fhv.blueroute.player.presentation.dto.PlayerResponse;
 import at.fhv.blueroute.player.presentation.dto.SelectPortRequest;
 import jakarta.validation.Valid;
 import org.springframework.http.ResponseEntity;
@@ -14,41 +14,34 @@ import java.util.List;
 @RequestMapping("/players")
 public class PlayerController {
 
-    private final PlayerService playerService;
+    private final PlayerServiceClient playerServiceClient;
 
-    public PlayerController(PlayerService playerService) {
-        this.playerService = playerService;
+    public PlayerController(PlayerServiceClient playerServiceClient) {
+        this.playerServiceClient = playerServiceClient;
     }
 
     @GetMapping
     public List<PlayerResponse> getAllPlayers() {
-        return playerService.getAllPlayers();
+        return playerServiceClient.getAllPlayers();
     }
 
     @GetMapping("/{id}")
     public PlayerResponse getPlayerById(@PathVariable Long id) {
-        return playerService.getPlayerById(id);
-    }
-
-    @GetMapping("/me")
-    public PlayerResponse getPlayerBySession(@RequestParam String sessionCode) {
-        return playerService.getPlayerBySessionCode(sessionCode);
+        return playerServiceClient.getPlayer(id);
     }
 
     @PostMapping
     public PlayerResponse createPlayer(@Valid @RequestBody PlayerRequest request) {
-        return playerService.createPlayer(request);
+        return playerServiceClient.createPlayer(request);
     }
 
     @PostMapping("/select-port")
     public PlayerResponse selectPort(@RequestBody SelectPortRequest request) {
-        playerService.selectPort(request.getPlayerId(), request.getPort());
-        return playerService.getPlayerById(request.getPlayerId());
+        return playerServiceClient.selectPort(request.getPlayerId(), request.getPort());
     }
 
     @PatchMapping("/{playerId}/heartbeat")
     public ResponseEntity<Void> heartbeat(@PathVariable Long playerId) {
-        playerService.updateHeartbeat(playerId);
         return ResponseEntity.noContent().build();
     }
 }

@@ -1,6 +1,5 @@
 package at.fhv.blueroute.session.domain.model;
 
-import at.fhv.blueroute.player.domain.model.Player;
 import jakarta.persistence.*;
 
 import java.time.LocalDateTime;
@@ -15,8 +14,8 @@ public class SessionPlayer {
     @ManyToOne(optional = false)
     private Session session;
 
-    @ManyToOne(optional = false)
-    private Player player;
+    @Column(nullable = false)
+    private Long playerId;
 
     @Enumerated(EnumType.STRING)
     private SessionPlayerStatus status;
@@ -28,9 +27,9 @@ public class SessionPlayer {
     public SessionPlayer() {
     }
 
-    public SessionPlayer(Session session, Player player, SessionPlayerStatus status, boolean host) {
+    public SessionPlayer(Session session, Long playerId, SessionPlayerStatus status, boolean host) {
         this.session = session;
-        this.player = player;
+        this.playerId = playerId;
         this.status = status;
         this.host = host;
         this.joinedAt = LocalDateTime.now();
@@ -55,10 +54,9 @@ public class SessionPlayer {
         return session;
     }
 
-    public Player getPlayer() {
-        return player;
+    public Long getPlayerId() {
+        return playerId;
     }
-
     public SessionPlayerStatus getStatus() {
         return status;
     }
@@ -83,10 +81,9 @@ public class SessionPlayer {
         this.session = session;
     }
 
-    public void setPlayer(Player player) {
-        this.player = player;
+    public void setPlayerId(Long playerId) {
+        this.playerId = playerId;
     }
-
     public void setStatus(SessionPlayerStatus status) {
         this.status = status;
     }

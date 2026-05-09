@@ -1,10 +1,7 @@
 package at.fhv.blueroute.player.presentation.rest;
 
 import at.fhv.blueroute.player.application.service.PlayerService;
-import at.fhv.blueroute.player.presentation.dto.BalanceUpdateRequest;
-import at.fhv.blueroute.player.presentation.dto.PlayerRequest;
-import at.fhv.blueroute.player.presentation.dto.PlayerResponse;
-import at.fhv.blueroute.player.presentation.dto.SelectPortRequest;
+import at.fhv.blueroute.player.presentation.dto.*;
 import jakarta.validation.Valid;
 import org.springframework.web.bind.annotation.*;
 
@@ -35,7 +32,7 @@ public class PlayerController {
         return playerService.createPlayer(request);
     }
 
-    @PatchMapping("/{playerId}/port")
+    @PostMapping("/{playerId}/port")
     public PlayerResponse selectPort(
             @PathVariable Long playerId,
             @Valid @RequestBody SelectPortRequest request
@@ -53,5 +50,13 @@ public class PlayerController {
                 request.getAmount(),
                 request.getReason()
         );
+    }
+
+    @PostMapping("/{playerId}/company-name")
+    public PlayerResponse updateCompanyName(
+            @PathVariable Long playerId,
+            @RequestBody UpdateCompanyNameRequest request
+    ) {
+        return playerService.updateCompanyName(playerId, request.getCompanyName());
     }
 }

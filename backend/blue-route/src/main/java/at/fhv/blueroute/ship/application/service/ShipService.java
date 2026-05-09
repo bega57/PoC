@@ -100,6 +100,13 @@ public class ShipService {
             throw new IllegalArgumentException("Company name is required.");
         }
 
+        if (!hasCompanyName) {
+            playerServiceClient.updateCompanyName(
+                    playerFromService.getId(),
+                    request.getCompanyName().trim()
+            );
+        }
+
         playerServiceClient.updateBalance(
                 playerFromService.getId(),
                 -finalPrice,

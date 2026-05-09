@@ -66,4 +66,17 @@ public class PlayerService {
         return playerRepository.findById(id)
                 .orElseThrow(() -> new PlayerNotFoundException(id));
     }
+
+    public PlayerResponse updateCompanyName(Long playerId, String companyName) {
+        Player player = playerRepository.findById(playerId)
+                .orElseThrow(() -> new PlayerNotFoundException(playerId));
+
+        if (companyName == null || companyName.isBlank()) {
+            throw new IllegalArgumentException("Company name is required.");
+        }
+
+        player.setCompanyName(companyName.trim());
+
+        return playerMapper.toResponse(playerRepository.save(player));
+    }
 }

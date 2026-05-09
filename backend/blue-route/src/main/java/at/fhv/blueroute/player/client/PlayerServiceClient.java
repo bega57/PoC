@@ -2,13 +2,19 @@ package at.fhv.blueroute.player.client;
 
 import at.fhv.blueroute.player.client.dto.BalanceUpdateRequest;
 import at.fhv.blueroute.player.client.dto.PlayerResponse;
+import at.fhv.blueroute.player.client.dto.UpdateCompanyNameRequest;
+import at.fhv.blueroute.player.presentation.dto.PlayerRequest;
+import at.fhv.blueroute.player.presentation.dto.SelectPortRequest;
+
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpHeaders;
-import org.springframework.http.HttpMethod;
 import org.springframework.http.MediaType;
 import org.springframework.stereotype.Component;
 import org.springframework.web.client.RestTemplate;
+
+import java.util.List;
+
 
 @Component
 public class PlayerServiceClient {
@@ -53,5 +59,55 @@ public class PlayerServiceClient {
     public PlayerResponse getPlayer(Long playerId) {
         String url = playerServiceUrl + "/players/" + playerId;
         return restTemplate.getForObject(url, PlayerResponse.class);
+    }
+
+    public void updateCompanyName(Long playerId, String companyName) {
+        String url = playerServiceUrl + "/players/" + playerId + "/company-name";
+
+        restTemplate.postForObject(
+                url,
+                new UpdateCompanyNameRequest(companyName),
+                Void.class
+        );
+    }
+
+    public List<PlayerResponse> getAllPlayers() {
+        String url = playerServiceUrl + "/players";
+
+        PlayerResponse[] response =
+                restTemplate.getForObject(url, PlayerResponse[].class);
+
+        return response == null
+                ? List.of()
+                : List.of(response);
+    }
+
+    public PlayerResponse createPlayer(PlayerRequest request) {
+        String url = playerServiceUrl + "/players";
+
+        return restTemplate.postForObject(
+                url,
+                request,
+                PlayerResponse.class
+        );
+    }
+
+    public PlayerResponse selectPort(Long playerId, String port) {
+        String url = playerServiceUrl + "/players/" + playerId + "/port";
+
+        SelectPortRequest request = new SelectPortRequest();
+        request.setPort(port);
+
+        HttpHeaders headers = new HttpHeaders();
+        headers.setContentType(MediaType.APPLICATION_JSON);
+
+        HttpEntity<SelectPortRequest> entity =
+                new HttpEntity<>(request, headers);
+
+        return restTemplate.postForObject(
+                url,
+                entity,
+                PlayerResponse.class
+        );
     }
 }

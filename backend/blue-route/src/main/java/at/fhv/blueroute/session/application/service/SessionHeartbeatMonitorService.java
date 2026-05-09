@@ -5,7 +5,6 @@ import at.fhv.blueroute.session.domain.model.SessionPlayer;
 import at.fhv.blueroute.session.domain.model.SessionPlayerStatus;
 import at.fhv.blueroute.session.domain.model.SessionStatus;
 import at.fhv.blueroute.session.infrastructure.persistence.JpaSessionPlayerRepository;
-import at.fhv.blueroute.session.infrastructure.persistence.JpaSessionRepository;
 import at.fhv.blueroute.common.websocket.SessionStatusMessage;
 import at.fhv.blueroute.common.websocket.WebSocketSender;
 import org.slf4j.Logger;
@@ -25,18 +24,15 @@ public class SessionHeartbeatMonitorService {
     private static final Logger log = LoggerFactory.getLogger(SessionHeartbeatMonitorService.class);
 
     private final JpaSessionPlayerRepository sessionPlayerRepository;
-    private final JpaSessionRepository sessionRepository;
     private final WebSocketSender webSocketSender;
 
     @Value("${session.heartbeat.timeout-seconds:120}")
     private long heartbeatTimeoutSeconds;
 
     public SessionHeartbeatMonitorService(JpaSessionPlayerRepository sessionPlayerRepository,
-                                          JpaSessionRepository sessionRepository,
                                           WebSocketSender webSocketSender) {
         this.webSocketSender = webSocketSender;
         this.sessionPlayerRepository = sessionPlayerRepository;
-        this.sessionRepository = sessionRepository;
     }
 
     @Scheduled(fixedRate = 30000)
@@ -53,7 +49,7 @@ public class SessionHeartbeatMonitorService {
 
             log.info(
                     "Heartbeat check - Player {} | LastSeen: {} | Now: {} | Diff: {} sec",
-                    sessionPlayer.getPlayer().getId(),
+                    sessionPlayer.getPlayerId(),
                     sessionPlayer.getLastSeen(),
                     LocalDateTime.now(),
                     sessionPlayer.getLastSeen() != null
@@ -66,7 +62,7 @@ public class SessionHeartbeatMonitorService {
 
                 log.info(
                         "Player {} disconnected due to heartbeat timeout in session {}",
-                        sessionPlayer.getPlayer().getId(),
+                        sessionPlayer.getPlayerId(),
                         sessionPlayer.getSession().getSessionCode()
                 );
 

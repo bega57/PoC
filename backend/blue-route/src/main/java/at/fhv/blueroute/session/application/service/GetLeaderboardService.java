@@ -1,6 +1,5 @@
 package at.fhv.blueroute.session.application.service;
 
-import at.fhv.blueroute.player.domain.model.Player;
 import at.fhv.blueroute.session.domain.model.Session;
 import at.fhv.blueroute.session.domain.model.SessionPlayer;
 import at.fhv.blueroute.session.domain.repository.SessionRepository;
@@ -35,7 +34,7 @@ public class GetLeaderboardService {
                 : session.getSessionPlayers())
                 .stream()
                 .map(sp -> {
-                    Long playerId = sp.getPlayer().getId();
+                    Long playerId = sp.getPlayerId();
 
                     PlayerResponse player = playerServiceClient.getPlayer(playerId);
 

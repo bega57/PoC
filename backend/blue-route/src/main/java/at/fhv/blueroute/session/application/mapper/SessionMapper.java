@@ -1,6 +1,5 @@
 package at.fhv.blueroute.session.application.mapper;
 
-import at.fhv.blueroute.player.domain.model.Player;
 import at.fhv.blueroute.session.domain.model.Session;
 import at.fhv.blueroute.session.presentation.dto.PlayerSummaryResponse;
 import at.fhv.blueroute.session.presentation.dto.SessionResponse;
@@ -13,7 +12,6 @@ import at.fhv.blueroute.player.client.dto.PlayerResponse;
 
 import org.springframework.stereotype.Component;
 
-import java.util.List;
 
 @Component
 public class SessionMapper {
@@ -50,13 +48,14 @@ public class SessionMapper {
     }
 
     private PlayerSummaryResponse toPlayerSummary(SessionPlayer sessionPlayer) {
-        Player player = sessionPlayer.getPlayer();
-        PlayerResponse playerFromService = playerServiceClient.getPlayer(player.getId());
+
+        PlayerResponse player = playerServiceClient.getPlayer(sessionPlayer.getPlayerId());
+
         return new PlayerSummaryResponse(
                 player.getId(),
                 player.getUsername(),
                 player.getCompanyName(),
-                playerFromService.getBalance(),
+                player.getBalance(),
                 sessionPlayer.getStatus().name(),
                 shipRepository.findByOwnerId(player.getId())
                         .stream()
@@ -66,8 +65,7 @@ public class SessionMapper {
                                 0
                         ))
                         .toList(),
-                playerFromService.getCurrentPort()
-
+                player.getCurrentPort()
         );
     }
 }
