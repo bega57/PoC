@@ -2,9 +2,6 @@ package at.fhv.blueroute.session.application.service;
 
 import at.fhv.blueroute.common.websocket.SessionStatusMessage;
 import at.fhv.blueroute.common.websocket.WebSocketSender;
-import at.fhv.blueroute.player.application.exception.PlayerNotFoundException;
-import at.fhv.blueroute.player.domain.model.Player;
-import at.fhv.blueroute.player.domain.repository.PlayerRepository;
 import at.fhv.blueroute.session.application.exception.SessionFullException;
 import at.fhv.blueroute.session.application.exception.SessionNotFoundException;
 import at.fhv.blueroute.session.application.exception.SessionPlayerNotFoundException;
@@ -19,6 +16,9 @@ import at.fhv.blueroute.session.application.exception.PlayerAlreadyActiveExcepti
 import at.fhv.blueroute.session.application.exception.PlayerAlreadyInSessionException;
 import at.fhv.blueroute.voyage.domain.model.Voyage;
 import at.fhv.blueroute.voyage.infrastructure.persistence.JpaVoyageRepository;
+import at.fhv.blueroute.player.client.PlayerServiceClient;
+import at.fhv.blueroute.player.client.dto.PlayerResponse;
+
 import org.springframework.stereotype.Service;
 
 import java.util.List;
@@ -28,18 +28,18 @@ import java.util.Random;
 public class SessionService {
 
     private final SessionRepository sessionRepository;
-    private final PlayerRepository playerRepository;
+    private final PlayerServiceClient playerServiceClient;
     private final SessionMapper sessionMapper;
     private final WebSocketSender webSocketSender;
     private final JpaVoyageRepository voyageRepository;
 
     public SessionService(SessionRepository sessionRepository,
-                          PlayerRepository playerRepository,
+                          PlayerServiceClient playerServiceClient,
                           SessionMapper sessionMapper,
                           WebSocketSender webSocketSender,
                           JpaVoyageRepository voyageRepository) {
         this.sessionRepository = sessionRepository;
-        this.playerRepository = playerRepository;
+        this.playerServiceClient = playerServiceClient;
         this.sessionMapper = sessionMapper;
         this.webSocketSender = webSocketSender;
         this.voyageRepository = voyageRepository;
@@ -71,8 +71,11 @@ public class SessionService {
         Session session = sessionRepository.findBySessionCode(sessionCode)
                 .orElseThrow(() -> new SessionNotFoundException(sessionCode));
 
-        Player player = playerRepository.findById(playerId)
-                .orElseThrow(() -> new PlayerNotFoundException(playerId));
+        PlayerResponse player = playerServiceClient.getPlayer(playerId);
+
+        if (player == null) {
+            throw new RuntimeException("Player not found: " + playerId);
+        }
 
         SessionPlayer existingSessionPlayer = session.getSessionPlayerByPlayerId(playerId);
 
@@ -84,7 +87,7 @@ public class SessionService {
             throw new SessionFullException(sessionCode);
         }
 
-        session.addPlayer(player, false);
+        session.addPlayer(player.getId(), false);
 
         if (session.isFull()) {
             session.setStatus(SessionStatus.RUNNING);
@@ -107,8 +110,12 @@ public class SessionService {
     }
 
     public SessionResponse createSession(Long playerId, int maxPlayers) {
-        Player creator = playerRepository.findById(playerId)
-                .orElseThrow(() -> new PlayerNotFoundException(playerId));
+
+        PlayerResponse creator = playerServiceClient.getPlayer(playerId);
+
+        if (creator == null) {
+            throw new RuntimeException("Player not found: " + playerId);
+        }
 
         SessionStatus status = maxPlayers == 1 ? SessionStatus.RUNNING : SessionStatus.WAITING;
 
@@ -119,7 +126,7 @@ public class SessionService {
                 maxPlayers
         );
 
-        session.addPlayer(creator, true);
+        session.addPlayer(creator.getId(), true);
 
         Session savedSession = sessionRepository.save(session);
         return sessionMapper.toResponse(savedSession);
@@ -206,11 +213,16 @@ public class SessionService {
                 .orElseThrow(() -> new SessionNotFoundException(sessionCode));
         System.out.println("RESUME 2 - session found: " + session.getSessionCode());
 
-        Player player = playerRepository.findById(playerId)
-                .orElseThrow(() -> new PlayerNotFoundException(playerId));
+        PlayerResponse player = playerServiceClient.getPlayer(playerId);
+
+        if (player == null) {
+            throw new RuntimeException("Player not found: " + playerId);
+        }
+
         System.out.println("RESUME 3 - player found: " + player.getId());
 
         SessionPlayer sessionPlayer = session.getSessionPlayerByPlayerId(player.getId());
+
         System.out.println("RESUME 4 - sessionPlayer: " + sessionPlayer);
 
         if (sessionPlayer == null) {

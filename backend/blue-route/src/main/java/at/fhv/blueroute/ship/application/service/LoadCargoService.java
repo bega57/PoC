@@ -1,7 +1,7 @@
 package at.fhv.blueroute.ship.application.service;
 
-import at.fhv.blueroute.player.domain.model.Player;
-import at.fhv.blueroute.player.domain.repository.PlayerRepository;
+import at.fhv.blueroute.player.client.PlayerServiceClient;
+import at.fhv.blueroute.player.client.dto.PlayerResponse;
 import at.fhv.blueroute.port.domain.model.Port;
 import at.fhv.blueroute.port.domain.repository.PortRepository;
 import at.fhv.blueroute.ship.domain.model.Good;
@@ -20,31 +20,36 @@ import at.fhv.blueroute.common.service.PricingService;
 public class LoadCargoService {
 
     private final JpaShipRepository shipRepository;
-    private final PlayerRepository playerRepository;
     private final PortGoodRepository portGoodRepository;
     private final ShipCargoRepository shipCargoRepository;
     private final GoodRepository goodRepository;
     private final PortRepository portRepository;
     private final PricingService pricingService;
+    private final PlayerServiceClient playerServiceClient;
 
     public LoadCargoService(JpaShipRepository shipRepository,
-                            PlayerRepository playerRepository,
                             PortGoodRepository portGoodRepository,
                             ShipCargoRepository shipCargoRepository,
-                            GoodRepository goodRepository, PortRepository portRepository, PricingService pricingService) {
+                            GoodRepository goodRepository,
+                            PortRepository portRepository,
+                            PricingService pricingService,
+                            PlayerServiceClient playerServiceClient) {
         this.shipRepository = shipRepository;
-        this.playerRepository = playerRepository;
         this.portGoodRepository = portGoodRepository;
         this.shipCargoRepository = shipCargoRepository;
         this.goodRepository = goodRepository;
         this.portRepository = portRepository;
         this.pricingService = pricingService;
+        this.playerServiceClient = playerServiceClient;
     }
 
     public void loadCargo(LoadCargoRequest request) {
 
-        Player player = playerRepository.findById(request.getPlayerId())
-                .orElseThrow(() -> new RuntimeException("Player not found"));
+        PlayerResponse player = playerServiceClient.getPlayer(request.getPlayerId());
+
+        if (player == null) {
+            throw new RuntimeException("Player not found");
+        }
 
         Ship ship = shipRepository.findById(request.getShipId())
                 .orElseThrow(() -> new RuntimeException("Ship not found"));
@@ -57,7 +62,7 @@ public class LoadCargoService {
             throw new RuntimeException("Ship is currently traveling");
         }
 
-        if (!ship.getOwner().getId().equals(player.getId())) {
+        if (!ship.getOwnerId().equals(player.getId())) {
             throw new RuntimeException("Not your ship");
         }
 
@@ -78,10 +83,6 @@ public class LoadCargoService {
 
         double basePrice = portGood.getBuyPrice() * request.getQuantity();
         double finalPrice = pricingService.applyVAT(basePrice);
-
-        if (player.getBalance() < finalPrice) {
-            throw new RuntimeException("Not enough money");
-        }
 
         Good good = goodRepository.findById(request.getGoodId())
                 .orElseThrow();
@@ -113,11 +114,14 @@ public class LoadCargoService {
             cargo.setQuantity(cargo.getQuantity() + request.getQuantity());
         }
 
-        player.setBalance(player.getBalance() - finalPrice);
+        playerServiceClient.updateBalance(
+                player.getId(),
+                -finalPrice,
+                "CARGO_PURCHASE"
+        );
         portGood.setStock(portGood.getStock() - request.getQuantity());
 
         shipCargoRepository.save(cargo);
         portGoodRepository.save(portGood);
-        playerRepository.save(player);
     }
 }

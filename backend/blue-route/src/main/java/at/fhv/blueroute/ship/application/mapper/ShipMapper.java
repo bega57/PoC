@@ -15,7 +15,7 @@ public class ShipMapper {
                 ship.getType().name(),
                 ship.getPrice(),
                 ship.getSpeed(),
-                ship.getOwner().getId(),
+                ship.getOwnerId(),
                 (int) Math.round(ship.getCondition()),
                 (int) Math.round(ship.getFuelLevel()),
                 ship.getCurrentPort(),

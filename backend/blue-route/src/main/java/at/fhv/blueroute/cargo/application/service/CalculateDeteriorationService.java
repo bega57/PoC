@@ -9,14 +9,14 @@ public class CalculateDeteriorationService {
 
     public double calculate(Cargo cargo) {
 
-        double base = cargo.getRequiredTicks();
+        double base = cargo.getRequiredTicks() * 0.08;
 
         double riskFactor = switch (cargo.getRiskLevel()) {
-            case LOW -> 0.5;
-            case MEDIUM -> 1.0;
-            case HIGH -> 2.0;
+            case LOW -> 0.8;
+            case MEDIUM -> 1.2;
+            case HIGH -> 1.6;
         };
 
-        return base * riskFactor;
+        return Math.round(base * riskFactor * 100.0) / 100.0;
     }
 }

@@ -4,8 +4,6 @@ import at.fhv.blueroute.event.application.exception.InvalidVoyageEventActionExce
 import at.fhv.blueroute.event.application.exception.VoyageEventNotFoundException;
 import at.fhv.blueroute.event.domain.model.VoyageEventOption;
 import at.fhv.blueroute.event.domain.model.VoyageEventType;
-import at.fhv.blueroute.player.domain.model.Player;
-import at.fhv.blueroute.ship.application.exception.InsufficientBalanceException;
 import at.fhv.blueroute.ship.domain.model.Ship;
 import at.fhv.blueroute.ship.infrastructure.persistence.JpaShipRepository;
 import at.fhv.blueroute.voyage.domain.model.Voyage;
@@ -15,6 +13,7 @@ import at.fhv.blueroute.common.websocket.WebSocketSender;
 import at.fhv.blueroute.session.domain.model.Session;
 import at.fhv.blueroute.session.domain.model.SessionStatus;
 import at.fhv.blueroute.session.infrastructure.persistence.JpaSessionRepository;
+import at.fhv.blueroute.player.client.PlayerServiceClient;
 import org.springframework.stereotype.Service;
 import jakarta.transaction.Transactional;
 
@@ -29,15 +28,18 @@ public class VoyageEventResolveService {
     private final JpaShipRepository shipRepository;
     private final JpaSessionRepository sessionRepository;
     private final WebSocketSender webSocketSender;
+    private final PlayerServiceClient playerServiceClient;
 
     public VoyageEventResolveService(JpaVoyageRepository voyageRepository,
                                      JpaShipRepository shipRepository,
                                      JpaSessionRepository sessionRepository,
-                                     WebSocketSender webSocketSender) {
+                                     WebSocketSender webSocketSender,
+                                     PlayerServiceClient playerServiceClient) {
         this.voyageRepository = voyageRepository;
         this.shipRepository = shipRepository;
         this.sessionRepository = sessionRepository;
         this.webSocketSender = webSocketSender;
+        this.playerServiceClient = playerServiceClient;
     }
 
     public String resolveEvent(Long voyageId, VoyageEventOption selectedOption) {
@@ -65,12 +67,12 @@ public class VoyageEventResolveService {
                         "Ship not found for voyage with id: " + voyageId
                 ));
 
-        Player player = ship.getOwner();
+        Long playerId = ship.getOwnerId();
 
         String resultMessage = applyConsequence(
                 voyage,
                 ship,
-                player,
+                playerId,
                 voyage.getPendingEventType(),
                 selectedOption
         );
@@ -101,15 +103,15 @@ public class VoyageEventResolveService {
 
     private String applyConsequence(Voyage voyage,
                                     Ship ship,
-                                    Player player,
+                                    Long playerId,
                                     VoyageEventType eventType,
                                     VoyageEventOption option) {
         return switch (eventType) {
             case BURNING_BARRELS -> resolveBurningBarrels(voyage, ship, option);
-            case PIRATE_DRIP_CHECK -> resolvePirateDripCheck(voyage, ship, player, option);
-            case RAT_BUFFET -> resolveRatBuffet(voyage, player, option);
-            case HACKER_SEAGULLS -> resolveHackerSeagulls(voyage, ship, player, option);
-            case MEDICAL_EMERGENCY -> resolveMedicalEmergency(voyage, player, option);
+            case PIRATE_DRIP_CHECK -> resolvePirateDripCheck(voyage, ship, playerId, option);
+            case RAT_BUFFET -> resolveRatBuffet(voyage, playerId, option);
+            case HACKER_SEAGULLS -> resolveHackerSeagulls(voyage, ship, playerId, option);
+            case MEDICAL_EMERGENCY -> resolveMedicalEmergency(voyage, playerId, option);
             case BAD_WEATHER -> resolveBadWeather(voyage, ship, option);
         };
     }
@@ -132,10 +134,10 @@ public class VoyageEventResolveService {
         };
     }
 
-    private String resolvePirateDripCheck(Voyage voyage, Ship ship, Player player, VoyageEventOption option) {
+    private String resolvePirateDripCheck(Voyage voyage, Ship ship, Long playerId, VoyageEventOption option) {
         return switch (option) {
             case OPTION_A -> {
-                chargePlayer(player, 500);
+                chargePlayer(playerId, 500);
                 voyage.setEventCost(500.0);
                 yield "The pirates accepted the bribe and called you honorary captains.";
             }
@@ -150,10 +152,10 @@ public class VoyageEventResolveService {
         };
     }
 
-    private String resolveRatBuffet(Voyage voyage, Player player, VoyageEventOption option) {
+    private String resolveRatBuffet(Voyage voyage, Long playerId, VoyageEventOption option) {
         return switch (option) {
             case OPTION_A -> {
-                chargePlayer(player, 200);
+                chargePlayer(playerId, 200);
                 voyage.setEventCost(200.0);
                 yield "You bought rat traps. Expensive, but the cargo buffet was closed.";
             }
@@ -165,14 +167,14 @@ public class VoyageEventResolveService {
         };
     }
 
-    private String resolveHackerSeagulls(Voyage voyage, Ship ship, Player player, VoyageEventOption option) {
+    private String resolveHackerSeagulls(Voyage voyage, Ship ship, Long playerId, VoyageEventOption option) {
         return switch (option) {
             case OPTION_A -> {
                 delayVoyage(voyage, ship, 1);
                 yield "System reboot successful. Unfortunately, the voyage took 1 extra day.";
             }
             case OPTION_B -> {
-                chargePlayer(player, 350);
+                chargePlayer(playerId, 350);
                 voyage.setEventCost(350.0);
                 yield "The technician removed three USB sticks from a seagull nest. Problem solved.";
             }
@@ -183,10 +185,10 @@ public class VoyageEventResolveService {
         };
     }
 
-    private String resolveMedicalEmergency(Voyage voyage, Player player, VoyageEventOption option) {
+    private String resolveMedicalEmergency(Voyage voyage, Long playerId, VoyageEventOption option) {
         return switch (option) {
             case OPTION_A -> {
-                chargePlayer(player, 300);
+                chargePlayer(playerId, 300);
                 voyage.setEventCost(300.0);
                 yield "You ordered replacement medicine. The crew was relieved. Your wallet was not.";
             }
@@ -244,16 +246,15 @@ public class VoyageEventResolveService {
         voyage.setRewardLossPercent(voyage.getRewardLossPercent() + percent);
     }
 
-    private void chargePlayer(Player player, double amount) {
-        if (player == null) {
+    private void chargePlayer(Long playerId, double amount) {
+        if (playerId == null) {
             throw new InvalidVoyageEventActionException("This option requires a ship owner.");
         }
-        double currentBalance = player.getBalance() == null ? 0.0 : player.getBalance();
 
-        if (currentBalance < amount) {
-            throw new InsufficientBalanceException("Not enough balance to choose this option.");
-        }
-
-        player.setBalance(currentBalance - amount);
+        playerServiceClient.updateBalance(
+                playerId,
+                -amount,
+                "EVENT_PENALTY"
+        );
     }
 }

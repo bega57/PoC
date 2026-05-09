@@ -1,6 +1,5 @@
 package at.fhv.blueroute.session.domain.model;
 
-import at.fhv.blueroute.player.domain.model.Player;
 import jakarta.persistence.*;
 
 import java.util.ArrayList;
@@ -52,42 +51,6 @@ public class Session {
         this.expensiveShipStock = 10;
     }
 
-    public Long getId() {
-        return id;
-    }
-
-    public String getSessionCode() {
-        return sessionCode;
-    }
-
-    public SessionStatus getStatus() {
-        return status;
-    }
-
-    public int getCurrentTick() {
-        return currentTick;
-    }
-
-    public int getMaxPlayers() {
-        return maxPlayers;
-    }
-
-    public List<SessionPlayer> getSessionPlayers() {
-        return sessionPlayers;
-    }
-
-    public int getCheapShipStock() {
-        return cheapShipStock;
-    }
-
-    public int getMediumShipStock() {
-        return mediumShipStock;
-    }
-
-    public int getExpensiveShipStock() {
-        return expensiveShipStock;
-    }
-
     public void setId(Long id) {
         this.id = id;
     }
@@ -124,19 +87,55 @@ public class Session {
         this.expensiveShipStock = expensiveShipStock;
     }
 
-    public void addPlayer(Player player, boolean host) {
-        SessionPlayer sessionPlayer = new SessionPlayer(this, player, SessionPlayerStatus.ACTIVE, host);
+    public void addPlayer(Long playerId, boolean host) {
+        SessionPlayer sessionPlayer = new SessionPlayer(this, playerId, SessionPlayerStatus.ACTIVE, host);
         this.sessionPlayers.add(sessionPlayer);
+    }
+
+    public String getSessionCode() {
+        return sessionCode;
+    }
+
+    public Long getId() {
+        return id;
+    }
+
+    public SessionStatus getStatus() {
+        return status;
+    }
+
+    public int getCurrentTick() {
+        return currentTick;
+    }
+
+    public int getMaxPlayers() {
+        return maxPlayers;
+    }
+
+    public int getCheapShipStock() {
+        return cheapShipStock;
+    }
+
+    public int getMediumShipStock() {
+        return mediumShipStock;
+    }
+
+    public List<SessionPlayer> getSessionPlayers() {
+        return sessionPlayers;
+    }
+
+    public int getExpensiveShipStock() {
+        return expensiveShipStock;
     }
 
     public boolean hasPlayer(Long playerId) {
         return sessionPlayers.stream()
-                .anyMatch(sessionPlayer -> sessionPlayer.getPlayer().getId().equals(playerId));
+                .anyMatch(sessionPlayer -> sessionPlayer.getPlayerId().equals(playerId));
     }
 
     public SessionPlayer getSessionPlayerByPlayerId(Long playerId) {
         return sessionPlayers.stream()
-                .filter(sessionPlayer -> sessionPlayer.getPlayer().getId().equals(playerId))
+                .filter(sessionPlayer -> sessionPlayer.getPlayerId().equals(playerId))
                 .findFirst()
                 .orElse(null);
     }
