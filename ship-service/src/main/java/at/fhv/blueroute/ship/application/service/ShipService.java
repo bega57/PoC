@@ -196,4 +196,61 @@ public class ShipService {
 
         return shipMapper.toResponse(savedShip, sellPrice, 0);
     }
+
+    public ShipResponse getShip(Long shipId) {
+
+        Ship ship = shipRepository.findById(shipId)
+                .orElseThrow(() ->
+                        new IllegalArgumentException("Ship not found"));
+
+        double sellPrice =
+                sellPriceService.calculate(ship);
+
+        return shipMapper.toResponse(
+                ship,
+                sellPrice,
+                0
+        );
+    }
+    public void startVoyage(
+            Long shipId,
+            double usedCapacity
+    ) {
+
+        Ship ship = shipRepository.findById(shipId)
+                .orElseThrow(() ->
+                        new IllegalArgumentException("Ship not found"));
+
+        ship.setTraveling(true);
+        ship.setCurrentPort(null);
+
+        ship.setUsedCapacity(
+                ship.getUsedCapacity() + usedCapacity
+        );
+
+        shipRepository.save(ship);
+    }
+
+    public void finishVoyage(
+            Long shipId,
+            String destinationPort,
+            double releasedCapacity
+    ) {
+
+        Ship ship = shipRepository.findById(shipId)
+                .orElseThrow(() ->
+                        new IllegalArgumentException("Ship not found"));
+
+        ship.setTraveling(false);
+        ship.setCurrentPort(destinationPort);
+
+        ship.setUsedCapacity(
+                Math.max(
+                        0,
+                        ship.getUsedCapacity() - releasedCapacity
+                )
+        );
+
+        shipRepository.save(ship);
+    }
 }

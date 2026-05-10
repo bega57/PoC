@@ -13,7 +13,7 @@ POST http://localhost:8082/ships/buy
 Content-Type: application/json
 
 {
-  "playerId": 1,
+  "playerId": 3,
   "shipType": "CHEAP",
   "shipName": "Titanic"
 }
@@ -58,8 +58,8 @@ POST http://localhost:8082/ships/sell
 Content-Type: application/json
 
 {
-  "shipId": 1,
-  "playerId": 1
+  "shipId": 4,
+  "playerId": 3
 }
 
 ###
@@ -74,7 +74,7 @@ POST http://localhost:8082/ships/used/1/buy
 Content-Type: application/json
 
 {
-  "playerId": 1,
+  "playerId": 3,
   "shipName": "Titanic 2"
 }
 

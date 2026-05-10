@@ -43,6 +43,13 @@ public class ShipController {
         return shipService.getShipsByPlayer(playerId);
     }
 
+    @GetMapping("/{shipId}")
+    public ShipResponse getShip(
+            @PathVariable Long shipId
+    ) {
+        return shipService.getShip(shipId);
+    }
+
     @PostMapping("/{shipId}/repair")
     public ShipResponse repairShip(
             @PathVariable Long shipId,
@@ -119,6 +126,29 @@ public class ShipController {
         return refuelShipService.calculateCost(
                 shipId,
                 fuelAmount
+        );
+    }
+
+    @PostMapping("/{shipId}/start-voyage")
+    public void startVoyage(
+            @PathVariable Long shipId,
+            @RequestBody StartVoyageRequest request
+    ) {
+        shipService.startVoyage(
+                shipId,
+                request.getUsedCapacity()
+        );
+    }
+
+    @PostMapping("/{shipId}/finish-voyage")
+    public void finishVoyage(
+            @PathVariable Long shipId,
+            @RequestBody FinishVoyageRequest request
+    ) {
+        shipService.finishVoyage(
+                shipId,
+                request.getDestinationPort(),
+                request.getReleasedCapacity()
         );
     }
 }
