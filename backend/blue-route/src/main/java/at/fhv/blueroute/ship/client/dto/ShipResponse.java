@@ -1,4 +1,4 @@
-package at.fhv.blueroute.ship.presentation.dto;
+package at.fhv.blueroute.ship.client.dto;
 
 public class ShipResponse {
 
@@ -110,5 +110,13 @@ public class ShipResponse {
 
     public void setRefuelCost(double refuelCost) {
         this.refuelCost = refuelCost;
+    }
+
+    public void setCondition(Integer condition) {
+        this.condition = condition;
+    }
+
+    public void setFuelLevel(Integer fuelLevel) {
+        this.fuelLevel = fuelLevel;
     }
 }

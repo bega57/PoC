@@ -1,5 +1,8 @@
 package at.fhv.blueroute.ship.application.service;
 
+import at.fhv.blueroute.ship.application.exception.FuelCapacityExceededException;
+import at.fhv.blueroute.ship.application.exception.InvalidFuelAmountException;
+import at.fhv.blueroute.ship.application.exception.ShipNotFoundException;
 import at.fhv.blueroute.ship.application.mapper.ShipMapper;
 import at.fhv.blueroute.ship.domain.model.Ship;
 import at.fhv.blueroute.ship.domain.repository.ShipRepository;
@@ -27,13 +30,14 @@ public class RefuelShipService {
     public ShipResponse refuel(Long shipId, int requestedFuel) {
 
         Ship ship = shipRepository.findById(shipId)
-                .orElseThrow(() -> new RuntimeException("Ship not found"));
+                .orElseThrow(() ->
+                        new ShipNotFoundException(shipId));
 
         int maxFuel = 100;
         int currentFuel = ship.getFuelLevel();
 
         if (requestedFuel <= 0) {
-            throw new RuntimeException("Invalid fuel amount");
+            throw new InvalidFuelAmountException();
         }
 
         double basePrice = 5.0;
@@ -53,7 +57,7 @@ public class RefuelShipService {
         int maxByTank = (int) Math.floor(maxFuel - currentFuel);
 
         if (requestedFuel > maxByTank) {
-            throw new IllegalArgumentException("Fuel exceeds tank capacity");
+            throw new FuelCapacityExceededException();
         }
 
         double cost = requestedFuel * pricePerUnit;
@@ -74,7 +78,8 @@ public class RefuelShipService {
     public double calculateCost(Long shipId, int fuelAmount) {
 
         Ship ship = shipRepository.findById(shipId)
-                .orElseThrow(() -> new RuntimeException("Ship not found"));
+                .orElseThrow(() ->
+                        new ShipNotFoundException(shipId));
 
         double basePrice = 5.0;
 

@@ -1,3 +1,4 @@
+### CREATE PLAYER
 POST http://localhost:8081/players
 Content-Type: application/json
 
@@ -7,6 +8,7 @@ Content-Type: application/json
 
 ###
 
+### BUY SHIP
 POST http://localhost:8082/ships/buy
 Content-Type: application/json
 
@@ -18,7 +20,13 @@ Content-Type: application/json
 
 ###
 
+### GET PLAYER SHIPS
 GET http://localhost:8082/ships/player/1
+
+###
+
+### GET REFUEL COST
+GET http://localhost:8082/ships/1/refuel-cost?fuelAmount=10
 
 ###
 
@@ -26,7 +34,7 @@ POST http://localhost:8082/ships/1/repair
 Content-Type: application/json
 
 {
-  "repairAmount": 10
+  "repairAmount": -10
 }
 
 ###
@@ -35,5 +43,42 @@ POST http://localhost:8082/ships/1/refuel
 Content-Type: application/json
 
 {
-  "fuelAmount": 10
+  "fuelAmount": 999
 }
+
+###
+
+### GET REPAIR COST
+GET http://localhost:8082/ships/1/repair-cost?repairAmount=10
+
+###
+
+### SELL SHIP
+POST http://localhost:8082/ships/sell
+Content-Type: application/json
+
+{
+  "shipId": 1,
+  "playerId": 1
+}
+
+###
+
+### GET USED SHIPS
+GET http://localhost:8082/ships/used
+
+###
+
+### BUY USED SHIP
+POST http://localhost:8082/ships/used/1/buy
+Content-Type: application/json
+
+{
+  "playerId": 1,
+  "shipName": "Titanic 2"
+}
+
+###
+
+### GET PLAYER SHIPS AGAIN
+GET http://localhost:8082/ships/player/1

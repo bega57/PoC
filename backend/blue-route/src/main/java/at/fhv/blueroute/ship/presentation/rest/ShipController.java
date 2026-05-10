@@ -1,13 +1,13 @@
 package at.fhv.blueroute.ship.presentation.rest;
 
-import at.fhv.blueroute.ship.application.service.RefuelShipService;
-import at.fhv.blueroute.ship.application.service.RepairShipService;
-import at.fhv.blueroute.ship.application.service.ShipService;
-import at.fhv.blueroute.ship.presentation.dto.*;
-import at.fhv.blueroute.ship.application.service.GetUsedShipOffersService;
+import at.fhv.blueroute.ship.client.ShipServiceClient;
+import at.fhv.blueroute.ship.client.dto.ShipResponse;
+import at.fhv.blueroute.ship.client.dto.UsedShipOfferResponse;
+import at.fhv.blueroute.ship.client.dto.*;
+import at.fhv.blueroute.websocket.WebSocketEvent;
+
 import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.web.bind.annotation.*;
-import at.fhv.blueroute.websocket.WebSocketEvent;
 
 import java.util.List;
 
@@ -16,29 +16,22 @@ import java.util.List;
 @CrossOrigin(origins = "*")
 public class ShipController {
 
-    private final ShipService shipService;
-    private final GetUsedShipOffersService getUsedShipOffersService;
-    private final RefuelShipService refuelShipService;
-    private final RepairShipService repairShipService;
+    private final ShipServiceClient shipServiceClient;
     private final SimpMessagingTemplate messagingTemplate;
 
     public ShipController(
-            ShipService shipService,
-            GetUsedShipOffersService getUsedShipOffersService,
-            RefuelShipService refuelShipService,
-            RepairShipService repairShipService,
+            ShipServiceClient shipServiceClient,
             SimpMessagingTemplate messagingTemplate
     ) {
-        this.shipService = shipService;
-        this.getUsedShipOffersService = getUsedShipOffersService;
-        this.refuelShipService = refuelShipService;
-        this.repairShipService = repairShipService;
+        this.shipServiceClient = shipServiceClient;
         this.messagingTemplate = messagingTemplate;
     }
+
     @PostMapping("/buy")
     public ShipResponse buyShip(@RequestBody BuyShipRequest request) {
 
-        ShipResponse response = shipService.buyShip(request);
+        ShipResponse response =
+                shipServiceClient.buyShip(request);
 
         messagingTemplate.convertAndSend(
                 "/topic/session/" + request.getSessionCode(),
@@ -48,16 +41,20 @@ public class ShipController {
         return response;
     }
 
-
     @GetMapping("/player/{playerId}")
-    public List<ShipResponse> getShipsByPlayer(@PathVariable Long playerId) {
-        return shipService.getShipsByPlayer(playerId);
+    public List<ShipResponse> getShipsByPlayer(
+            @PathVariable Long playerId
+    ) {
+        return shipServiceClient.getShipsByPlayer(playerId);
     }
 
     @PostMapping("/sell")
-    public ShipResponse sellShip(@RequestBody SellShipRequest request) {
+    public ShipResponse sellShip(
+            @RequestBody SellShipRequest request
+    ) {
 
-        ShipResponse response = shipService.sellShip(request);
+        ShipResponse response =
+                shipServiceClient.sellShip(request);
 
         messagingTemplate.convertAndSend(
                 "/topic/session/" + request.getSessionCode(),
@@ -67,21 +64,9 @@ public class ShipController {
         return response;
     }
 
-
-    @GetMapping("/used/{sessionCode}")
-    public List<UsedShipOfferResponse> getUsedShips(@PathVariable String sessionCode) {
-        return getUsedShipOffersService.execute(sessionCode)
-                .stream()
-                .map(offer -> new UsedShipOfferResponse(
-                        offer.getId(),
-                        offer.getType().name(),
-                        offer.getPrice(),
-                        offer.getType().getSpeed(),
-                        offer.getType().getCapacity(),
-                        offer.getCondition(),
-                        offer.getFuelLevel()
-                ))
-                .toList();
+    @GetMapping("/used")
+    public List<UsedShipOfferResponse> getUsedShips() {
+        return shipServiceClient.getUsedShips();
     }
 
     @PostMapping("/used/{offerId}/buy")
@@ -91,11 +76,34 @@ public class ShipController {
     ) {
 
         ShipResponse response =
-                shipService.buyUsedShip(offerId, request);
+                shipServiceClient.buyUsedShip(
+                        offerId,
+                        request
+                );
 
         messagingTemplate.convertAndSend(
                 "/topic/session/" + request.getSessionCode(),
                 new WebSocketEvent("SHIP_BOUGHT")
+        );
+
+        return response;
+    }
+
+    @PostMapping("/{shipId}/repair")
+    public ShipResponse repairShip(
+            @PathVariable Long shipId,
+            @RequestBody RepairShipRequest request
+    ) {
+
+        ShipResponse response =
+                shipServiceClient.repairShip(
+                        shipId,
+                        request
+                );
+
+        messagingTemplate.convertAndSend(
+                "/topic/session/" + request.getSessionCode(),
+                new WebSocketEvent("SHIP_REPAIRED")
         );
 
         return response;
@@ -106,8 +114,12 @@ public class ShipController {
             @PathVariable Long shipId,
             @RequestBody RefuelShipRequest request
     ) {
+
         ShipResponse response =
-                refuelShipService.refuel(shipId, request.getFuelAmount());
+                shipServiceClient.refuelShip(
+                        shipId,
+                        request
+                );
 
         messagingTemplate.convertAndSend(
                 "/topic/session/" + request.getSessionCode(),
@@ -117,37 +129,32 @@ public class ShipController {
         return response;
     }
 
-    @GetMapping("/{id}/refuel-cost")
-    public double getRefuelCost(
-            @PathVariable Long id,
-            @RequestParam int fuelAmount
-    ) {
-        return refuelShipService.calculateCost(id, fuelAmount);
-    }
-
-    @PostMapping("/{shipId}/repair")
-    public ShipResponse repairShip(
-            @PathVariable Long shipId,
-            @RequestBody RepairShipRequest request
-    ) {
-
-        ShipResponse response =
-                repairShipService.repair(shipId, request.getRepairAmount());
-
-        messagingTemplate.convertAndSend(
-                "/topic/session/" + request.getSessionCode(),
-                new WebSocketEvent("SHIP_REPAIRED")
-        );
-
-        return response;
-    }
-
-    @GetMapping("/{id}/repair-cost")
+    @GetMapping("/{shipId}/repair-cost")
     public double getRepairCost(
-            @PathVariable Long id,
+            @PathVariable Long shipId,
             @RequestParam int repairAmount
     ) {
-        return repairShipService.calculateRepairCost(id, repairAmount);
+        return shipServiceClient.getRepairCost(
+                shipId,
+                repairAmount
+        );
     }
 
+    @GetMapping("/{shipId}/refuel-cost")
+    public double getRefuelCost(
+            @PathVariable Long shipId,
+            @RequestParam int fuelAmount
+    ) {
+        return shipServiceClient.getRefuelCost(
+                shipId,
+                fuelAmount
+        );
+    }
+
+    @GetMapping("/{shipId}")
+    public ShipResponse getShip(
+            @PathVariable Long shipId
+    ) {
+        return shipServiceClient.getShip(shipId);
+    }
 }

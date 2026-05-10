@@ -1,7 +1,7 @@
-/** package at.fhv.blueroute.ship.application.service;
+/**package at.fhv.blueroute.ship.application.service;
 
-import at.fhv.blueroute.ship.player.client.PlayerServiceClient;
-import at.fhv.blueroute.ship.player.client.dto.PlayerResponse;
+import at.fhv.blueroute.player.client.PlayerServiceClient;
+import at.fhv.blueroute.player.client.dto.PlayerResponse;
 import at.fhv.blueroute.port.domain.model.Port;
 import at.fhv.blueroute.port.domain.repository.PortRepository;
 import at.fhv.blueroute.ship.domain.model.Good;
@@ -124,5 +124,4 @@ public class LoadCargoService {
         shipCargoRepository.save(cargo);
         portGoodRepository.save(portGood);
     }
-}
-**/
+}**/

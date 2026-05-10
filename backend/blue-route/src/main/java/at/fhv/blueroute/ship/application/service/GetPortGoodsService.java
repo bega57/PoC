@@ -1,4 +1,4 @@
-package at.fhv.blueroute.ship.application.service;
+/**package at.fhv.blueroute.ship.application.service;
 
 import at.fhv.blueroute.ship.domain.model.Good;
 import at.fhv.blueroute.ship.infrastructure.persistence.GoodRepository;
@@ -37,4 +37,4 @@ public class GetPortGoodsService {
                 })
                 .toList();
     }
-}
+}**/

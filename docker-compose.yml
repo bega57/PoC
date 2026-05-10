@@ -22,6 +22,7 @@ services:
       DB_USER: postgres
       DB_PASSWORD: postgres
       PLAYER_SERVICE_URL: http://player-service:8081
+      SHIP_SERVICE_URL: http://ship-service:8082
     ports:
       - "8080:8080"
 

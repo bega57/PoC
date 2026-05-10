@@ -1,4 +1,4 @@
-package at.fhv.blueroute.ship.presentation.dto;
+/**package at.fhv.blueroute.ship.presentation.dto;
 
 public record PortGoodResponse(
         Long goodId,
@@ -7,4 +7,4 @@ public record PortGoodResponse(
         double buyPrice,
         double sellPrice,
         int stock
-) {}
+) {}**/

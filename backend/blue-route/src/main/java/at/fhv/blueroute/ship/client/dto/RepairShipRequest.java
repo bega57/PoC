@@ -1,4 +1,4 @@
-package at.fhv.blueroute.ship.presentation.dto;
+package at.fhv.blueroute.ship.client.dto;
 
 public class RepairShipRequest {
 

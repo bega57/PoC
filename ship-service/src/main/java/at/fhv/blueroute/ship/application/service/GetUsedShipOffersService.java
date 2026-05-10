@@ -15,7 +15,7 @@ public class GetUsedShipOffersService {
         this.repository = repository;
     }
 
-    public List<UsedShipOffer> execute(String sessionCode) {
+    public List<UsedShipOffer> execute() {
         return repository.findAll();
     }
 }

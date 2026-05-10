@@ -1,5 +1,8 @@
 package at.fhv.blueroute.ship.application.service;
 
+import at.fhv.blueroute.ship.application.exception.InvalidRepairAmountException;
+import at.fhv.blueroute.ship.application.exception.RepairLimitExceededException;
+import at.fhv.blueroute.ship.application.exception.ShipNotFoundException;
 import at.fhv.blueroute.ship.application.mapper.ShipMapper;
 import at.fhv.blueroute.ship.domain.model.Ship;
 import at.fhv.blueroute.ship.domain.repository.ShipRepository;
@@ -27,19 +30,20 @@ public class RepairShipService {
     public ShipResponse repair(Long shipId, int repairAmount) {
 
         Ship ship = shipRepository.findById(shipId)
-                .orElseThrow(() -> new RuntimeException("Ship not found"));
+                .orElseThrow(() ->
+                        new ShipNotFoundException(shipId));
 
         int maxCondition = 100;
         int currentCondition = Math.max(0, ship.getCondition());
 
         if (repairAmount <= 0) {
-            throw new RuntimeException("Invalid repair amount");
+            throw new InvalidRepairAmountException();
         }
 
         double missing = maxCondition - currentCondition;
 
         if (repairAmount > missing) {
-            throw new RuntimeException("Repair amount exceeds max condition");
+            throw new RepairLimitExceededException();
         }
 
         double basePricePerUnit = 1.5;
@@ -79,7 +83,8 @@ public class RepairShipService {
     public double calculateRepairCost(Long shipId, int repairAmount) {
 
         Ship ship = shipRepository.findById(shipId)
-                .orElseThrow(() -> new RuntimeException("Ship not found"));
+                .orElseThrow(() ->
+                        new ShipNotFoundException(shipId));
 
         int currentCondition = Math.max(0, ship.getCondition());
 

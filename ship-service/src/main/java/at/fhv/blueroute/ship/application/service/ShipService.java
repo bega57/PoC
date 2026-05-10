@@ -1,5 +1,6 @@
 package at.fhv.blueroute.ship.application.service;
 
+import at.fhv.blueroute.ship.application.exception.PlayerNotFoundException;
 import at.fhv.blueroute.ship.player.client.PlayerServiceClient;
 import at.fhv.blueroute.ship.player.client.dto.PlayerResponse;
 import at.fhv.blueroute.ship.application.exception.ShipCurrentlyTravelingException;
@@ -47,7 +48,9 @@ public class ShipService {
                 playerServiceClient.getPlayer(request.getPlayerId());
 
         if (player == null) {
-            throw new RuntimeException("Player not found");
+            throw new PlayerNotFoundException(
+                    request.getPlayerId()
+            );
         }
 
         if (request.getShipName() == null
@@ -117,6 +120,21 @@ public class ShipService {
 
         double sellPrice = sellPriceService.calculate(ship);
 
+        double usedMarketPrice =
+                Math.floor(sellPrice * 1.1);
+
+        UsedShipOffer usedShipOffer =
+                new UsedShipOffer(
+                        ship.getType(),
+                        usedMarketPrice,
+                        ship.getCondition(),
+                        ship.getFuelLevel()
+                );
+
+        usedShipOfferRepository.save(
+                usedShipOffer
+        );
+
         playerServiceClient.updateBalance(
                 request.getPlayerId(),
                 sellPrice,
@@ -137,7 +155,9 @@ public class ShipService {
                 playerServiceClient.getPlayer(request.getPlayerId());
 
         if (player == null) {
-            throw new RuntimeException("Player not found");
+            throw new PlayerNotFoundException(
+                    request.getPlayerId()
+            );
         }
 
         UsedShipOffer offer =

@@ -1,4 +1,4 @@
-package at.fhv.blueroute.ship.infrastructure.persistence;
+/**package at.fhv.blueroute.ship.infrastructure.persistence;
 
 import at.fhv.blueroute.ship.domain.model.ShipCargo;
 import org.springframework.data.jpa.repository.JpaRepository;
@@ -11,4 +11,4 @@ public interface ShipCargoRepository extends JpaRepository<ShipCargo, Long> {
     Optional<ShipCargo> findByShipIdAndGoodId(Long shipId, Long goodId);
 
     List<ShipCargo> findByShipId(Long shipId);
-}
+}**/

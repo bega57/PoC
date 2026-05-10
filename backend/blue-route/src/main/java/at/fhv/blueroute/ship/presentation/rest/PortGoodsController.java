@@ -1,4 +1,4 @@
-package at.fhv.blueroute.ship.presentation.rest;
+/**package at.fhv.blueroute.ship.presentation.rest;
 
 import at.fhv.blueroute.ship.application.service.GetPortGoodsService;
 import at.fhv.blueroute.ship.presentation.dto.PortGoodResponse;
@@ -20,4 +20,4 @@ public class PortGoodsController {
     public List<PortGoodResponse> get(@PathVariable Long portId) {
         return service.getGoods(portId);
     }
-}
+}**/
