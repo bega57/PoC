@@ -1,0 +1,54 @@
+package at.fhv.blueroute.ship.client.dto;
+
+public class BuyShipRequest {
+
+    private Long playerId;
+    private String companyName;
+    private String shipName;
+    private String shipType;
+    private String sessionCode;
+
+    public BuyShipRequest() {
+    }
+
+    public Long getPlayerId() {
+        return playerId;
+    }
+
+    public String getCompanyName() {
+        return companyName;
+    }
+
+    public String getShipName() {
+        return shipName;
+    }
+
+    public String getShipType() {
+        return shipType;
+    }
+
+    public String getSessionCode() {
+        return sessionCode;
+    }
+
+    public void setSessionCode(String sessionCode) {
+        this.sessionCode = sessionCode;
+    }
+
+    public void setPlayerId(Long playerId) {
+        this.playerId = playerId;
+    }
+
+    public void setCompanyName(String companyName) {
+        this.companyName = companyName;
+    }
+
+    public void setShipName(String shipName) {
+        this.shipName = shipName;
+    }
+
+    public void setShipType(String shipType) {
+        this.shipType = shipType;
+    }
+
+}

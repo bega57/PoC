@@ -1,6 +1,6 @@
 package at.fhv.blueroute.player.presentation.dto;
 
-import at.fhv.blueroute.ship.presentation.dto.ShipResponse;
+import at.fhv.blueroute.ship.client.dto.ShipResponse;
 import java.util.List;
 
 public class PlayerResponse {

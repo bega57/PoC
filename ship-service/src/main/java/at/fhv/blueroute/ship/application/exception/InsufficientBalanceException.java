@@ -1,0 +1,12 @@
+package at.fhv.blueroute.ship.application.exception;
+
+public class InsufficientBalanceException extends RuntimeException {
+
+    public InsufficientBalanceException(Long playerId) {
+        super("You do not have enough balance.");
+    }
+
+    public InsufficientBalanceException(String message) {
+        super(message);
+    }
+}

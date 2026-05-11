@@ -6,8 +6,8 @@ import at.fhv.blueroute.cargo.infrastructure.persistence.JpaCargoRepository;
 import at.fhv.blueroute.player.client.PlayerServiceClient;
 import at.fhv.blueroute.session.domain.model.Session;
 import at.fhv.blueroute.session.infrastructure.persistence.JpaSessionRepository;
-import at.fhv.blueroute.ship.domain.model.Ship;
-import at.fhv.blueroute.ship.infrastructure.persistence.JpaShipRepository;
+import at.fhv.blueroute.ship.client.ShipServiceClient;
+import at.fhv.blueroute.ship.client.dto.ShipResponse;
 import at.fhv.blueroute.voyage.application.exception.VoyageException;
 import at.fhv.blueroute.voyage.domain.model.Voyage;
 import at.fhv.blueroute.voyage.domain.model.VoyageStatus;
@@ -24,7 +24,7 @@ import java.time.LocalDateTime;
 public class StartVoyageService {
 
     private final JpaVoyageRepository voyageRepository;
-    private final JpaShipRepository shipRepository;
+    private final ShipServiceClient shipServiceClient;
     private final JpaCargoRepository cargoRepository;
     private final JpaSessionRepository sessionRepository;
     private final WebSocketSender webSocketSender;
@@ -32,8 +32,7 @@ public class StartVoyageService {
     private final PlayerServiceClient playerServiceClient;
 
     public StartVoyageService(
-            JpaVoyageRepository voyageRepository,
-            JpaShipRepository shipRepository,
+            JpaVoyageRepository voyageRepository, ShipServiceClient shipServiceClient,
             JpaCargoRepository cargoRepository,
             JpaSessionRepository sessionRepository,
             WebSocketSender webSocketSender,
@@ -41,7 +40,7 @@ public class StartVoyageService {
             PlayerServiceClient playerServiceClient
     ) {
         this.voyageRepository = voyageRepository;
-        this.shipRepository = shipRepository;
+        this.shipServiceClient = shipServiceClient;
         this.cargoRepository = cargoRepository;
         this.sessionRepository = sessionRepository;
         this.webSocketSender = webSocketSender;
@@ -51,8 +50,8 @@ public class StartVoyageService {
 
     public Voyage startVoyage(Long shipId, Long cargoId, String sessionCode) {
 
-        Ship ship = shipRepository.findById(shipId)
-                .orElseThrow(() -> new RuntimeException("Ship not found"));
+        ShipResponse ship =
+                shipServiceClient.getShip(shipId);
 
         if (ship.isTraveling()) {
             throw new VoyageException("Ship is already traveling");
@@ -148,13 +147,10 @@ public class StartVoyageService {
 
         voyageEventPlanningService.planEventForVoyage(voyage, cargo, currentTick);
 
-        ship.setTraveling(true);
-        ship.setCurrentPort(null);
-        ship.setUsedCapacity(
-                ship.getUsedCapacity() + cargo.getRequiredCapacity()
+        shipServiceClient.startVoyage(
+                ship.getId(),
+                cargo.getRequiredCapacity()
         );
-
-        shipRepository.save(ship);
 
         Voyage savedVoyage = voyageRepository.save(voyage);
 

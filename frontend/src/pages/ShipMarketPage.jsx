@@ -117,13 +117,12 @@ function ShipMarketPage() {
 
     const fetchUsedShips = async () => {
         try {
-            const response = await api.get(`/ships/used/${sessionCode}`);
+            const response = await api.get(`/ships/used`);
             setUsedShips(response.data);
         } catch (error) {
             console.error(error);
         }
     };
-
 
     useEffect(() => {
         fetchUsedShips();

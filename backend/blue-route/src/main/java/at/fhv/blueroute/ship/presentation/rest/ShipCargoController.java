@@ -1,4 +1,4 @@
-package at.fhv.blueroute.ship.presentation.rest;
+/**package at.fhv.blueroute.ship.presentation.rest;
 
 import at.fhv.blueroute.ship.application.service.LoadCargoService;
 import at.fhv.blueroute.ship.presentation.dto.LoadCargoRequest;
@@ -18,4 +18,4 @@ public class ShipCargoController {
     public void loadCargo(@RequestBody LoadCargoRequest request) {
         loadCargoService.loadCargo(request);
     }
-}
+}**/

@@ -1,0 +1,84 @@
+### CREATE PLAYER
+POST http://localhost:8081/players
+Content-Type: application/json
+
+{
+  "username": "Begum"
+}
+
+###
+
+### BUY SHIP
+POST http://localhost:8082/ships/buy
+Content-Type: application/json
+
+{
+  "playerId": 3,
+  "shipType": "CHEAP",
+  "shipName": "Titanic"
+}
+
+###
+
+### GET PLAYER SHIPS
+GET http://localhost:8082/ships/player/1
+
+###
+
+### GET REFUEL COST
+GET http://localhost:8082/ships/1/refuel-cost?fuelAmount=10
+
+###
+
+POST http://localhost:8082/ships/1/repair
+Content-Type: application/json
+
+{
+  "repairAmount": -10
+}
+
+###
+
+POST http://localhost:8082/ships/1/refuel
+Content-Type: application/json
+
+{
+  "fuelAmount": 999
+}
+
+###
+
+### GET REPAIR COST
+GET http://localhost:8082/ships/1/repair-cost?repairAmount=10
+
+###
+
+### SELL SHIP
+POST http://localhost:8082/ships/sell
+Content-Type: application/json
+
+{
+  "shipId": 4,
+  "playerId": 3
+}
+
+###
+
+### GET USED SHIPS
+GET http://localhost:8082/ships/used
+
+###
+
+### BUY USED SHIP
+POST http://localhost:8082/ships/used/1/buy
+Content-Type: application/json
+
+{
+  "playerId": 3,
+  "shipName": "Titanic 2"
+}
+
+###
+
+### GET PLAYER SHIPS AGAIN
+GET http://localhost:8082/ships/player/1

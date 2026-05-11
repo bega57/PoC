@@ -1,4 +1,4 @@
-package at.fhv.blueroute.ship.domain.model;
+/**package at.fhv.blueroute.ship.domain.model;
 
 import jakarta.persistence.*;
 
@@ -51,4 +51,4 @@ public class ShipCargo {
 
     private int quantity;
 
-}
+}**/

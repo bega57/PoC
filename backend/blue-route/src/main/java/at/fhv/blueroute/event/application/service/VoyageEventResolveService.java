@@ -4,8 +4,8 @@ import at.fhv.blueroute.event.application.exception.InvalidVoyageEventActionExce
 import at.fhv.blueroute.event.application.exception.VoyageEventNotFoundException;
 import at.fhv.blueroute.event.domain.model.VoyageEventOption;
 import at.fhv.blueroute.event.domain.model.VoyageEventType;
-import at.fhv.blueroute.ship.domain.model.Ship;
-import at.fhv.blueroute.ship.infrastructure.persistence.JpaShipRepository;
+import at.fhv.blueroute.ship.client.ShipServiceClient;
+import at.fhv.blueroute.ship.client.dto.ShipResponse;
 import at.fhv.blueroute.voyage.domain.model.Voyage;
 import at.fhv.blueroute.voyage.infrastructure.persistence.JpaVoyageRepository;
 import at.fhv.blueroute.common.websocket.SessionStatusMessage;
@@ -25,18 +25,17 @@ public class VoyageEventResolveService {
     private static final double EXTRA_CONDITION_LOSS_PER_DELAY_TICK = 2.0;
 
     private final JpaVoyageRepository voyageRepository;
-    private final JpaShipRepository shipRepository;
+    private final ShipServiceClient shipServiceClient;
     private final JpaSessionRepository sessionRepository;
     private final WebSocketSender webSocketSender;
     private final PlayerServiceClient playerServiceClient;
 
-    public VoyageEventResolveService(JpaVoyageRepository voyageRepository,
-                                     JpaShipRepository shipRepository,
+    public VoyageEventResolveService(JpaVoyageRepository voyageRepository, ShipServiceClient shipServiceClient,
                                      JpaSessionRepository sessionRepository,
                                      WebSocketSender webSocketSender,
                                      PlayerServiceClient playerServiceClient) {
         this.voyageRepository = voyageRepository;
-        this.shipRepository = shipRepository;
+        this.shipServiceClient = shipServiceClient;
         this.sessionRepository = sessionRepository;
         this.webSocketSender = webSocketSender;
         this.playerServiceClient = playerServiceClient;
@@ -62,10 +61,15 @@ public class VoyageEventResolveService {
             throw new InvalidVoyageEventActionException("Selected option must not be null.");
         }
 
-        Ship ship = shipRepository.findById(voyage.getShipId())
-                .orElseThrow(() -> new InvalidVoyageEventActionException(
-                        "Ship not found for voyage with id: " + voyageId
-                ));
+        ShipResponse ship = shipServiceClient.getShip(
+                voyage.getShipId()
+        );
+
+        if (ship == null) {
+            throw new InvalidVoyageEventActionException(
+                    "Ship not found for voyage with id: " + voyageId
+            );
+        }
 
         Long playerId = ship.getOwnerId();
 
@@ -81,7 +85,6 @@ public class VoyageEventResolveService {
 
         voyage.setEventResolved(true);
 
-        shipRepository.save(ship);
         voyageRepository.save(voyage);
 
         Session session = sessionRepository.findById(voyage.getSessionId())
@@ -102,7 +105,7 @@ public class VoyageEventResolveService {
     }
 
     private String applyConsequence(Voyage voyage,
-                                    Ship ship,
+                                    ShipResponse ship,
                                     Long playerId,
                                     VoyageEventType eventType,
                                     VoyageEventOption option) {
@@ -116,7 +119,7 @@ public class VoyageEventResolveService {
         };
     }
 
-    private String resolveBurningBarrels(Voyage voyage, Ship ship, VoyageEventOption option) {
+    private String resolveBurningBarrels(Voyage voyage, ShipResponse ship, VoyageEventOption option) {
         return switch (option) {
             case OPTION_A -> {
                 damageShip(ship, 8);
@@ -134,7 +137,7 @@ public class VoyageEventResolveService {
         };
     }
 
-    private String resolvePirateDripCheck(Voyage voyage, Ship ship, Long playerId, VoyageEventOption option) {
+    private String resolvePirateDripCheck(Voyage voyage, ShipResponse ship, Long playerId, VoyageEventOption option) {
         return switch (option) {
             case OPTION_A -> {
                 chargePlayer(playerId, 500);
@@ -167,7 +170,7 @@ public class VoyageEventResolveService {
         };
     }
 
-    private String resolveHackerSeagulls(Voyage voyage, Ship ship, Long playerId, VoyageEventOption option) {
+    private String resolveHackerSeagulls(Voyage voyage, ShipResponse ship, Long playerId, VoyageEventOption option) {
         return switch (option) {
             case OPTION_A -> {
                 delayVoyage(voyage, ship, 1);
@@ -200,7 +203,7 @@ public class VoyageEventResolveService {
         };
     }
 
-    private String resolveBadWeather(Voyage voyage, Ship ship, VoyageEventOption option) {
+    private String resolveBadWeather(Voyage voyage, ShipResponse ship, VoyageEventOption option) {
         return switch (option) {
             case OPTION_A -> {
                 delayVoyage(voyage, ship, 2);
@@ -214,7 +217,7 @@ public class VoyageEventResolveService {
         };
     }
 
-    private void delayVoyage(Voyage voyage, Ship ship, int ticks) {
+    private void delayVoyage(Voyage voyage, ShipResponse ship, int ticks) {
         voyage.setArrivalTick(voyage.getArrivalTick() + ticks);
 
         double extraFuelLoss = ticks * EXTRA_FUEL_LOSS_PER_DELAY_TICK;
@@ -228,13 +231,13 @@ public class VoyageEventResolveService {
         voyage.setExtraConditionLoss(voyage.getExtraConditionLoss() + extraConditionLoss);
     }
 
-    private void damageShip(Ship ship, double damage) {
+    private void damageShip(ShipResponse ship, double damage) {
         int currentCondition = ship.getCondition() == null ? 100 : ship.getCondition();
         int newCondition = (int) Math.max(0, currentCondition - damage);
         ship.setCondition(newCondition);
     }
 
-    private void reduceFuel(Ship ship, double amount) {
+    private void reduceFuel(ShipResponse ship, double amount) {
         int currentFuel = ship.getFuelLevel() == null ? 100 : ship.getFuelLevel();
         int newFuelLevel = (int) Math.max(0, currentFuel - amount);
         ship.setFuelLevel(newFuelLevel);

@@ -1,4 +1,4 @@
-package at.fhv.blueroute.ship.presentation.dto;
+/**package at.fhv.blueroute.ship.presentation.dto;
 
 public class LoadCargoRequest {
 
@@ -47,4 +47,4 @@ public class LoadCargoRequest {
     public void setPlayerId(Long playerId) {
         this.playerId = playerId;
     }
-}
+}**/

@@ -1,4 +1,4 @@
-package at.fhv.blueroute.ship.domain.model;
+/**package at.fhv.blueroute.ship.domain.model;
 
 import jakarta.persistence.*;
 
@@ -71,4 +71,4 @@ public class PortGood {
     public void setId(Long id) {
         this.id = id;
     }
-}
+}**/

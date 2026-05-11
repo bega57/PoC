@@ -9,7 +9,8 @@ import at.fhv.blueroute.session.domain.model.Session;
 import at.fhv.blueroute.session.domain.model.SessionStatus;
 import at.fhv.blueroute.session.infrastructure.persistence.JpaSessionRepository;
 import at.fhv.blueroute.session.presentation.dto.LeaderboardEntryResponse;
-import at.fhv.blueroute.ship.infrastructure.persistence.JpaShipRepository;
+import at.fhv.blueroute.ship.client.ShipServiceClient;
+import at.fhv.blueroute.ship.client.dto.ShipResponse;
 import at.fhv.blueroute.voyage.application.service.FinishVoyageService;
 import at.fhv.blueroute.voyage.domain.model.VoyageStatus;
 import jakarta.transaction.Transactional;
@@ -28,7 +29,7 @@ public class SessionTickService {
 
     private final JpaSessionRepository sessionRepository;
     private final JpaVoyageRepository voyageRepository;
-    private final JpaShipRepository shipRepository;
+    private final ShipServiceClient shipServiceClient;
     private final WebSocketSender webSocketSender;
     private final FinishVoyageService finishVoyageService;
     private final JpaCargoRepository cargoRepository;
@@ -38,8 +39,7 @@ public class SessionTickService {
 
     public SessionTickService(
             JpaSessionRepository sessionRepository,
-            JpaVoyageRepository voyageRepository,
-            JpaShipRepository shipRepository,
+            JpaVoyageRepository voyageRepository, ShipServiceClient shipServiceClient,
             WebSocketSender webSocketSender,
             FinishVoyageService finishVoyageService,
             JpaCargoRepository cargoRepository,
@@ -49,7 +49,7 @@ public class SessionTickService {
     ) {
         this.sessionRepository = sessionRepository;
         this.voyageRepository = voyageRepository;
-        this.shipRepository = shipRepository;
+        this.shipServiceClient = shipServiceClient;
         this.webSocketSender = webSocketSender;
         this.finishVoyageService = finishVoyageService;
         this.cargoRepository = cargoRepository;
@@ -110,7 +110,8 @@ public class SessionTickService {
 
                 if (v.getStatus() == VoyageStatus.RUNNING) {
 
-                    var ship = shipRepository.findById(v.getShipId()).orElseThrow();
+                    ShipResponse ship =
+                            shipServiceClient.getShip(v.getShipId());
                     var cargo = cargoRepository.findById(v.getCargoId()).orElseThrow();
 
                     int duration = Math.max(1,
@@ -118,15 +119,17 @@ public class SessionTickService {
                     );
 
                     double shipFuelMultiplier = switch (ship.getType()) {
-                        case CHEAP -> 1.25;
-                        case MEDIUM -> 1.0;
-                        case EXPENSIVE -> 0.8;
+                        case "CHEAP" -> 1.25;
+                        case "MEDIUM" -> 1.0;
+                        case "EXPENSIVE" -> 0.8;
+                        default -> 1.0;
                     };
 
                     double shipConditionMultiplier = switch (ship.getType()) {
-                        case CHEAP -> 1.5;
-                        case MEDIUM -> 1.0;
-                        case EXPENSIVE -> 0.7;
+                        case "CHEAP" -> 1.5;
+                        case "MEDIUM" -> 1.0;
+                        case "EXPENSIVE" -> 0.7;
+                        default -> 1.0;
                     };
 
 
@@ -143,7 +146,6 @@ public class SessionTickService {
                     int newCondition = (int) Math.max(0, ship.getCondition() - conditionPerTick);
                     ship.setCondition(newCondition);
 
-                    shipRepository.save(ship);
                 }
             }
 
