@@ -30,7 +30,7 @@ public class FinishVoyageService {
         this.cargoRepository = cargoRepository;
     }
 
-    public void finishVoyage(Long voyageId, int currentTick) {
+    public Voyage finishVoyage(Long voyageId, int currentTick) {
 
         System.out.println("TRAVEL SERVICE FINISH CALLED");
         Voyage voyage = voyageRepository.findById(voyageId)
@@ -38,11 +38,11 @@ public class FinishVoyageService {
                         new RuntimeException("Voyage not found"));
 
         if (voyage.getStatus() == VoyageStatus.FINISHED) {
-            return;
+            return voyage;
         }
 
         if (currentTick < voyage.getArrivalTick()) {
-            return;
+            return voyage;
         }
 
         ShipResponse ship =
@@ -71,6 +71,6 @@ public class FinishVoyageService {
 
         voyage.setStatus(VoyageStatus.FINISHED);
 
-        voyageRepository.save(voyage);
+        return voyageRepository.save(voyage);
     }
 }

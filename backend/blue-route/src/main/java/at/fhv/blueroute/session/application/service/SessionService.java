@@ -17,7 +17,6 @@ import at.fhv.blueroute.session.application.exception.PlayerAlreadyInSessionExce
 import at.fhv.blueroute.player.client.PlayerServiceClient;
 import at.fhv.blueroute.player.client.dto.PlayerResponse;
 
-import at.fhv.blueroute.travel.client.TravelServiceClient;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
@@ -30,19 +29,15 @@ public class SessionService {
     private final PlayerServiceClient playerServiceClient;
     private final SessionMapper sessionMapper;
     private final WebSocketSender webSocketSender;
-    private final TravelServiceClient travelServiceClient;
 
     public SessionService(SessionRepository sessionRepository,
                           PlayerServiceClient playerServiceClient,
                           SessionMapper sessionMapper,
-                          WebSocketSender webSocketSender,
-                          TravelServiceClient travelServiceClient) {
+                          WebSocketSender webSocketSender) {
         this.sessionRepository = sessionRepository;
         this.playerServiceClient = playerServiceClient;
         this.sessionMapper = sessionMapper;
         this.webSocketSender = webSocketSender;
-        this.travelServiceClient = travelServiceClient;
-
     }
 
     public List<SessionResponse> getAllSessions() {
@@ -198,7 +193,7 @@ public class SessionService {
         boolean hasActivePlayers = session.getSessionPlayers().stream()
                 .anyMatch(sp -> sp.getStatus() == SessionPlayerStatus.ACTIVE);
 
-        if (hasActivePlayers && !hasPendingEvents(session)) {
+        if (hasActivePlayers) {
             session.setStatus(SessionStatus.RUNNING);
         }
 
@@ -241,7 +236,7 @@ public class SessionService {
                 .anyMatch(sp -> sp.getStatus() == SessionPlayerStatus.ACTIVE);
         System.out.println("RESUME 7 - hasActivePlayers: " + hasActivePlayers);
 
-        if (hasActivePlayers && !hasPendingEvents(session)) {
+        if (hasActivePlayers) {
             session.setStatus(SessionStatus.RUNNING);
         }
 
@@ -266,8 +261,4 @@ public class SessionService {
         return response;
     }
 
-    private boolean hasPendingEvents(Session session) {
-        return travelServiceClient
-                .hasPendingEvents(session.getId());
-    }
 }

@@ -341,7 +341,10 @@ function GamePage() {
 
     useEffect(() => {
 
-        const socket = new SockJS(`${import.meta.env.VITE_API_BASE_URL}/ws`);
+        const API_BASE_URL =
+            import.meta.env.VITE_API_BASE_URL || "http://localhost:8080";
+
+        const socket = new SockJS(`${API_BASE_URL}/ws`);
 
         const client = new Client({
             webSocketFactory: () => socket,

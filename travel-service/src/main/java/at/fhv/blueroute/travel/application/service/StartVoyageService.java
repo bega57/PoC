@@ -109,14 +109,6 @@ public class StartVoyageService {
         voyage.setSessionId(sessionId);
 
         int requiredTicks = cargo.getRequiredTicks();
-        int speed = ship.getSpeed();
-
-        System.out.println("---- VOYAGE DEBUG ----");
-        System.out.println("CurrentTick: " + currentTick);
-        System.out.println("RequiredTicks (Cargo): " + requiredTicks);
-        System.out.println("Ship Speed: " + speed);
-        System.out.println("Fuel Consumption (Cargo): " + cargo.getFuelConsumption());
-
         int adjustedTicks = requiredTicks;
 
         double fuelPerTick =

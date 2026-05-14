@@ -8,6 +8,7 @@ import at.fhv.blueroute.travel.domain.model.Voyage;
 import at.fhv.blueroute.travel.infrastructure.persistence.JpaVoyageRepository;
 import at.fhv.blueroute.travel.presentation.dto.StartVoyageRequest;
 import at.fhv.blueroute.travel.presentation.dto.VoyageResponse;
+import at.fhv.blueroute.travel.presentation.dto.*;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -44,11 +45,14 @@ public class VoyageController {
 
         try {
 
-            Voyage voyage =
-                    startVoyageService.startVoyage(
-                            request.getShipId(),
-                            request.getCargoId(),
-                            request.getSessionId(),
+            VoyageResponse voyage =
+                    VoyageResponse.from(
+                            startVoyageService.startVoyage(
+                                    request.getShipId(),
+                                    request.getCargoId(),
+                                    request.getSessionId(),
+                                    request.getCurrentTick()
+                            ),
                             request.getCurrentTick()
                     );
 
@@ -63,13 +67,16 @@ public class VoyageController {
     }
 
     @PostMapping("/{id}/finish")
-    public void finishVoyage(
+    public VoyageResponse finishVoyage(
             @PathVariable Long id,
             @RequestParam int currentTick
     ) {
 
-        finishVoyageService.finishVoyage(
-                id,
+        return VoyageResponse.from(
+                finishVoyageService.finishVoyage(
+                        id,
+                        currentTick
+                ),
                 currentTick
         );
     }
@@ -84,31 +91,153 @@ public class VoyageController {
                 .getAllVoyages(sessionId, currentTick);
     }
 
-    private Voyage getVoyageById(Long id) {
+    @GetMapping("/{id}")
+    public VoyageResponse getVoyage(
+            @PathVariable Long id
+    ) {
 
-        return voyageRepository
-                .findById(id)
-                .orElseThrow(() ->
-                        new RuntimeException("Voyage not found"));
+        Voyage voyage =
+                voyageRepository.findById(id)
+                        .orElseThrow();
+
+        return VoyageResponse.from(
+                voyage,
+                voyage.getStartTick()
+        );
     }
 
-    @GetMapping("/pending-events")
-    public boolean hasPendingEvents(
-            @RequestParam Long sessionId
+    @PostMapping("/{id}/event-triggered")
+    public void markEventTriggered(
+            @PathVariable Long id
     ) {
-        return voyageRepository
-                .findBySessionId(sessionId)
-                .stream()
-                .anyMatch(v ->
-                        v.getPendingEventType() != null
-                                && !v.isEventResolved()
-                );
+
+        Voyage voyage =
+                voyageRepository.findById(id)
+                        .orElseThrow();
+
+        voyage.setEventTriggered(true);
+
+        voyageRepository.save(voyage);
+    }
+
+    @PostMapping("/{id}/event-resolved")
+    public void markEventResolved(
+            @PathVariable Long id,
+            @RequestBody EventResolvedRequest request
+    ) {
+
+        Voyage voyage =
+                voyageRepository.findById(id)
+                        .orElseThrow();
+
+        voyage.setEventResolved(true);
+        voyage.setEventResultMessage(request.getResultMessage());
+
+        voyageRepository.save(voyage);
+    }
+
+    @PostMapping("/{id}/event-cost")
+    public void setEventCost(
+            @PathVariable Long id,
+            @RequestBody EventCostRequest request
+    ) {
+
+        Voyage voyage =
+                voyageRepository.findById(id)
+                        .orElseThrow();
+
+        voyage.setEventCost(request.getEventCost());
+
+        voyageRepository.save(voyage);
+    }
+
+    @PostMapping("/{id}/delay")
+    public void delayVoyage(
+            @PathVariable Long id,
+            @RequestBody DelayVoyageRequest request
+    ) {
+
+        Voyage voyage =
+                voyageRepository.findById(id)
+                        .orElseThrow();
+
+        voyage.setArrivalTick(
+                voyage.getArrivalTick() + request.getExtraDelayTicks()
+        );
+
+        voyage.setExtraDelayTicks(
+                voyage.getExtraDelayTicks() + request.getExtraDelayTicks()
+        );
+
+        voyage.setExtraFuelLoss(
+                voyage.getExtraFuelLoss() + request.getExtraFuelLoss()
+        );
+
+        voyage.setExtraConditionLoss(
+                voyage.getExtraConditionLoss() + request.getExtraConditionLoss()
+        );
+
+        voyageRepository.save(voyage);
+    }
+
+    @PostMapping("/{id}/reward-loss")
+    public void reduceReward(
+            @PathVariable Long id,
+            @RequestBody RewardLossRequest request
+    ) {
+
+        Voyage voyage =
+                voyageRepository.findById(id)
+                        .orElseThrow();
+
+        double factor =
+                (100.0 - request.getRewardLossPercent()) / 100.0;
+
+        voyage.setReward(
+                voyage.getReward() * factor
+        );
+
+        voyage.setRewardLossPercent(
+                voyage.getRewardLossPercent() + request.getRewardLossPercent()
+        );
+
+        voyageRepository.save(voyage);
+    }
+
+    @PostMapping("/{id}/event-plan")
+    public void assignEventPlan(
+            @PathVariable Long id,
+            @RequestBody EventPlanRequest request
+    ) {
+
+        Voyage voyage =
+                voyageRepository.findById(id)
+                        .orElseThrow();
+
+        voyage.setPendingEventType(
+                request.getEventType()
+        );
+
+        voyage.setEventTriggerTick(
+                request.getEventTriggerTick()
+        );
+
+        voyage.setEventTriggered(false);
+        voyage.setEventResolved(false);
+
+        voyageRepository.save(voyage);
     }
 
     @PostMapping("/process-tick")
-    public void processTick() {
-        processVoyageTickService.processTick();
+    public List<VoyageResponse> processTick(
+            @RequestParam Long sessionId,
+            @RequestParam int currentTick
+    ) {
+        return processVoyageTickService
+                .processTick(sessionId, currentTick)
+                .stream()
+                .map(voyage -> VoyageResponse.from(voyage, currentTick))
+                .toList();
     }
-
 
 }

@@ -4,10 +4,9 @@ public class StartVoyageRequest {
 
     private Long shipId;
     private Long cargoId;
-
+    private Long sessionId;
     private String sessionCode;
     private int currentTick;
-
 
     public int getCurrentTick() {
         return currentTick;
@@ -23,6 +22,14 @@ public class StartVoyageRequest {
 
     public Long getCargoId() {
         return cargoId;
+    }
+
+    public Long getSessionId() {
+        return sessionId;
+    }
+
+    public void setSessionId(Long sessionId) {
+        this.sessionId = sessionId;
     }
 
     public String getSessionCode() {

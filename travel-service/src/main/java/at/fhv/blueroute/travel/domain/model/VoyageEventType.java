@@ -1,4 +1,4 @@
-package at.fhv.blueroute.event.domain.model;
+package at.fhv.blueroute.travel.domain.model;
 
 public enum VoyageEventType {
     BURNING_BARRELS,

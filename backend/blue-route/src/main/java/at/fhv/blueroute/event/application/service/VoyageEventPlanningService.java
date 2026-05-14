@@ -3,10 +3,11 @@ package at.fhv.blueroute.event.application.service;
 import at.fhv.blueroute.cargo.domain.model.Cargo;
 import at.fhv.blueroute.cargo.domain.model.CargoType;
 import at.fhv.blueroute.cargo.domain.model.RiskLevel;
+import at.fhv.blueroute.event.application.dto.PlannedVoyageEvent;
 import at.fhv.blueroute.event.domain.model.VoyageEventType;
-import at.fhv.blueroute.archive_voyage.domain.model.Voyage;
 import org.springframework.stereotype.Service;
 
+import java.util.Optional;
 import java.util.Random;
 
 @Service
@@ -14,40 +15,41 @@ public class VoyageEventPlanningService {
 
     private final Random random = new Random();
 
-    public void planEventForVoyage(Voyage voyage, Cargo cargo, int currentTick) {
-        int voyageDuration = voyage.getArrivalTick() - currentTick;
+    public Optional<PlannedVoyageEvent> planEventForVoyage(
+            Cargo cargo,
+            int currentTick,
+            int arrivalTick
+    ) {
+        int voyageDuration = arrivalTick - currentTick;
 
         if (voyageDuration <= 1) {
-            return;
+            return Optional.empty();
         }
 
         if (!shouldEventHappen(cargo.getRiskLevel())) {
-            return;
+            return Optional.empty();
         }
 
         VoyageEventType eventType = chooseEventType(cargo.getType());
 
-        int eventTriggerTick = currentTick + Math.max(1, (int) Math.ceil(voyageDuration / 2.0));
+        int eventTriggerTick =
+                currentTick + Math.max(1, (int) Math.ceil(voyageDuration / 2.0));
 
-        if (eventTriggerTick >= voyage.getArrivalTick()) {
-            eventTriggerTick = voyage.getArrivalTick() - 1;
+        if (eventTriggerTick >= arrivalTick) {
+            eventTriggerTick = arrivalTick - 1;
         }
 
-        voyage.setPendingEventType(eventType);
-        voyage.setEventTriggerTick(eventTriggerTick);
-        voyage.setEventTriggered(false);
-        voyage.setEventResolved(false);
+        return Optional.of(
+                new PlannedVoyageEvent(eventType, eventTriggerTick)
+        );
     }
 
     private boolean shouldEventHappen(RiskLevel riskLevel) {
-        int chance;
-
-        switch (riskLevel) {
-            case LOW -> chance = 100;
-            case MEDIUM -> chance = 100;
-            case HIGH -> chance = 100;
-            default -> chance = 100;
-        }
+        int chance = switch (riskLevel) {
+            case LOW -> 100;
+            case MEDIUM -> 100;
+            case HIGH -> 100;
+        };
 
         return random.nextInt(100) < chance;
     }

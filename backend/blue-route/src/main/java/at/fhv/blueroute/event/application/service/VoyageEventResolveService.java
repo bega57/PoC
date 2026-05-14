@@ -6,14 +6,14 @@ import at.fhv.blueroute.event.domain.model.VoyageEventOption;
 import at.fhv.blueroute.event.domain.model.VoyageEventType;
 import at.fhv.blueroute.ship.client.ShipServiceClient;
 import at.fhv.blueroute.ship.client.dto.ShipResponse;
-import at.fhv.blueroute.archive_voyage.domain.model.Voyage;
-import at.fhv.blueroute.archive_voyage.infrastructure.persistence.JpaVoyageRepository;
 import at.fhv.blueroute.common.websocket.SessionStatusMessage;
 import at.fhv.blueroute.common.websocket.WebSocketSender;
 import at.fhv.blueroute.session.domain.model.Session;
 import at.fhv.blueroute.session.domain.model.SessionStatus;
 import at.fhv.blueroute.session.infrastructure.persistence.JpaSessionRepository;
 import at.fhv.blueroute.player.client.PlayerServiceClient;
+import at.fhv.blueroute.travel.client.TravelServiceClient;
+import at.fhv.blueroute.travel.client.dto.VoyageResponse;
 import org.springframework.stereotype.Service;
 import jakarta.transaction.Transactional;
 
@@ -24,33 +24,32 @@ public class VoyageEventResolveService {
     private static final double EXTRA_FUEL_LOSS_PER_DELAY_TICK = 5.0;
     private static final double EXTRA_CONDITION_LOSS_PER_DELAY_TICK = 2.0;
 
-    private final JpaVoyageRepository voyageRepository;
     private final ShipServiceClient shipServiceClient;
     private final JpaSessionRepository sessionRepository;
     private final WebSocketSender webSocketSender;
     private final PlayerServiceClient playerServiceClient;
+    private final TravelServiceClient travelServiceClient;
 
-    public VoyageEventResolveService(JpaVoyageRepository voyageRepository, ShipServiceClient shipServiceClient,
+    public VoyageEventResolveService(ShipServiceClient shipServiceClient,
                                      JpaSessionRepository sessionRepository,
                                      WebSocketSender webSocketSender,
-                                     PlayerServiceClient playerServiceClient) {
-        this.voyageRepository = voyageRepository;
+                                     PlayerServiceClient playerServiceClient,
+                                     TravelServiceClient travelServiceClient) {
         this.shipServiceClient = shipServiceClient;
         this.sessionRepository = sessionRepository;
         this.webSocketSender = webSocketSender;
         this.playerServiceClient = playerServiceClient;
+        this.travelServiceClient = travelServiceClient;
     }
 
     public String resolveEvent(Long voyageId, VoyageEventOption selectedOption) {
-        Voyage voyage = voyageRepository.findById(voyageId)
-                .orElseThrow(() -> new VoyageEventNotFoundException(voyageId));
+            VoyageResponse voyage = travelServiceClient.getVoyage(voyageId);
 
+            if (voyage == null) {
+                throw new VoyageEventNotFoundException(voyageId);
+            }
         if (voyage.getPendingEventType() == null) {
             throw new VoyageEventNotFoundException(voyageId);
-        }
-
-        if (!voyage.isEventTriggered()) {
-            voyage.setEventTriggered(true);
         }
 
         if (voyage.isEventResolved()) {
@@ -81,11 +80,7 @@ public class VoyageEventResolveService {
                 selectedOption
         );
 
-        voyage.setEventResultMessage(resultMessage);
-
-        voyage.setEventResolved(true);
-
-        voyageRepository.save(voyage);
+        travelServiceClient.markEventResolved(voyageId, resultMessage);
 
         Session session = sessionRepository.findById(voyage.getSessionId())
                 .orElseThrow(() -> new InvalidVoyageEventActionException("Session not found for voyage."));
@@ -104,7 +99,7 @@ public class VoyageEventResolveService {
         return resultMessage;
     }
 
-    private String applyConsequence(Voyage voyage,
+    private String applyConsequence(VoyageResponse voyage,
                                     ShipResponse ship,
                                     Long playerId,
                                     VoyageEventType eventType,
@@ -119,7 +114,7 @@ public class VoyageEventResolveService {
         };
     }
 
-    private String resolveBurningBarrels(Voyage voyage, ShipResponse ship, VoyageEventOption option) {
+    private String resolveBurningBarrels(VoyageResponse voyage, ShipResponse ship, VoyageEventOption option) {
         return switch (option) {
             case OPTION_A -> {
                 damageShip(ship, 8);
@@ -137,11 +132,11 @@ public class VoyageEventResolveService {
         };
     }
 
-    private String resolvePirateDripCheck(Voyage voyage, ShipResponse ship, Long playerId, VoyageEventOption option) {
+    private String resolvePirateDripCheck(VoyageResponse voyage, ShipResponse ship, Long playerId, VoyageEventOption option) {
         return switch (option) {
             case OPTION_A -> {
                 chargePlayer(playerId, 500);
-                voyage.setEventCost(500.0);
+                travelServiceClient.setEventCost(voyage.getId(), 500.0);
                 yield "The pirates accepted the bribe and called you honorary captains.";
             }
             case OPTION_B -> {
@@ -155,11 +150,11 @@ public class VoyageEventResolveService {
         };
     }
 
-    private String resolveRatBuffet(Voyage voyage, Long playerId, VoyageEventOption option) {
+    private String resolveRatBuffet(VoyageResponse voyage, Long playerId, VoyageEventOption option) {
         return switch (option) {
             case OPTION_A -> {
                 chargePlayer(playerId, 200);
-                voyage.setEventCost(200.0);
+                travelServiceClient.setEventCost(voyage.getId(), 200.0);
                 yield "You bought rat traps. Expensive, but the cargo buffet was closed.";
             }
             case OPTION_B -> {
@@ -170,7 +165,7 @@ public class VoyageEventResolveService {
         };
     }
 
-    private String resolveHackerSeagulls(Voyage voyage, ShipResponse ship, Long playerId, VoyageEventOption option) {
+    private String resolveHackerSeagulls(VoyageResponse voyage, ShipResponse ship, Long playerId, VoyageEventOption option) {
         return switch (option) {
             case OPTION_A -> {
                 delayVoyage(voyage, ship, 1);
@@ -178,7 +173,7 @@ public class VoyageEventResolveService {
             }
             case OPTION_B -> {
                 chargePlayer(playerId, 350);
-                voyage.setEventCost(350.0);
+                travelServiceClient.setEventCost(voyage.getId(), 350.0);
                 yield "The technician removed three USB sticks from a seagull nest. Problem solved.";
             }
             case OPTION_C -> {
@@ -188,11 +183,11 @@ public class VoyageEventResolveService {
         };
     }
 
-    private String resolveMedicalEmergency(Voyage voyage, Long playerId, VoyageEventOption option) {
+    private String resolveMedicalEmergency(VoyageResponse voyage, Long playerId, VoyageEventOption option) {
         return switch (option) {
             case OPTION_A -> {
                 chargePlayer(playerId, 300);
-                voyage.setEventCost(300.0);
+                travelServiceClient.setEventCost(voyage.getId(), 300.0);
                 yield "You ordered replacement medicine. The crew was relieved. Your wallet was not.";
             }
             case OPTION_B -> {
@@ -203,7 +198,7 @@ public class VoyageEventResolveService {
         };
     }
 
-    private String resolveBadWeather(Voyage voyage, ShipResponse ship, VoyageEventOption option) {
+    private String resolveBadWeather(VoyageResponse voyage, ShipResponse ship, VoyageEventOption option) {
         return switch (option) {
             case OPTION_A -> {
                 delayVoyage(voyage, ship, 2);
@@ -217,18 +212,19 @@ public class VoyageEventResolveService {
         };
     }
 
-    private void delayVoyage(Voyage voyage, ShipResponse ship, int ticks) {
-        voyage.setArrivalTick(voyage.getArrivalTick() + ticks);
-
+    private void delayVoyage(VoyageResponse voyage, ShipResponse ship, int ticks) {
         double extraFuelLoss = ticks * EXTRA_FUEL_LOSS_PER_DELAY_TICK;
         double extraConditionLoss = ticks * EXTRA_CONDITION_LOSS_PER_DELAY_TICK;
 
         reduceFuel(ship, extraFuelLoss);
         damageShip(ship, extraConditionLoss);
 
-        voyage.setExtraDelayTicks(voyage.getExtraDelayTicks() + ticks);
-        voyage.setExtraFuelLoss(voyage.getExtraFuelLoss() + extraFuelLoss);
-        voyage.setExtraConditionLoss(voyage.getExtraConditionLoss() + extraConditionLoss);
+        travelServiceClient.delayVoyage(
+                voyage.getId(),
+                ticks,
+                extraFuelLoss,
+                extraConditionLoss
+        );
     }
 
     private void damageShip(ShipResponse ship, double damage) {
@@ -243,10 +239,8 @@ public class VoyageEventResolveService {
         ship.setFuelLevel(newFuelLevel);
     }
 
-    private void reduceReward(Voyage voyage, double percent) {
-        double factor = (100.0 - percent) / 100.0;
-        voyage.setReward(voyage.getReward() * factor);
-        voyage.setRewardLossPercent(voyage.getRewardLossPercent() + percent);
+    private void reduceReward(VoyageResponse voyage, double percent) {
+        travelServiceClient.reduceReward(voyage.getId(), percent);
     }
 
     private void chargePlayer(Long playerId, double amount) {

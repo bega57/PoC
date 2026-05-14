@@ -1,15 +1,14 @@
 package at.fhv.blueroute.event.application.service;
 
+import at.fhv.blueroute.common.websocket.SessionStatusMessage;
 import at.fhv.blueroute.common.websocket.WebSocketSender;
 import at.fhv.blueroute.event.domain.model.VoyageEventType;
 import at.fhv.blueroute.event.presentation.dto.VoyageEventDto;
 import at.fhv.blueroute.event.presentation.dto.VoyageEventOptionDto;
 import at.fhv.blueroute.session.domain.model.Session;
-import at.fhv.blueroute.archive_voyage.domain.model.Voyage;
-import at.fhv.blueroute.archive_voyage.infrastructure.persistence.JpaVoyageRepository;
-import at.fhv.blueroute.common.websocket.SessionStatusMessage;
 import at.fhv.blueroute.session.domain.model.SessionStatus;
-
+import at.fhv.blueroute.travel.client.TravelServiceClient;
+import at.fhv.blueroute.travel.client.dto.VoyageResponse;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
@@ -17,16 +16,16 @@ import java.util.List;
 @Service
 public class VoyageEventTriggerService {
 
-    private final JpaVoyageRepository voyageRepository;
+    private final TravelServiceClient travelServiceClient;
     private final WebSocketSender webSocketSender;
 
-    public VoyageEventTriggerService(JpaVoyageRepository voyageRepository,
+    public VoyageEventTriggerService(TravelServiceClient travelServiceClient,
                                      WebSocketSender webSocketSender) {
-        this.voyageRepository = voyageRepository;
+        this.travelServiceClient = travelServiceClient;
         this.webSocketSender = webSocketSender;
     }
 
-    public void triggerEventIfNeeded(Voyage voyage, Session session) {
+    public void triggerEventIfNeeded(VoyageResponse voyage, Session session) {
         if (voyage.getPendingEventType() == null) return;
         if (voyage.isEventTriggered()) return;
         if (voyage.isEventResolved()) return;
@@ -39,8 +38,7 @@ public class VoyageEventTriggerService {
 
         if (session.getCurrentTick() < voyage.getEventTriggerTick()) return;
 
-        voyage.setEventTriggered(true);
-        voyageRepository.save(voyage);
+        travelServiceClient.markEventTriggered(voyage.getId());
 
         session.setStatus(SessionStatus.PAUSED);
 
@@ -57,7 +55,7 @@ public class VoyageEventTriggerService {
         webSocketSender.sendSessionUpdate(session.getSessionCode(), dto);
     }
 
-    private VoyageEventDto createDto(Voyage voyage) {
+    private VoyageEventDto createDto(VoyageResponse voyage) {
         VoyageEventType type = voyage.getPendingEventType();
 
         return switch (type) {

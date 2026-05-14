@@ -1,6 +1,7 @@
 package at.fhv.blueroute.travel.domain.model;
 
-import at.fhv.blueroute.event.domain.model.VoyageEventType;
+import at.fhv.blueroute.travel.domain.model.VoyageEventType;
+
 import jakarta.persistence.*;
 
 import java.time.LocalDateTime;
@@ -30,6 +31,15 @@ public class Voyage {
 
     private boolean rewardGranted;
 
+    @Enumerated(EnumType.STRING)
+    private VoyageEventType pendingEventType;
+
+    private Integer eventTriggerTick;
+
+    private boolean eventTriggered;
+
+    private boolean eventResolved;
+
     @Column(nullable = false)
     private int startTick;
 
@@ -39,14 +49,6 @@ public class Voyage {
     @Column(nullable = false)
     private Long sessionId;
 
-    @Enumerated(EnumType.STRING)
-    private VoyageEventType pendingEventType;
-
-    private Integer eventTriggerTick;
-
-    private boolean eventTriggered;
-
-    private boolean eventResolved;
 
     private String eventResultMessage;
 
@@ -214,12 +216,28 @@ public class Voyage {
         this.sessionId = sessionId;
     }
 
-    public VoyageEventType getPendingEventType() {
-        return pendingEventType;
-    }
-
     public void setId(Long id) {
         this.id = id;
+    }
+
+    public double getFuelPerTick() {
+        return fuelPerTick;
+    }
+
+    public void setFuelPerTick(double fuelPerTick) {
+        this.fuelPerTick = fuelPerTick;
+    }
+
+    public double getConditionPerTick() {
+        return conditionPerTick;
+    }
+
+    public void setConditionPerTick(double conditionPerTick) {
+        this.conditionPerTick = conditionPerTick;
+    }
+
+    public VoyageEventType getPendingEventType() {
+        return pendingEventType;
     }
 
     public void setPendingEventType(VoyageEventType pendingEventType) {
@@ -250,20 +268,4 @@ public class Voyage {
         this.eventResolved = eventResolved;
     }
 
-
-    public double getFuelPerTick() {
-        return fuelPerTick;
-    }
-
-    public void setFuelPerTick(double fuelPerTick) {
-        this.fuelPerTick = fuelPerTick;
-    }
-
-    public double getConditionPerTick() {
-        return conditionPerTick;
-    }
-
-    public void setConditionPerTick(double conditionPerTick) {
-        this.conditionPerTick = conditionPerTick;
-    }
 }

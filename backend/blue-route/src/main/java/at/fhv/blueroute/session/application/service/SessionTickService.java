@@ -38,68 +38,38 @@ public class SessionTickService {
 
     public void processTicks() {
 
-        System.out.println("PROCESS TICKS RUNNING");
-
         List<Session> runningSessions =
                 sessionRepository.findByStatus(SessionStatus.RUNNING);
-
-        travelServiceClient.processTick();
 
         for (Session session : runningSessions) {
 
             session.setCurrentTick(session.getCurrentTick() + 1);
 
-            travelServiceClient.processTick();
-
-            List<VoyageResponse> voyages =
-                    travelServiceClient.getVoyages(
+            List<VoyageResponse> finishedVoyages =
+                    travelServiceClient.processTick(
                             session.getId(),
                             session.getCurrentTick()
                     );
 
-            for (VoyageResponse v : voyages) {
+            for (VoyageResponse finishedVoyage : finishedVoyages) {
 
-                if ("FINISHED".equals(v.status)) {
-                    continue;
-                }
-
-                if (session.getStatus() == SessionStatus.PAUSED) {
-                    break;
-                }
-
-                if (session.getCurrentTick() >= v.arrivalTick) {
-
-                    System.out.println("FINISHING VOYAGE: " + v.id);
-
-                    travelServiceClient.finishVoyage(
-                            v.id,
-                            session.getCurrentTick()
-                    );
-
-                    webSocketSender.sendSessionUpdate(
-                            session.getSessionCode(),
-                            new VoyageFinishedMessage(
-                                    "VOYAGE_FINISHED",
-                                    session.getSessionCode(),
-                                    v.id,
-                                    v.shipId,
-                                    v.destinationPort,
-                                    v.reward,
-                                    v.eventResultMessage,
-                                    v.extraDelayTicks,
-                                    v.extraFuelLoss,
-                                    v.extraConditionLoss,
-                                    v.eventCost,
-                                    v.rewardLossPercent
-                            )
-                    );
-
-                    continue;
-                }
-
-                if ("RUNNING".equals(v.status)) {
-
-                }
+                webSocketSender.sendSessionUpdate(
+                        session.getSessionCode(),
+                        new VoyageFinishedMessage(
+                                "VOYAGE_FINISHED",
+                                session.getSessionCode(),
+                                finishedVoyage.getId(),
+                                finishedVoyage.getShipId(),
+                                finishedVoyage.getDestinationPort(),
+                                finishedVoyage.getReward(),
+                                finishedVoyage.getEventResultMessage(),
+                                finishedVoyage.getExtraDelayTicks(),
+                                finishedVoyage.getExtraFuelLoss(),
+                                finishedVoyage.getExtraConditionLoss(),
+                                finishedVoyage.getEventCost(),
+                                finishedVoyage.getRewardLossPercent()
+                        )
+                );
             }
 
             webSocketSender.sendSessionUpdate(

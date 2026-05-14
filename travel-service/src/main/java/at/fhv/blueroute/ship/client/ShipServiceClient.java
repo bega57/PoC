@@ -3,12 +3,7 @@ package at.fhv.blueroute.ship.client;
 import at.fhv.blueroute.ship.client.dto.FinishVoyageRequest;
 import at.fhv.blueroute.ship.client.dto.ShipResponse;
 import at.fhv.blueroute.ship.client.dto.StartVoyageRequest;
-import at.fhv.blueroute.ship.client.dto.VoyageProgressRequest;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.http.HttpEntity;
-import org.springframework.http.HttpHeaders;
-import org.springframework.http.HttpMethod;
-import org.springframework.http.MediaType;
 import org.springframework.stereotype.Component;
 import org.springframework.web.client.RestTemplate;
 
@@ -92,23 +87,19 @@ public class ShipServiceClient {
             double conditionLoss
     ) {
 
-        VoyageProgressRequest request =
-                new VoyageProgressRequest();
+        String url =
+                shipServiceUrl
+                        + "/ships/"
+                        + shipId
+                        + "/voyage-progress"
+                        + "?fuelLoss="
+                        + fuelLoss
+                        + "&conditionLoss="
+                        + conditionLoss;
 
-        request.setFuelLoss(fuelLoss);
-        request.setConditionLoss(conditionLoss);
-
-        HttpHeaders headers = new HttpHeaders();
-        headers.setContentType(MediaType.APPLICATION_JSON);
-
-        HttpEntity<VoyageProgressRequest> entity =
-                new HttpEntity<>(request, headers);
-
-        restTemplate.exchange(
-                shipServiceUrl + "/ships/" + shipId + "/voyage-progress",
-                HttpMethod.PUT,
-                entity,
-                Void.class
+        restTemplate.put(
+                url,
+                null
         );
     }
 }
