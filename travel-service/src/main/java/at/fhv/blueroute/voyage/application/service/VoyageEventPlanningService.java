@@ -1,7 +1,7 @@
-package at.fhv.blueroute.event.application.service;
+package at.fhv.blueroute.voyage.application.service;
 
-import at.fhv.blueroute.event.application.dto.PlannedVoyageEvent;
-import at.fhv.blueroute.event.domain.model.VoyageEventType;
+import at.fhv.blueroute.cargo.domain.model.Cargo;
+import at.fhv.blueroute.voyage.domain.model.VoyageEventType;
 import org.springframework.stereotype.Service;
 
 import java.util.Optional;
@@ -13,8 +13,7 @@ public class VoyageEventPlanningService {
     private final Random random = new Random();
 
     public Optional<PlannedVoyageEvent> planEventForVoyage(
-            String riskLevel,
-            String cargoType,
+            Cargo cargo,
             int currentTick,
             int arrivalTick
     ) {
@@ -24,11 +23,11 @@ public class VoyageEventPlanningService {
             return Optional.empty();
         }
 
-        if (!shouldEventHappen(riskLevel)) {
+        if (!shouldEventHappen(cargo.getRiskLevel().name())) {
             return Optional.empty();
         }
 
-        VoyageEventType eventType = chooseEventType(cargoType);
+        VoyageEventType eventType = chooseEventType(cargo.getType().name());
 
         int eventTriggerTick =
                 currentTick + Math.max(1, (int) Math.ceil(voyageDuration / 2.0));
@@ -37,9 +36,7 @@ public class VoyageEventPlanningService {
             eventTriggerTick = arrivalTick - 1;
         }
 
-        return Optional.of(
-                new PlannedVoyageEvent(eventType, eventTriggerTick)
-        );
+        return Optional.of(new PlannedVoyageEvent(eventType, eventTriggerTick));
     }
 
     private boolean shouldEventHappen(String riskLevel) {
@@ -62,5 +59,11 @@ public class VoyageEventPlanningService {
             case "MEDICINE" -> VoyageEventType.MEDICAL_EMERGENCY;
             default -> VoyageEventType.BAD_WEATHER;
         };
+    }
+
+    public record PlannedVoyageEvent(
+            VoyageEventType eventType,
+            int eventTriggerTick
+    ) {
     }
 }

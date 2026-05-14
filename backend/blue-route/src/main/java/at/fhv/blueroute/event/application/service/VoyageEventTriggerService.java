@@ -7,8 +7,8 @@ import at.fhv.blueroute.event.presentation.dto.VoyageEventDto;
 import at.fhv.blueroute.event.presentation.dto.VoyageEventOptionDto;
 import at.fhv.blueroute.session.domain.model.Session;
 import at.fhv.blueroute.session.domain.model.SessionStatus;
-import at.fhv.blueroute.travel.client.TravelServiceClient;
-import at.fhv.blueroute.travel.client.dto.VoyageResponse;
+import at.fhv.blueroute.voyage.client.VoyageServiceClient;
+import at.fhv.blueroute.voyage.client.dto.VoyageResponse;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
@@ -16,12 +16,12 @@ import java.util.List;
 @Service
 public class VoyageEventTriggerService {
 
-    private final TravelServiceClient travelServiceClient;
+    private final VoyageServiceClient voyageServiceClient;
     private final WebSocketSender webSocketSender;
 
-    public VoyageEventTriggerService(TravelServiceClient travelServiceClient,
+    public VoyageEventTriggerService(VoyageServiceClient voyageServiceClient,
                                      WebSocketSender webSocketSender) {
-        this.travelServiceClient = travelServiceClient;
+        this.voyageServiceClient = voyageServiceClient;
         this.webSocketSender = webSocketSender;
     }
 
@@ -38,7 +38,7 @@ public class VoyageEventTriggerService {
 
         if (session.getCurrentTick() < voyage.getEventTriggerTick()) return;
 
-        travelServiceClient.markEventTriggered(voyage.getId());
+        voyageServiceClient.markEventTriggered(voyage.getId());
 
         session.setStatus(SessionStatus.PAUSED);
 

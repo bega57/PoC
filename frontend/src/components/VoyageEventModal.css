@@ -88,7 +88,7 @@
 .voyage-event-option-button {
     background: #f3ea57;
 
-    color: black;
+    color: black !important;
 
     border: none;
 

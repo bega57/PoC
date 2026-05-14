@@ -12,8 +12,8 @@ import at.fhv.blueroute.session.domain.model.Session;
 import at.fhv.blueroute.session.domain.model.SessionStatus;
 import at.fhv.blueroute.session.infrastructure.persistence.JpaSessionRepository;
 import at.fhv.blueroute.player.client.PlayerServiceClient;
-import at.fhv.blueroute.travel.client.TravelServiceClient;
-import at.fhv.blueroute.travel.client.dto.VoyageResponse;
+import at.fhv.blueroute.voyage.client.VoyageServiceClient;
+import at.fhv.blueroute.voyage.client.dto.VoyageResponse;
 import org.springframework.stereotype.Service;
 import jakarta.transaction.Transactional;
 
@@ -28,22 +28,22 @@ public class VoyageEventResolveService {
     private final JpaSessionRepository sessionRepository;
     private final WebSocketSender webSocketSender;
     private final PlayerServiceClient playerServiceClient;
-    private final TravelServiceClient travelServiceClient;
+    private final VoyageServiceClient voyageServiceClient;
 
     public VoyageEventResolveService(ShipServiceClient shipServiceClient,
                                      JpaSessionRepository sessionRepository,
                                      WebSocketSender webSocketSender,
                                      PlayerServiceClient playerServiceClient,
-                                     TravelServiceClient travelServiceClient) {
+                                     VoyageServiceClient voyageServiceClient) {
         this.shipServiceClient = shipServiceClient;
         this.sessionRepository = sessionRepository;
         this.webSocketSender = webSocketSender;
         this.playerServiceClient = playerServiceClient;
-        this.travelServiceClient = travelServiceClient;
+        this.voyageServiceClient = voyageServiceClient;
     }
 
     public String resolveEvent(Long voyageId, VoyageEventOption selectedOption) {
-            VoyageResponse voyage = travelServiceClient.getVoyage(voyageId);
+            VoyageResponse voyage = voyageServiceClient.getVoyage(voyageId);
 
             if (voyage == null) {
                 throw new VoyageEventNotFoundException(voyageId);
@@ -80,7 +80,7 @@ public class VoyageEventResolveService {
                 selectedOption
         );
 
-        travelServiceClient.markEventResolved(voyageId, resultMessage);
+        voyageServiceClient.markEventResolved(voyageId, resultMessage);
 
         Session session = sessionRepository.findById(voyage.getSessionId())
                 .orElseThrow(() -> new InvalidVoyageEventActionException("Session not found for voyage."));
@@ -136,7 +136,7 @@ public class VoyageEventResolveService {
         return switch (option) {
             case OPTION_A -> {
                 chargePlayer(playerId, 500);
-                travelServiceClient.setEventCost(voyage.getId(), 500.0);
+                voyageServiceClient.setEventCost(voyage.getId(), 500.0);
                 yield "The pirates accepted the bribe and called you honorary captains.";
             }
             case OPTION_B -> {
@@ -154,7 +154,7 @@ public class VoyageEventResolveService {
         return switch (option) {
             case OPTION_A -> {
                 chargePlayer(playerId, 200);
-                travelServiceClient.setEventCost(voyage.getId(), 200.0);
+                voyageServiceClient.setEventCost(voyage.getId(), 200.0);
                 yield "You bought rat traps. Expensive, but the cargo buffet was closed.";
             }
             case OPTION_B -> {
@@ -173,7 +173,7 @@ public class VoyageEventResolveService {
             }
             case OPTION_B -> {
                 chargePlayer(playerId, 350);
-                travelServiceClient.setEventCost(voyage.getId(), 350.0);
+                voyageServiceClient.setEventCost(voyage.getId(), 350.0);
                 yield "The technician removed three USB sticks from a seagull nest. Problem solved.";
             }
             case OPTION_C -> {
@@ -187,7 +187,7 @@ public class VoyageEventResolveService {
         return switch (option) {
             case OPTION_A -> {
                 chargePlayer(playerId, 300);
-                travelServiceClient.setEventCost(voyage.getId(), 300.0);
+                voyageServiceClient.setEventCost(voyage.getId(), 300.0);
                 yield "You ordered replacement medicine. The crew was relieved. Your wallet was not.";
             }
             case OPTION_B -> {
@@ -219,7 +219,7 @@ public class VoyageEventResolveService {
         reduceFuel(ship, extraFuelLoss);
         damageShip(ship, extraConditionLoss);
 
-        travelServiceClient.delayVoyage(
+        voyageServiceClient.delayVoyage(
                 voyage.getId(),
                 ticks,
                 extraFuelLoss,
@@ -240,7 +240,7 @@ public class VoyageEventResolveService {
     }
 
     private void reduceReward(VoyageResponse voyage, double percent) {
-        travelServiceClient.reduceReward(voyage.getId(), percent);
+        voyageServiceClient.reduceReward(voyage.getId(), percent);
     }
 
     private void chargePlayer(Long playerId, double amount) {
