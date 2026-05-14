@@ -1,0 +1,8 @@
+POST http://localhost:8083/voyages/start
+Content-Type: application/json
+
+{
+  "shipId": 1,
+  "cargoId": 1,
+  "sessionCode": "TEST"
+}

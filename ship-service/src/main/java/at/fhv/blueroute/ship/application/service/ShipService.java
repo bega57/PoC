@@ -16,6 +16,7 @@ import at.fhv.blueroute.ship.presentation.dto.SellShipRequest;
 import at.fhv.blueroute.ship.presentation.dto.ShipResponse;
 
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 
@@ -250,6 +251,35 @@ public class ShipService {
                         ship.getUsedCapacity() - releasedCapacity
                 )
         );
+
+        shipRepository.save(ship);
+    }
+
+    @Transactional
+    public void updateVoyageProgress(
+            Long shipId,
+            double fuelLoss,
+            double conditionLoss
+    ) {
+
+        Ship ship = shipRepository.findById(shipId)
+                .orElseThrow(() ->
+                        new RuntimeException("Ship not found"));
+
+        int newFuel =
+                (int) Math.max(
+                        0,
+                        Math.round(ship.getFuelLevel() - fuelLoss)
+                );
+
+        int newCondition =
+                (int) Math.max(
+                        0,
+                        Math.round(ship.getCondition() - conditionLoss)
+                );
+
+        ship.setFuelLevel(newFuel);
+        ship.setCondition(newCondition);
 
         shipRepository.save(ship);
     }

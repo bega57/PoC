@@ -4,7 +4,7 @@ import at.fhv.blueroute.cargo.domain.model.Cargo;
 import at.fhv.blueroute.cargo.domain.model.CargoType;
 import at.fhv.blueroute.cargo.domain.model.RiskLevel;
 import at.fhv.blueroute.event.domain.model.VoyageEventType;
-import at.fhv.blueroute.voyage.domain.model.Voyage;
+import at.fhv.blueroute.archive_voyage.domain.model.Voyage;
 import org.springframework.stereotype.Service;
 
 import java.util.Random;

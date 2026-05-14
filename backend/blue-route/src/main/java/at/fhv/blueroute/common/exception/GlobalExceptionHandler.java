@@ -4,7 +4,7 @@ import at.fhv.blueroute.player.application.exception.PlayerNotFoundException;
 import at.fhv.blueroute.session.application.exception.SessionFullException;
 import at.fhv.blueroute.session.application.exception.SessionNotFoundException;
 import at.fhv.blueroute.ship.application.exception.InsufficientBalanceException;
-import at.fhv.blueroute.voyage.application.exception.VoyageException;
+import at.fhv.blueroute.travel.application.exception.VoyageException;
 import jakarta.servlet.http.HttpServletRequest;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;

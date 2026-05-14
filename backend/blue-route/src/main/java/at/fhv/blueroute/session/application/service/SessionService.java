@@ -14,11 +14,10 @@ import at.fhv.blueroute.session.domain.repository.SessionRepository;
 import at.fhv.blueroute.session.presentation.dto.SessionResponse;
 import at.fhv.blueroute.session.application.exception.PlayerAlreadyActiveException;
 import at.fhv.blueroute.session.application.exception.PlayerAlreadyInSessionException;
-import at.fhv.blueroute.voyage.domain.model.Voyage;
-import at.fhv.blueroute.voyage.infrastructure.persistence.JpaVoyageRepository;
 import at.fhv.blueroute.player.client.PlayerServiceClient;
 import at.fhv.blueroute.player.client.dto.PlayerResponse;
 
+import at.fhv.blueroute.travel.client.TravelServiceClient;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
@@ -31,18 +30,18 @@ public class SessionService {
     private final PlayerServiceClient playerServiceClient;
     private final SessionMapper sessionMapper;
     private final WebSocketSender webSocketSender;
-    private final JpaVoyageRepository voyageRepository;
+    private final TravelServiceClient travelServiceClient;
 
     public SessionService(SessionRepository sessionRepository,
                           PlayerServiceClient playerServiceClient,
                           SessionMapper sessionMapper,
                           WebSocketSender webSocketSender,
-                          JpaVoyageRepository voyageRepository) {
+                          TravelServiceClient travelServiceClient) {
         this.sessionRepository = sessionRepository;
         this.playerServiceClient = playerServiceClient;
         this.sessionMapper = sessionMapper;
         this.webSocketSender = webSocketSender;
-        this.voyageRepository = voyageRepository;
+        this.travelServiceClient = travelServiceClient;
 
     }
 
@@ -268,8 +267,7 @@ public class SessionService {
     }
 
     private boolean hasPendingEvents(Session session) {
-        List<Voyage> voyages = voyageRepository.findBySessionId(session.getId());
-        return voyages.stream()
-                .anyMatch(v -> v.getPendingEventType() != null && !v.isEventResolved());
+        return travelServiceClient
+                .hasPendingEvents(session.getId());
     }
 }

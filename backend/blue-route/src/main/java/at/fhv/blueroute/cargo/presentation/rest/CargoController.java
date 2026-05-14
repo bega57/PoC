@@ -1,9 +1,8 @@
 package at.fhv.blueroute.cargo.presentation.rest;
 
-import at.fhv.blueroute.cargo.application.service.GetCargoByPortService;
-import at.fhv.blueroute.cargo.application.service.GetCargoOffersService;
-import at.fhv.blueroute.cargo.domain.model.Cargo;
-import at.fhv.blueroute.cargo.presentation.dto.CargoOfferDto;
+import at.fhv.blueroute.cargo.client.CargoServiceClient;
+import at.fhv.blueroute.cargo.client.dto.CargoResponse;
+import at.fhv.blueroute.cargo.client.dto.CargoOfferDto;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -13,22 +12,19 @@ import java.util.List;
 @CrossOrigin
 public class CargoController {
 
-    private final GetCargoByPortService service;
-    private final GetCargoOffersService cargoOffersService;
+    private final CargoServiceClient cargoServiceClient;
 
-    public CargoController(GetCargoByPortService service,
-                           GetCargoOffersService cargoOffersService) {
-        this.service = service;
-        this.cargoOffersService = cargoOffersService;
+    public CargoController(CargoServiceClient cargoServiceClient) {
+        this.cargoServiceClient = cargoServiceClient;
     }
 
     @GetMapping
-    public List<Cargo> getCargo(@RequestParam String portName) {
-        return service.execute(portName);
+    public List<CargoResponse> getCargo(@RequestParam String portName) {
+        return cargoServiceClient.getCargo(portName);
     }
 
     @GetMapping("/offers")
     public List<CargoOfferDto> getAllCargoOffers() {
-        return cargoOffersService.execute();
+        return cargoServiceClient.getCargoOffers();
     }
 }

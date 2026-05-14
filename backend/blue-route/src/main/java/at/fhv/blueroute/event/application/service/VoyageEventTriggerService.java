@@ -5,8 +5,8 @@ import at.fhv.blueroute.event.domain.model.VoyageEventType;
 import at.fhv.blueroute.event.presentation.dto.VoyageEventDto;
 import at.fhv.blueroute.event.presentation.dto.VoyageEventOptionDto;
 import at.fhv.blueroute.session.domain.model.Session;
-import at.fhv.blueroute.voyage.domain.model.Voyage;
-import at.fhv.blueroute.voyage.infrastructure.persistence.JpaVoyageRepository;
+import at.fhv.blueroute.archive_voyage.domain.model.Voyage;
+import at.fhv.blueroute.archive_voyage.infrastructure.persistence.JpaVoyageRepository;
 import at.fhv.blueroute.common.websocket.SessionStatusMessage;
 import at.fhv.blueroute.session.domain.model.SessionStatus;
 
