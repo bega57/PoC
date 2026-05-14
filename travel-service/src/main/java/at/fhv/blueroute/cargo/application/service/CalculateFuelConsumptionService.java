@@ -8,7 +8,7 @@ public class CalculateFuelConsumptionService {
 
     public double calculate(Cargo cargo, double distance) {
 
-        double base = 0.00004;
+        double base = 0.0004;
 
         double capacityFactor = cargo.getRequiredCapacity() / 10.0;
 

@@ -61,13 +61,13 @@ public class PlayerServiceClient {
         return restTemplate.getForObject(url, PlayerResponse.class);
     }
 
-    public void updateCompanyName(Long playerId, String companyName) {
+    public PlayerResponse updateCompanyName(Long playerId, String companyName) {
         String url = playerServiceUrl + "/players/" + playerId + "/company-name";
 
-        restTemplate.postForObject(
+        return restTemplate.postForObject(
                 url,
                 new UpdateCompanyNameRequest(companyName),
-                Void.class
+                PlayerResponse.class
         );
     }
 

@@ -269,13 +269,13 @@ public class ShipService {
         int newFuel =
                 (int) Math.max(
                         0,
-                        Math.round(ship.getFuelLevel() - fuelLoss)
+                        Math.floor(ship.getFuelLevel() - fuelLoss)
                 );
 
         int newCondition =
                 (int) Math.max(
                         0,
-                        Math.round(ship.getCondition() - conditionLoss)
+                        Math.floor(ship.getCondition() - conditionLoss)
                 );
 
         ship.setFuelLevel(newFuel);

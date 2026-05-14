@@ -2,6 +2,7 @@ package at.fhv.blueroute.player.presentation.rest;
 
 import at.fhv.blueroute.player.client.PlayerServiceClient;
 import at.fhv.blueroute.player.client.dto.PlayerResponse;
+import at.fhv.blueroute.player.client.dto.UpdateCompanyNameRequest;
 import at.fhv.blueroute.player.presentation.dto.PlayerRequest;
 import at.fhv.blueroute.player.presentation.dto.SelectPortRequest;
 import jakarta.validation.Valid;
@@ -43,5 +44,16 @@ public class PlayerController {
     @PatchMapping("/{playerId}/heartbeat")
     public ResponseEntity<Void> heartbeat(@PathVariable Long playerId) {
         return ResponseEntity.noContent().build();
+    }
+
+    @PostMapping("/{playerId}/company-name")
+    public PlayerResponse updateCompanyName(
+            @PathVariable Long playerId,
+            @RequestBody UpdateCompanyNameRequest request
+    ) {
+        return playerServiceClient.updateCompanyName(
+                playerId,
+                request.getCompanyName()
+        );
     }
 }
