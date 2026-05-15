@@ -1,6 +1,6 @@
 import GameDay from "../ui/GameDay.jsx";
 
-function GameStatusBar({ session, currentPlayer, myActiveVoyages, smoothProgress }) {
+function GameStatusBar({ session, currentPlayer, myActiveVoyages }) {
 
     const allShips = session.players.flatMap(p => p.ships || []);
 
@@ -18,13 +18,11 @@ function GameStatusBar({ session, currentPlayer, myActiveVoyages, smoothProgress
             {myActiveVoyages.length > 0 ? (
                 myActiveVoyages.map(v => {
                     const ship = allShips.find(s => s.id === v.shipId);
-                    const backend = v.progress ?? 0;
-                    const smooth = (smoothProgress[v.id] ?? 0) / 100;
-                    const currentDay = Math.max(
-                        1,
-                        Math.ceil(smooth * v.duration)
-                    );
-                    const progress = Math.min(Math.max(backend, smooth), 1);
+
+                    const progress = v.progress ?? 0;
+
+                    const currentDay =
+                        Math.max(1, v.currentDay ?? 1);
 
                     return (
                         <div key={v.id} style={{ marginTop: "8px" }}>
@@ -48,7 +46,7 @@ function GameStatusBar({ session, currentPlayer, myActiveVoyages, smoothProgress
                                     height: "100%",
                                     background: "linear-gradient(90deg, #22c55e, #4ade80)",
                                     boxShadow: "0 0 6px #22c55e",
-                                    transition: "width 0.5s linear"
+                                    transition: "width 5s linear"
                                 }} />
                             </div>
 

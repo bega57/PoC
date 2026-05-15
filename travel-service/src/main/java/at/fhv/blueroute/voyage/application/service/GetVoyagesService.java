@@ -81,7 +81,7 @@ public class GetVoyagesService {
             dto.currentDay =
                     Math.min(
                             durationTicks,
-                            currentTick - v.getStartTick()
+                            (currentTick - v.getStartTick()) + 1
                     );
 
         } else {
