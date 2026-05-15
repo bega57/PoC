@@ -60,15 +60,8 @@ function GameMap({
                 <div className="port-instruction-popup">
 
                     <div className="port-instruction-title">
-                        Main Port Required
+                        ⚠️ Main Port Required
                     </div>
-
-                    <div className="port-instruction-divider"></div>
-
-                    <div className="port-instruction-text">
-                        ⚠️ Don't forget to pick a main port
-                    </div>
-
                     <div className="port-instruction-subtext">
                         You cannot change this later
                     </div>

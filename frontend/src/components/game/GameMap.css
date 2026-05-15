@@ -132,49 +132,53 @@
 .port-instruction-popup {
     position: absolute;
 
-    top: 28px;
+    top: 14px;
     left: 50%;
 
     transform: translateX(-50%);
 
-    background: #10284d;
+    width: 340px;
+    height: 58px;
+
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+
+    gap: 4px;
+
+    background: rgba(16, 40, 77, 0.94);
 
     border: 2px solid #5fa8ff;
-    border-radius: 6px;
+    border-radius: 14px;
 
-    min-width: 260px;
-
-    padding: 10px 14px;
-
-    z-index: 100;
+    backdrop-filter: blur(10px);
 
     box-shadow:
             0 0 18px rgba(95,168,255,0.18),
             0 8px 30px rgba(0,0,0,0.45);
 
-    backdrop-filter: blur(6px);
+    z-index: 100;
 }
-
-
-.port-instruction-divider {
-    height: 1px;
-
-    background: rgba(255,255,255,0.12);
-
-    margin-bottom: 10px;
-}
-
 
 .port-instruction-title {
-    font-size: 13px;
-    margin-bottom: 6px;
-}
+    font-size: 14px;
+    font-weight: 700;
 
-.port-instruction-text {
-    font-size: 12px;
-    margin-bottom: 4px;
+    color: #f8fafc;
+
+    white-space: nowrap;
 }
 
 .port-instruction-subtext {
     font-size: 11px;
+
+    color: rgba(255,255,255,0.68);
+
+    white-space: nowrap;
+}
+
+.port-instruction-divider,
+.port-instruction-text {
+    display: none;
 }
