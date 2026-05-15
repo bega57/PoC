@@ -596,7 +596,6 @@ function GamePage() {
                 session={session}
                 ports={ports}
                 voyages={voyages}
-                smoothProgress={smoothProgress}
                 hoveredPort={hoveredPort}
                 setHoveredPort={setHoveredPort}
                 handlePortHover={handlePortHover}

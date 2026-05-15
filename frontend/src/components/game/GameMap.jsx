@@ -1,3 +1,5 @@
+import { useEffect, useState } from "react";
+
 import {
     ComposableMap,
     Geographies,
@@ -28,7 +30,6 @@ function GameMap({
                      session,
                      ports,
                      voyages,
-                     smoothProgress,
                      hoveredPort,
                      setHoveredPort,
                      handlePortHover,
@@ -52,6 +53,35 @@ function GameMap({
                      getShipImage,
                      geoUrl
                  }) {
+    const [animatedProgress, setAnimatedProgress] = useState({});
+
+    useEffect(() => {
+
+        const interval = setInterval(() => {
+
+            setAnimatedProgress(prev => {
+
+                const updated = { ...prev };
+
+                voyages.forEach(v => {
+
+                    const target = v.progress ?? 0;
+
+                    const current =
+                        updated[v.id] ?? target;
+
+                    updated[v.id] =
+                        current + (target - current) * 0.03;
+                });
+
+                return updated;
+            });
+
+        }, 16);
+
+        return () => clearInterval(interval);
+
+    }, [voyages]);
 
     return (
         <div className="map-container">
@@ -197,7 +227,7 @@ function GameMap({
                 ).map(({ ship, player }) => {
 
                     const voyage = voyages.find(
-                        v => v.shipId === ship.id && v.status !== "FINISHED"
+                        v => v.shipId === ship.id && v.status === "RUNNING"
                     );
 
                     if (!voyage && ship.currentPort) {
@@ -240,12 +270,23 @@ function GameMap({
 
                     if (voyage) {
 
-                        const progress = Math.min(
-                            1,
-                            (smoothProgress[voyage.id] ?? (voyage.progress ?? 0) * 100) / 100
+                        const progress = Math.max(
+                            0,
+                            Math.min(
+                                1,
+                                Number(
+                                    animatedProgress[voyage.id] ?? voyage.progress
+                                ) || 0
+                            )
                         );
 
-                        console.log("FRONTEND PROGRESS:", progress);
+                        if (
+                            progress === undefined ||
+                            progress === null ||
+                            Number.isNaN(progress)
+                        ) {
+                            return null;
+                        }
 
                         let position;
 
