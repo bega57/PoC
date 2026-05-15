@@ -99,8 +99,6 @@ function GamePage() {
 
     const sessionIdRef = useRef(null);
 
-    const [smoothProgress, setSmoothProgress] = useState({});
-
     const fetchVoyagesOnly = async (sessionId, currentTick) => {
         if (!sessionId) return;
 
@@ -113,36 +111,6 @@ function GamePage() {
             console.error(err);
         }
     };
-
-    useEffect(() => {
-        const interval = setInterval(() => {
-            setSmoothProgress(prev => {
-                const updated = { ...prev };
-
-                voyages.forEach(v => {
-                    const backend = v.progress ?? 0;
-                    const current = (updated[v.id] ?? backend * 100) / 100;
-
-                    const totalTime = v.duration * 5000; // gleich wie Backend
-                    const speed = 16 / totalTime; // 16ms frame
-
-                    let next = current + speed;
-
-                    next = Math.min(next, backend);
-
-                    if (v.status === "FINISHED") {
-                        next = 1;
-                    }
-
-                    updated[v.id] = next * 100;
-                });
-
-                return updated;
-            });
-        }, 16);
-
-        return () => clearInterval(interval);
-    }, [voyages]);
 
     const sendHeartbeatSafe = () => {
         if (!sessionCode || !player?.id) return;
@@ -657,7 +625,6 @@ function GamePage() {
                 selectedShip={selectedShip}
                 currentPlayer={currentPlayer}
                 myActiveVoyages={myActiveVoyages}
-                smoothProgress={smoothProgress}
             />
 
             <GameSidebar
