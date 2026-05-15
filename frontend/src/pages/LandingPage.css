@@ -130,7 +130,7 @@
     font-weight: 600;
 
     background: linear-gradient(135deg, #2563eb, #38bdf8);
-    color: white;
+    color: white !important;
 
     border: none;
 
@@ -147,7 +147,7 @@
 
 .landing-buttons .secondary {
     background: rgba(37, 99, 235, 0.12);
-    color: #c7d2fe;
+    color: #c7d2fe !important;
 
     border: 1px solid rgba(96,165,250,0.3);
 }

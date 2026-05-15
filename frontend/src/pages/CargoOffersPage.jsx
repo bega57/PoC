@@ -18,20 +18,24 @@ function CargoOffersPage() {
             const res = await axios.get(
                 `${import.meta.env.VITE_API_BASE_URL}/cargo/offers`
             );
-            setOffers(res.data);
+
+            setOffers(Array.isArray(res.data) ? res.data : []);
         } catch (err) {
             console.error("Error fetching cargo offers", err);
         }
     };
 
     const portOptions = useMemo(() => {
+        const safeOffers = Array.isArray(offers) ? offers : [];
+
         const ports = [
             ...new Set(
-                offers
+                safeOffers
                     .map((offer) => offer.fromPort)
                     .filter(Boolean)
             )
         ];
+
         return ports.sort((a, b) => a.localeCompare(b));
     }, [offers]);
 
@@ -41,10 +45,11 @@ function CargoOffersPage() {
     };
 
     const filteredOffers = useMemo(() => {
-        let data = [...offers];
+        let data = Array.isArray(offers) ? [...offers] : [];
 
         if (fromPort) {
-            data = data.filter((offer) => offer.fromPort === fromPort);        }
+            data = data.filter((offer) => offer.fromPort === fromPort);
+        }
 
         if (sortBy === "reward") {
             data.sort((a, b) => b.reward - a.reward);
@@ -133,7 +138,7 @@ function CargoOffersPage() {
                                 <div className="cargo-stats">
                                     <div className="cargo-stat-block">
                                         <span className="cargo-stat-label">Price</span>
-                                        <div className={`risk-badge ${offer.riskLevel.toLowerCase()}`}>
+                                        <div className={`risk-badge ${(offer.riskLevel || "unknown").toLowerCase()}`}>
                                             {offer.riskLevel}
                                         </div>
                                     </div>
@@ -161,7 +166,7 @@ function CargoOffersPage() {
                                     <div className="cargo-stat-block">
                                         <span className="cargo-stat-label">Type</span>
                                         <span className="cargo-stat-value">
-                                            {offer.type.replace("_", " ")}
+                                            {offer.type ? offer.type.replace("_", " ") : "Unknown"}
                                         </span>
                                     </div>
 

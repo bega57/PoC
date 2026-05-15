@@ -29,7 +29,9 @@ function CompanyPage() {
             const sessionResponse = await api.get(`/sessions/${sessionCode}`);
             const sessionData = sessionResponse.data;
 
-            const voyagesResponse = await api.get(`/voyages?sessionId=${sessionData.id}`);
+            const voyagesResponse = await api.get(
+                `/voyages?sessionId=${sessionData.id}&currentTick=${session.currentTick}`
+            );
 
             setVoyages(voyagesResponse.data);
         } catch (error) {

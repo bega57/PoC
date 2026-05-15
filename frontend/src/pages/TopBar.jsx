@@ -45,7 +45,7 @@ function TopBar({ session, player }) {
                 <div className="card balance">
                     <div className="card-label">BALANCE</div>
                     <div className="card-main">
-                        💰 {player.balance.toLocaleString()}
+                        💰 {Math.floor(player.balance).toLocaleString("de-DE")} $
                     </div>
                 </div>
 

@@ -106,7 +106,7 @@ function GamePage() {
 
         try {
             const res = await api.get(
-                `/voyages?sessionId=${sessionId}&tick=${currentTick}`
+                `/voyages?sessionId=${sessionId}&currentTick=${currentTick}`
             );
             setVoyages(res.data);
         } catch (err) {
@@ -232,7 +232,7 @@ function GamePage() {
             }));
 
             const voyagesRes = await api.get(
-                `/voyages?sessionId=${sessionData.id}&tick=${sessionData.currentTick}`
+                `/voyages?sessionId=${sessionData.id}&currentTick=${sessionData.currentTick}`
             );
             setVoyages(voyagesRes.data);
 
@@ -341,7 +341,10 @@ function GamePage() {
 
     useEffect(() => {
 
-        const socket = new SockJS(`${import.meta.env.VITE_API_BASE_URL}/ws`);
+        const API_BASE_URL =
+            import.meta.env.VITE_API_BASE_URL || "http://localhost:8080";
+
+        const socket = new SockJS(`${API_BASE_URL}/ws`);
 
         const client = new Client({
             webSocketFactory: () => socket,

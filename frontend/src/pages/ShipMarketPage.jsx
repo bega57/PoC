@@ -189,12 +189,17 @@ function ShipMarketPage() {
             setIsBuying(true);
             setMessage("");
 
+            if (playerNeedsCompanyName) {
+                await api.post(`/players/${currentPlayer.id}/company-name`, {
+                    companyName: companyName.trim()
+                });
+            }
+
             if (activeTab === "NEW") {
                 await api.post("/ships/buy", {
                     playerId: currentPlayer.id,
                     shipType: selectedShip.type,
                     shipName: shipName.trim(),
-                    companyName: playerNeedsCompanyName ? companyName.trim() : null,
                     sessionCode: sessionCode
                 });
             } else {

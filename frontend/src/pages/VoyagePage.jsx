@@ -28,7 +28,7 @@ export default function VoyagePage() {
 
         try {
             const res = await api.get(
-                `/voyages?sessionId=${session.id}&tick=${session.currentTick}`
+                `/voyages?sessionId=${session.id}&currentTick=${session.currentTick}`
             );
             setVoyages(res.data);
         } catch (err) {
@@ -191,7 +191,8 @@ export default function VoyagePage() {
             await api.post("/voyages/start", {
                 shipId: selectedShip.id,
                 cargoId: Number(selectedCargoId),
-                sessionCode: sessionCode
+                sessionId: session.id,
+                currentTick: session.currentTick
             });
 
             await fetchVoyages();

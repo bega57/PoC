@@ -151,4 +151,19 @@ public class ShipController {
                 request.getReleasedCapacity()
         );
     }
+
+
+    @PutMapping("/{id}/voyage-progress")
+    public void updateVoyageProgress(
+            @PathVariable Long id,
+            @RequestParam double fuelLoss,
+            @RequestParam double conditionLoss
+    ) {
+
+        shipService.updateVoyageProgress(
+                id,
+                fuelLoss,
+                conditionLoss
+        );
+    }
 }

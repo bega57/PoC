@@ -1,12 +1,10 @@
 package at.fhv.blueroute.event.application.service;
 
-import at.fhv.blueroute.cargo.domain.model.Cargo;
-import at.fhv.blueroute.cargo.domain.model.CargoType;
-import at.fhv.blueroute.cargo.domain.model.RiskLevel;
+import at.fhv.blueroute.event.application.dto.PlannedVoyageEvent;
 import at.fhv.blueroute.event.domain.model.VoyageEventType;
-import at.fhv.blueroute.voyage.domain.model.Voyage;
 import org.springframework.stereotype.Service;
 
+import java.util.Optional;
 import java.util.Random;
 
 @Service
@@ -14,51 +12,54 @@ public class VoyageEventPlanningService {
 
     private final Random random = new Random();
 
-    public void planEventForVoyage(Voyage voyage, Cargo cargo, int currentTick) {
-        int voyageDuration = voyage.getArrivalTick() - currentTick;
+    public Optional<PlannedVoyageEvent> planEventForVoyage(
+            String riskLevel,
+            String cargoType,
+            int currentTick,
+            int arrivalTick
+    ) {
+        int voyageDuration = arrivalTick - currentTick;
 
         if (voyageDuration <= 1) {
-            return;
+            return Optional.empty();
         }
 
-        if (!shouldEventHappen(cargo.getRiskLevel())) {
-            return;
+        if (!shouldEventHappen(riskLevel)) {
+            return Optional.empty();
         }
 
-        VoyageEventType eventType = chooseEventType(cargo.getType());
+        VoyageEventType eventType = chooseEventType(cargoType);
 
-        int eventTriggerTick = currentTick + Math.max(1, (int) Math.ceil(voyageDuration / 2.0));
+        int eventTriggerTick =
+                currentTick + Math.max(1, (int) Math.ceil(voyageDuration / 2.0));
 
-        if (eventTriggerTick >= voyage.getArrivalTick()) {
-            eventTriggerTick = voyage.getArrivalTick() - 1;
+        if (eventTriggerTick >= arrivalTick) {
+            eventTriggerTick = arrivalTick - 1;
         }
 
-        voyage.setPendingEventType(eventType);
-        voyage.setEventTriggerTick(eventTriggerTick);
-        voyage.setEventTriggered(false);
-        voyage.setEventResolved(false);
+        return Optional.of(
+                new PlannedVoyageEvent(eventType, eventTriggerTick)
+        );
     }
 
-    private boolean shouldEventHappen(RiskLevel riskLevel) {
-        int chance;
-
-        switch (riskLevel) {
-            case LOW -> chance = 100;
-            case MEDIUM -> chance = 100;
-            case HIGH -> chance = 100;
-            default -> chance = 100;
-        }
+    private boolean shouldEventHappen(String riskLevel) {
+        int chance = switch (riskLevel) {
+            case "LOW" -> 100;
+            case "MEDIUM" -> 100;
+            case "HIGH" -> 100;
+            default -> 0;
+        };
 
         return random.nextInt(100) < chance;
     }
 
-    private VoyageEventType chooseEventType(CargoType cargoType) {
+    private VoyageEventType chooseEventType(String cargoType) {
         return switch (cargoType) {
-            case OIL -> VoyageEventType.BURNING_BARRELS;
-            case LUXURY_GOODS -> VoyageEventType.PIRATE_DRIP_CHECK;
-            case FOOD -> VoyageEventType.RAT_BUFFET;
-            case ELECTRONICS -> VoyageEventType.HACKER_SEAGULLS;
-            case MEDICINE -> VoyageEventType.MEDICAL_EMERGENCY;
+            case "OIL" -> VoyageEventType.BURNING_BARRELS;
+            case "LUXURY_GOODS" -> VoyageEventType.PIRATE_DRIP_CHECK;
+            case "FOOD" -> VoyageEventType.RAT_BUFFET;
+            case "ELECTRONICS" -> VoyageEventType.HACKER_SEAGULLS;
+            case "MEDICINE" -> VoyageEventType.MEDICAL_EMERGENCY;
             default -> VoyageEventType.BAD_WEATHER;
         };
     }

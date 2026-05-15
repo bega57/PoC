@@ -1,26 +1,19 @@
 package at.fhv.blueroute.session.application.service;
 
-import at.fhv.blueroute.cargo.application.service.CalculateDeteriorationService;
-import at.fhv.blueroute.cargo.infrastructure.persistence.JpaCargoRepository;
 import at.fhv.blueroute.common.websocket.LeaderboardMessage;
 import at.fhv.blueroute.common.websocket.SessionUpdateMessage;
+import at.fhv.blueroute.common.websocket.VoyageFinishedMessage;
 import at.fhv.blueroute.common.websocket.WebSocketSender;
 import at.fhv.blueroute.session.domain.model.Session;
 import at.fhv.blueroute.session.domain.model.SessionStatus;
 import at.fhv.blueroute.session.infrastructure.persistence.JpaSessionRepository;
 import at.fhv.blueroute.session.presentation.dto.LeaderboardEntryResponse;
-import at.fhv.blueroute.ship.client.ShipServiceClient;
-import at.fhv.blueroute.ship.client.dto.ShipResponse;
-import at.fhv.blueroute.voyage.application.service.FinishVoyageService;
-import at.fhv.blueroute.voyage.domain.model.VoyageStatus;
+import at.fhv.blueroute.voyage.client.VoyageServiceClient;
+import at.fhv.blueroute.voyage.client.dto.VoyageResponse;
+import at.fhv.blueroute.event.application.service.VoyageEventTriggerService;
 import jakarta.transaction.Transactional;
 import org.springframework.stereotype.Service;
-import at.fhv.blueroute.voyage.domain.model.Voyage;
-import at.fhv.blueroute.voyage.infrastructure.persistence.JpaVoyageRepository;
-import at.fhv.blueroute.common.websocket.VoyageFinishedMessage;
-import at.fhv.blueroute.event.application.service.VoyageEventTriggerService;
 
-import java.time.LocalDateTime;
 import java.util.List;
 
 @Service
@@ -28,33 +21,22 @@ import java.util.List;
 public class SessionTickService {
 
     private final JpaSessionRepository sessionRepository;
-    private final JpaVoyageRepository voyageRepository;
-    private final ShipServiceClient shipServiceClient;
     private final WebSocketSender webSocketSender;
-    private final FinishVoyageService finishVoyageService;
-    private final JpaCargoRepository cargoRepository;
-    private final CalculateDeteriorationService deteriorationService;
     private final GetLeaderboardService leaderboardService;
+    private final VoyageServiceClient voyageServiceClient;
     private final VoyageEventTriggerService voyageEventTriggerService;
 
     public SessionTickService(
             JpaSessionRepository sessionRepository,
-            JpaVoyageRepository voyageRepository, ShipServiceClient shipServiceClient,
             WebSocketSender webSocketSender,
-            FinishVoyageService finishVoyageService,
-            JpaCargoRepository cargoRepository,
-            CalculateDeteriorationService deteriorationService,
             GetLeaderboardService leaderboardService,
+            VoyageServiceClient voyageServiceClient,
             VoyageEventTriggerService voyageEventTriggerService
     ) {
         this.sessionRepository = sessionRepository;
-        this.voyageRepository = voyageRepository;
-        this.shipServiceClient = shipServiceClient;
         this.webSocketSender = webSocketSender;
-        this.finishVoyageService = finishVoyageService;
-        this.cargoRepository = cargoRepository;
-        this.deteriorationService = deteriorationService;
         this.leaderboardService = leaderboardService;
+        this.voyageServiceClient = voyageServiceClient;
         this.voyageEventTriggerService = voyageEventTriggerService;
     }
 
@@ -67,86 +49,41 @@ public class SessionTickService {
 
             session.setCurrentTick(session.getCurrentTick() + 1);
 
-            List<Voyage> voyages =
-                    voyageRepository.findBySessionId(session.getId());
-
-            for (Voyage v : voyages) {
-
-                if (v.getStatus() == VoyageStatus.FINISHED) continue;
-
-                voyageEventTriggerService.triggerEventIfNeeded(v, session);
-
-                if (session.getStatus() == SessionStatus.PAUSED) {
-                    break;
-                }
-
-                if (session.getCurrentTick() >= v.getArrivalTick()) {
-
-                    finishVoyageService.finishVoyage(
-                            v.getId(),
+            List<VoyageResponse> finishedVoyages =
+                    voyageServiceClient.processTick(
+                            session.getId(),
                             session.getCurrentTick()
                     );
 
-                    webSocketSender.sendSessionUpdate(
-                            session.getSessionCode(),
-                            new VoyageFinishedMessage(
-                                    "VOYAGE_FINISHED",
-                                    session.getSessionCode(),
-                                    v.getId(),
-                                    v.getShipId(),
-                                    v.getDestinationPort(),
-                                    v.getReward(),
-                                    v.getEventResultMessage(),
-                                    v.getExtraDelayTicks(),
-                                    v.getExtraFuelLoss(),
-                                    v.getExtraConditionLoss(),
-                                    v.getEventCost(),
-                                    v.getRewardLossPercent()
-                            )
+            List<VoyageResponse> activeVoyages =
+                    voyageServiceClient.getVoyages(
+                            session.getId(),
+                            session.getCurrentTick()
                     );
 
-                    continue;
-                }
+            for (VoyageResponse voyage : activeVoyages) {
+                voyageEventTriggerService.triggerEventIfNeeded(voyage, session);
+            }
 
-                if (v.getStatus() == VoyageStatus.RUNNING) {
+            for (VoyageResponse finishedVoyage : finishedVoyages) {
 
-                    ShipResponse ship =
-                            shipServiceClient.getShip(v.getShipId());
-                    var cargo = cargoRepository.findById(v.getCargoId()).orElseThrow();
-
-                    int duration = Math.max(1,
-                            v.getArrivalTick() - v.getStartTick()
-                    );
-
-                    double shipFuelMultiplier = switch (ship.getType()) {
-                        case "CHEAP" -> 1.25;
-                        case "MEDIUM" -> 1.0;
-                        case "EXPENSIVE" -> 0.8;
-                        default -> 1.0;
-                    };
-
-                    double shipConditionMultiplier = switch (ship.getType()) {
-                        case "CHEAP" -> 1.5;
-                        case "MEDIUM" -> 1.0;
-                        case "EXPENSIVE" -> 0.7;
-                        default -> 1.0;
-                    };
-
-
-                    double cargoFuelPerTick = (cargo.getFuelConsumption() / duration) * shipFuelMultiplier;
-                    double extraFuelPerTick = 1.0 + (duration * 0.02);
-                    double fuelPerTick = cargoFuelPerTick + extraFuelPerTick;
-
-                    double totalDamage = deteriorationService.calculate(cargo);
-                    double conditionPerTick = (totalDamage / duration) * shipConditionMultiplier;
-
-                    int newFuel = (int) Math.max(0, ship.getFuelLevel() - fuelPerTick);
-                    ship.setFuelLevel(newFuel);
-
-                    int newCondition = (int) Math.max(0, ship.getCondition() - conditionPerTick);
-                    ship.setCondition(newCondition);
-
-                }
+                webSocketSender.sendSessionUpdate(
+                        session.getSessionCode(),
+                        new VoyageFinishedMessage(
+                                "VOYAGE_FINISHED",
+                                session.getSessionCode(),
+                                finishedVoyage.getId(),
+                                finishedVoyage.getShipId(),
+                                finishedVoyage.getDestinationPort(),
+                                finishedVoyage.getReward(),
+                                finishedVoyage.getEventResultMessage(),
+                                finishedVoyage.getExtraDelayTicks(),
+                                finishedVoyage.getExtraFuelLoss(),
+                                finishedVoyage.getExtraConditionLoss(),
+                                finishedVoyage.getEventCost(),
+                                finishedVoyage.getRewardLossPercent()
+                        )
+                );
             }
 
             webSocketSender.sendSessionUpdate(

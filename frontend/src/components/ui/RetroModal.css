@@ -126,6 +126,8 @@
     transition: 0.08s;
 
     min-width: 220px;
+
+    color: black !important;
 }
 
 .retro-button:hover {
@@ -143,7 +145,7 @@
 .retro-button.secondary {
     background: #6cb4ff;
 
-    color: black;
+    color: black !important;
 }
 
 .retro-modal h1 {
