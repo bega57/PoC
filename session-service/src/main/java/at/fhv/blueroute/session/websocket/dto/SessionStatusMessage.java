@@ -1,18 +1,18 @@
-package at.fhv.blueroute.session.common.websocket;
+package at.fhv.blueroute.session.websocket.dto;
 
-public class SessionUpdateMessage {
+public class SessionStatusMessage {
 
     private String type;
     private String sessionCode;
-    private int currentTick;
+    private String status;
 
-    public SessionUpdateMessage() {
+    public SessionStatusMessage() {
     }
 
-    public SessionUpdateMessage(String type, String sessionCode, int currentTick) {
+    public SessionStatusMessage(String type, String sessionCode, String status) {
         this.type = type;
         this.sessionCode = sessionCode;
-        this.currentTick = currentTick;
+        this.status = status;
     }
 
     public String getType() {
@@ -23,8 +23,8 @@ public class SessionUpdateMessage {
         return sessionCode;
     }
 
-    public int getCurrentTick() {
-        return currentTick;
+    public String getStatus() {
+        return status;
     }
 
     public void setType(String type) {
@@ -35,7 +35,7 @@ public class SessionUpdateMessage {
         this.sessionCode = sessionCode;
     }
 
-    public void setCurrentTick(int currentTick) {
-        this.currentTick = currentTick;
+    public void setStatus(String status) {
+        this.status = status;
     }
 }

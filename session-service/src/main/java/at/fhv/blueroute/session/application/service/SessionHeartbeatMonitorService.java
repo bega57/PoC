@@ -1,7 +1,7 @@
 package at.fhv.blueroute.session.application.service;
 
-import at.fhv.blueroute.session.common.websocket.SessionStatusMessage;
-import at.fhv.blueroute.session.common.websocket.WebSocketSender;
+import at.fhv.blueroute.session.websocket.dto.SessionStatusMessage;
+import at.fhv.blueroute.session.backend.client.BackendWebSocketClient;
 import at.fhv.blueroute.session.domain.model.Session;
 import at.fhv.blueroute.session.domain.model.SessionPlayer;
 import at.fhv.blueroute.session.domain.model.SessionPlayerStatus;
@@ -24,15 +24,15 @@ public class SessionHeartbeatMonitorService {
     private static final Logger log = LoggerFactory.getLogger(SessionHeartbeatMonitorService.class);
 
     private final JpaSessionPlayerRepository sessionPlayerRepository;
-    private final WebSocketSender webSocketSender;
+    private final BackendWebSocketClient backendWebSocketClient;
 
     @Value("${session.heartbeat.timeout-seconds:120}")
     private long heartbeatTimeoutSeconds;
 
     public SessionHeartbeatMonitorService(JpaSessionPlayerRepository sessionPlayerRepository,
-                                          WebSocketSender webSocketSender) {
-        this.webSocketSender = webSocketSender;
+                                         BackendWebSocketClient backendWebSocketClient) {
         this.sessionPlayerRepository = sessionPlayerRepository;
+        this.backendWebSocketClient = backendWebSocketClient;
     }
 
     @Scheduled(fixedRate = 30000)
@@ -76,7 +76,7 @@ public class SessionHeartbeatMonitorService {
                 if (!hasActivePlayer) {
                     session.setStatus(SessionStatus.PAUSED);
 
-                    webSocketSender.sendSessionUpdate(
+                    backendWebSocketClient.publish(
                             session.getSessionCode(),
                             new SessionStatusMessage(
                                     "SESSION_PAUSED",

@@ -1,7 +1,6 @@
 package at.fhv.blueroute.session.application.service;
 
-import at.fhv.blueroute.session.common.websocket.SessionStatusMessage;
-import at.fhv.blueroute.session.common.websocket.WebSocketSender;
+import at.fhv.blueroute.session.websocket.dto.SessionStatusMessage;
 import at.fhv.blueroute.session.player.client.PlayerServiceClient;
 import at.fhv.blueroute.session.player.client.dto.PlayerResponse;
 import at.fhv.blueroute.session.application.exception.*;
@@ -12,6 +11,7 @@ import at.fhv.blueroute.session.domain.model.SessionPlayerStatus;
 import at.fhv.blueroute.session.domain.model.SessionStatus;
 import at.fhv.blueroute.session.domain.repository.SessionRepository;
 import at.fhv.blueroute.session.presentation.dto.SessionResponse;
+import at.fhv.blueroute.session.backend.client.BackendWebSocketClient;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
@@ -23,16 +23,16 @@ public class SessionService {
     private final SessionRepository sessionRepository;
     private final PlayerServiceClient playerServiceClient;
     private final SessionMapper sessionMapper;
-    private final WebSocketSender webSocketSender;
+    private final BackendWebSocketClient backendWebSocketClient;
 
     public SessionService(SessionRepository sessionRepository,
                           PlayerServiceClient playerServiceClient,
                           SessionMapper sessionMapper,
-                          WebSocketSender webSocketSender) {
+                          BackendWebSocketClient backendWebSocketClient) {
         this.sessionRepository = sessionRepository;
         this.playerServiceClient = playerServiceClient;
         this.sessionMapper = sessionMapper;
-        this.webSocketSender = webSocketSender;
+        this.backendWebSocketClient = backendWebSocketClient;
     }
 
     public List<SessionResponse> getAllSessions() {
@@ -85,7 +85,7 @@ public class SessionService {
         Session updatedSession = sessionRepository.save(session);
 
         if (updatedSession.getStatus() == SessionStatus.RUNNING) {
-            webSocketSender.sendSessionUpdate(
+            backendWebSocketClient.publish(
                     updatedSession.getSessionCode(),
                     new SessionStatusMessage(
                             "SESSION_RUNNING",
@@ -160,7 +160,7 @@ public class SessionService {
         Session updatedSession = sessionRepository.save(session);
 
         if (updatedSession.getStatus() == SessionStatus.PAUSED) {
-            webSocketSender.sendSessionUpdate(
+            backendWebSocketClient.publish(
                     updatedSession.getSessionCode(),
                     new SessionStatusMessage(
                             "SESSION_PAUSED",
@@ -239,7 +239,7 @@ public class SessionService {
         System.out.println("RESUME 8 - session saved");
 
         if (updatedSession.getStatus() == SessionStatus.RUNNING) {
-            webSocketSender.sendSessionUpdate(
+            backendWebSocketClient.publish(
                     updatedSession.getSessionCode(),
                     new SessionStatusMessage(
                             "SESSION_RUNNING",

@@ -2,7 +2,7 @@ import { useEffect, useState, useRef, useContext } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import SockJS from "sockjs-client";
 import { Client } from "@stomp/stompjs";
-import api from "../api/api";
+import api, { API_BASE_URL } from "../api/api";
 import "./GamePage.css";
 import "leaflet/dist/leaflet.css";
 import cheapShip from "../assets/ships/cheapSide.png";
@@ -319,9 +319,6 @@ function GamePage() {
     }, [toastMessage]);
 
     useEffect(() => {
-
-        const API_BASE_URL =
-            import.meta.env.VITE_API_BASE_URL || "http://localhost:8080";
 
         const socket = new SockJS(`${API_BASE_URL}/ws`);
 

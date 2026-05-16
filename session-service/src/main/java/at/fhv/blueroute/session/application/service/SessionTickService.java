@@ -1,12 +1,12 @@
 package at.fhv.blueroute.session.application.service;
 
-import at.fhv.blueroute.session.common.websocket.SessionUpdateMessage;
+import at.fhv.blueroute.session.websocket.dto.SessionUpdateMessage;
 import at.fhv.blueroute.session.domain.model.Session;
 import at.fhv.blueroute.session.domain.model.SessionStatus;
 import at.fhv.blueroute.session.domain.repository.SessionRepository;
 import at.fhv.blueroute.session.voyage.client.VoyageServiceClient;
 import at.fhv.blueroute.session.voyage.client.dto.VoyageResponse;
-import at.fhv.blueroute.session.common.websocket.VoyageFinishedMessage;
+import at.fhv.blueroute.session.websocket.dto.VoyageFinishedMessage;
 import at.fhv.blueroute.session.backend.client.BackendWebSocketClient;
 import jakarta.transaction.Transactional;
 import org.springframework.stereotype.Service;
@@ -46,18 +46,12 @@ public class SessionTickService {
                 backendWebSocketClient.publish(
                         session.getSessionCode(),
                         new VoyageFinishedMessage(
-                                "VOYAGE_FINISHED",
-                                session.getSessionCode(),
                                 finishedVoyage.getId(),
                                 finishedVoyage.getShipId(),
+                                finishedVoyage.getShipName(),
+                                finishedVoyage.getOriginPort(),
                                 finishedVoyage.getDestinationPort(),
-                                finishedVoyage.getReward(),
-                                finishedVoyage.getEventResultMessage(),
-                                finishedVoyage.getExtraDelayTicks(),
-                                finishedVoyage.getExtraFuelLoss(),
-                                finishedVoyage.getExtraConditionLoss(),
-                                finishedVoyage.getEventCost(),
-                                finishedVoyage.getRewardLossPercent()
+                                finishedVoyage.getReward()
                         )
                 );
             }
