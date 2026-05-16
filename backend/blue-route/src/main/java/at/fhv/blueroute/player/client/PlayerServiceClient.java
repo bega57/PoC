@@ -6,6 +6,7 @@ import at.fhv.blueroute.player.client.dto.UpdateCompanyNameRequest;
 import at.fhv.blueroute.player.presentation.dto.PlayerRequest;
 import at.fhv.blueroute.player.presentation.dto.SelectPortRequest;
 
+import at.fhv.blueroute.session.client.dto.LeaderboardEntryResponse;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpHeaders;
@@ -109,5 +110,14 @@ public class PlayerServiceClient {
                 entity,
                 PlayerResponse.class
         );
+    }
+
+    public List<LeaderboardEntryResponse> getLeaderboard(String sessionCode) {
+        String url = playerServiceUrl + "/players/leaderboard?sessionCode=" + sessionCode;
+
+        LeaderboardEntryResponse[] response =
+                restTemplate.getForObject(url, LeaderboardEntryResponse[].class);
+
+        return response == null ? List.of() : List.of(response);
     }
 }

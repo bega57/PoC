@@ -78,7 +78,7 @@ public class SessionService {
 
         session.addPlayer(player.getId(), false);
 
-        if (session.isFull()) {
+        if (session.getPlayerCount() >= session.getMaxPlayers()) {
             session.setStatus(SessionStatus.RUNNING);
         }
 

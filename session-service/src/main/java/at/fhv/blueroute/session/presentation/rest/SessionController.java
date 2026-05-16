@@ -31,11 +31,6 @@ public class SessionController {
         return sessionService.getSessionByCode(sessionCode);
     }
 
-//    @GetMapping("/{sessionCode}/leaderboard")
-//    public List<LeaderboardEntryResponse> getLeaderboard(@PathVariable String sessionCode) {
-//        return leaderboardService.getLeaderboard(sessionCode);
-//    }
-
     @PostMapping
     public SessionResponse createSession(@Valid @RequestBody CreateSessionRequest request) {
         return sessionService.createSession(request.getPlayerId(), request.getMaxPlayers());

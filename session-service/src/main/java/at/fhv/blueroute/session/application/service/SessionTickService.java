@@ -5,7 +5,9 @@ import at.fhv.blueroute.session.common.websocket.WebSocketSender;
 import at.fhv.blueroute.session.domain.model.Session;
 import at.fhv.blueroute.session.domain.model.SessionStatus;
 import at.fhv.blueroute.session.domain.repository.SessionRepository;
-import at.fhv.blueroute.session.infrastructure.persistence.JpaSessionRepository;
+import at.fhv.blueroute.session.voyage.client.VoyageServiceClient;
+import at.fhv.blueroute.session.voyage.client.dto.VoyageResponse;
+import at.fhv.blueroute.session.common.websocket.VoyageFinishedMessage;
 import jakarta.transaction.Transactional;
 import org.springframework.stereotype.Service;
 
@@ -17,11 +19,16 @@ public class SessionTickService {
 
     private final SessionRepository sessionRepository;
     private final WebSocketSender webSocketSender;
+    private final VoyageServiceClient voyageServiceClient;
 
-    public SessionTickService(SessionRepository sessionRepository,
-                              WebSocketSender webSocketSender) {
+    public SessionTickService(
+            SessionRepository sessionRepository,
+            WebSocketSender webSocketSender,
+            VoyageServiceClient voyageServiceClient
+    ) {
         this.sessionRepository = sessionRepository;
         this.webSocketSender = webSocketSender;
+        this.voyageServiceClient = voyageServiceClient;
     }
 
     public void processTicks() {
@@ -29,6 +36,31 @@ public class SessionTickService {
 
         for (Session session : runningSessions) {
             session.setCurrentTick(session.getCurrentTick() + 1);
+            List<VoyageResponse> finishedVoyages =
+                    voyageServiceClient.processTick(
+                            session.getId(),
+                            session.getCurrentTick()
+                    );
+            for (VoyageResponse finishedVoyage : finishedVoyages) {
+
+                webSocketSender.sendSessionUpdate(
+                        session.getSessionCode(),
+                        new VoyageFinishedMessage(
+                                "VOYAGE_FINISHED",
+                                session.getSessionCode(),
+                                finishedVoyage.getId(),
+                                finishedVoyage.getShipId(),
+                                finishedVoyage.getDestinationPort(),
+                                finishedVoyage.getReward(),
+                                finishedVoyage.getEventResultMessage(),
+                                finishedVoyage.getExtraDelayTicks(),
+                                finishedVoyage.getExtraFuelLoss(),
+                                finishedVoyage.getExtraConditionLoss(),
+                                finishedVoyage.getEventCost(),
+                                finishedVoyage.getRewardLossPercent()
+                        )
+                );
+            }
             sessionRepository.save(session);
 
             webSocketSender.sendSessionUpdate(

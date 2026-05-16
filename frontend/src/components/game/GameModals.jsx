@@ -80,7 +80,7 @@ function GameModals({
 
                                             return {
                                                 ...p,
-                                                ships: p.ships.map(ship => ({
+                                                ships: (p.ships ?? []).map(ship => ({
                                                     ...ship,
                                                     currentPort: res.data.currentPort
                                                 }))

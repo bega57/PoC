@@ -1,19 +1,24 @@
 package at.fhv.blueroute.session.application.service;
 
+import at.fhv.blueroute.common.websocket.WebSocketSender;
 import at.fhv.blueroute.session.client.SessionServiceClient;
 import at.fhv.blueroute.session.client.dto.SessionResponse;
 
 import org.springframework.stereotype.Service;
 
 import java.util.List;
+import java.util.Map;
 
 @Service
 public class SessionService {
 
     private final SessionServiceClient sessionServiceClient;
+    private final WebSocketSender webSocketSender;
 
-    public SessionService(SessionServiceClient sessionServiceClient) {
+    public SessionService(SessionServiceClient sessionServiceClient,
+                          WebSocketSender webSocketSender) {
         this.sessionServiceClient = sessionServiceClient;
+        this.webSocketSender = webSocketSender;
     }
 
     public List<SessionResponse> getAllSessions() {
@@ -28,7 +33,23 @@ public class SessionService {
     }
 
     public SessionResponse joinSession(String sessionCode, Long playerId) {
-        return sessionServiceClient.joinSession(sessionCode, playerId);
+
+        SessionResponse response =
+                sessionServiceClient.joinSession(sessionCode, playerId);
+
+        if ("RUNNING".equals(String.valueOf(response.getStatus()))) {
+
+            webSocketSender.sendSessionUpdate(
+                    sessionCode,
+                    Map.of(
+                            "type", "SESSION_RUNNING",
+                            "sessionCode", sessionCode,
+                            "status", response.getStatus()
+                    )
+            );
+        }
+
+        return response;
     }
 
     public SessionResponse resumeSession(String sessionCode, Long playerId) {

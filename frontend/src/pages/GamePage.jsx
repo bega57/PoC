@@ -38,7 +38,7 @@ function GamePage() {
     const [selectedShip, setSelectedShip] = useState(null);
 
     const [ports, setPorts] = useState([]);
-
+    const [ships, setShips] = useState([]);
     const [hoveredPort, setHoveredPort] = useState(null);
     const [portCargo, setPortCargo] = useState([]);
     const [cargoCache, setCargoCache] = useState({});
@@ -190,6 +190,9 @@ function GamePage() {
 
             setSession(sessionData);
 
+            const shipsRes = await api.get(`/ships/player/${player.id}`);
+            setShips(shipsRes.data);
+
             const me = sessionData.players.find(p => p.id === player.id);
             if (!me) return;
 
@@ -312,7 +315,7 @@ function GamePage() {
         const API_BASE_URL =
             import.meta.env.VITE_API_BASE_URL || "http://localhost:8080";
 
-        const socket = new SockJS(`${API_BASE_URL}/ws`);
+        const socket = new SockJS('http://localhost:8084/ws');
 
         const client = new Client({
             webSocketFactory: () => socket,
@@ -359,35 +362,32 @@ function GamePage() {
                     );
                     setShowRewardPopup(true);
 
+                    setShips(prevShips =>
+                        prevShips.map(ship => {
+                            if (ship.id === data.shipId) {
+                                return {
+                                    ...ship,
+                                    currentPort: data.destinationPort,
+                                    traveling: false
+                                };
+                            }
+
+                            return ship;
+                        })
+                    );
+
                     setSession(prev => {
                         if (!prev) return prev;
 
-                        const updated = {
-                            ...prev,
-                            players: prev.players.map(p => ({
-                                ...p,
-                                ships: p.ships.map(ship => {
-                                    if (ship.id === data.shipId) {
-                                        return {
-                                            ...ship,
-                                            currentPort: data.destinationPort,
-                                            traveling: false
-                                        };
-                                    }
-                                    return ship;
-                                })
-                            }))
-                        };
-
-                        if (updated.maxPlayers === 1) {
-                            const myPlayer = updated.players.find(p => p.id === player.id);
+                        if (prev.maxPlayers === 1) {
+                            const myPlayer = prev.players.find(p => p.id === player.id);
 
                             if (myPlayer) {
                                 saveScore(myPlayer.balance);
                             }
                         }
 
-                        return updated;
+                        return prev;
                     });
 
                     setTimeout(() => {
@@ -549,8 +549,7 @@ function GamePage() {
         );
     }
 
-    const myShips = session.players
-        .find(p => p.id === player?.id)?.ships || [];
+    const myShips = ships;
 
     const myShipIds = myShips.map(s => s.id);
 
@@ -594,6 +593,7 @@ function GamePage() {
 
             <GameMap
                 session={session}
+                ships={ships}
                 ports={ports}
                 voyages={voyages}
                 hoveredPort={hoveredPort}
