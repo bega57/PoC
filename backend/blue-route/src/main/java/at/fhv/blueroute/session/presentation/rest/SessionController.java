@@ -1,9 +1,7 @@
 package at.fhv.blueroute.session.presentation.rest;
 
 import at.fhv.blueroute.session.application.service.SessionService;
-import at.fhv.blueroute.session.presentation.dto.CreateSessionRequest;
-import at.fhv.blueroute.session.presentation.dto.JoinSessionRequest;
-import at.fhv.blueroute.session.client.dto.SessionResponse;
+import at.fhv.blueroute.session.client.dto.*;
 import at.fhv.blueroute.player.client.PlayerServiceClient;
 import at.fhv.blueroute.session.client.dto.LeaderboardEntryResponse;
 import jakarta.validation.Valid;

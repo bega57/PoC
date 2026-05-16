@@ -2,12 +2,14 @@ package at.fhv.blueroute.session.websocket.dto;
 
 public class VoyageFinishedMessage {
 
-    private final Long voyageId;
-    private final Long shipId;
-    private final String shipName;
-    private final String originPort;
-    private final String destinationPort;
-    private final double reward;
+    private String type;
+
+    private Long voyageId;
+    private Long shipId;
+    private String shipName;
+    private String originPort;
+    private String destinationPort;
+    private double reward;
 
     public VoyageFinishedMessage(
             Long voyageId,
@@ -17,12 +19,17 @@ public class VoyageFinishedMessage {
             String destinationPort,
             double reward
     ) {
+        this.type = "VOYAGE_FINISHED";
         this.voyageId = voyageId;
         this.shipId = shipId;
         this.shipName = shipName;
         this.originPort = originPort;
         this.destinationPort = destinationPort;
         this.reward = reward;
+    }
+
+    public String getType() {
+        return type;
     }
 
     public Long getVoyageId() {

@@ -1,7 +1,5 @@
 package at.fhv.blueroute.session.client.dto;
 
-import at.fhv.blueroute.session.presentation.dto.PlayerSummaryResponse;
-
 import java.util.List;
 
 public class SessionResponse {

@@ -157,4 +157,9 @@ public class ShipController {
     ) {
         return shipServiceClient.getShip(shipId);
     }
+
+    @GetMapping
+    public List<ShipResponse> getAllShips() {
+        return shipServiceClient.getAllShips();
+    }
 }

@@ -283,4 +283,21 @@ public class ShipService {
 
         shipRepository.save(ship);
     }
+
+    public List<ShipResponse> getAllShips() {
+
+        return shipRepository.findAll()
+                .stream()
+                .map(ship -> {
+                    double sellPrice =
+                            sellPriceService.calculate(ship);
+
+                    return shipMapper.toResponse(
+                            ship,
+                            sellPrice,
+                            0
+                    );
+                })
+                .toList();
+    }
 }
