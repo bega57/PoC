@@ -81,6 +81,7 @@ services:
       SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/blueroute
       SPRING_DATASOURCE_USERNAME: postgres
       SPRING_DATASOURCE_PASSWORD: postgres
+      BACKEND_URL: http://backend:8080
       PLAYER_SERVICE_URL: http://player-service:8081
       SHIP_SERVICE_URL: http://ship-service:8082
       TRAVEL_SERVICE_URL: http://travel-service:8083

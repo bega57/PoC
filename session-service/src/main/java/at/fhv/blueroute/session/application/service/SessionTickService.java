@@ -8,6 +8,7 @@ import at.fhv.blueroute.session.domain.repository.SessionRepository;
 import at.fhv.blueroute.session.voyage.client.VoyageServiceClient;
 import at.fhv.blueroute.session.voyage.client.dto.VoyageResponse;
 import at.fhv.blueroute.session.common.websocket.VoyageFinishedMessage;
+import at.fhv.blueroute.session.backend.client.BackendWebSocketClient;
 import jakarta.transaction.Transactional;
 import org.springframework.stereotype.Service;
 
@@ -20,15 +21,18 @@ public class SessionTickService {
     private final SessionRepository sessionRepository;
     private final WebSocketSender webSocketSender;
     private final VoyageServiceClient voyageServiceClient;
+    private final BackendWebSocketClient backendWebSocketClient;
 
     public SessionTickService(
             SessionRepository sessionRepository,
             WebSocketSender webSocketSender,
-            VoyageServiceClient voyageServiceClient
+            VoyageServiceClient voyageServiceClient,
+            BackendWebSocketClient backendWebSocketClient
     ) {
         this.sessionRepository = sessionRepository;
         this.webSocketSender = webSocketSender;
         this.voyageServiceClient = voyageServiceClient;
+        this.backendWebSocketClient = backendWebSocketClient;
     }
 
     public void processTicks() {
@@ -43,7 +47,7 @@ public class SessionTickService {
                     );
             for (VoyageResponse finishedVoyage : finishedVoyages) {
 
-                webSocketSender.sendSessionUpdate(
+                backendWebSocketClient.publish(
                         session.getSessionCode(),
                         new VoyageFinishedMessage(
                                 "VOYAGE_FINISHED",

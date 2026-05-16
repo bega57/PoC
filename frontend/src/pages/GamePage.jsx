@@ -315,7 +315,7 @@ function GamePage() {
         const API_BASE_URL =
             import.meta.env.VITE_API_BASE_URL || "http://localhost:8080";
 
-        const socket = new SockJS('http://localhost:8084/ws');
+        const socket = new SockJS(`${API_BASE_URL}/ws`);
 
         const client = new Client({
             webSocketFactory: () => socket,
