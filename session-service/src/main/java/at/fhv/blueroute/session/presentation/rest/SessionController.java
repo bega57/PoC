@@ -1,11 +1,10 @@
 package at.fhv.blueroute.session.presentation.rest;
 
-import at.fhv.blueroute.session.application.service.GetLeaderboardService;
 import at.fhv.blueroute.session.application.service.SessionService;
 import at.fhv.blueroute.session.presentation.dto.CreateSessionRequest;
 import at.fhv.blueroute.session.presentation.dto.JoinSessionRequest;
 import at.fhv.blueroute.session.presentation.dto.LeaderboardEntryResponse;
-import at.fhv.blueroute.session.client.dto.SessionResponse;
+import at.fhv.blueroute.session.presentation.dto.SessionResponse;
 import jakarta.validation.Valid;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -17,11 +16,9 @@ import java.util.List;
 public class SessionController {
 
     private final SessionService sessionService;
-    private final GetLeaderboardService leaderboardService;
 
-    public SessionController(SessionService sessionService, GetLeaderboardService leaderboardService) {
+    public SessionController(SessionService sessionService) {
         this.sessionService = sessionService;
-        this.leaderboardService = leaderboardService;
     }
 
     @GetMapping
@@ -34,10 +31,10 @@ public class SessionController {
         return sessionService.getSessionByCode(sessionCode);
     }
 
-    @GetMapping("/{sessionCode}/leaderboard")
-    public List<LeaderboardEntryResponse> getLeaderboard(@PathVariable String sessionCode) {
-        return leaderboardService.getLeaderboard(sessionCode);
-    }
+//    @GetMapping("/{sessionCode}/leaderboard")
+//    public List<LeaderboardEntryResponse> getLeaderboard(@PathVariable String sessionCode) {
+//        return leaderboardService.getLeaderboard(sessionCode);
+//    }
 
     @PostMapping
     public SessionResponse createSession(@Valid @RequestBody CreateSessionRequest request) {
@@ -69,6 +66,11 @@ public class SessionController {
 
         sessionService.heartbeat(sessionCode, playerId);
         return ResponseEntity.noContent().build();
+    }
+
+    @GetMapping("/health")
+    public String health() {
+        return "session-service running";
     }
 
 }

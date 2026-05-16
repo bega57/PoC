@@ -1,0 +1,259 @@
+package at.fhv.blueroute.session.application.service;
+
+import at.fhv.blueroute.session.common.websocket.SessionStatusMessage;
+import at.fhv.blueroute.session.common.websocket.WebSocketSender;
+import at.fhv.blueroute.session.player.client.PlayerServiceClient;
+import at.fhv.blueroute.session.player.client.dto.PlayerResponse;
+import at.fhv.blueroute.session.application.exception.*;
+import at.fhv.blueroute.session.application.mapper.SessionMapper;
+import at.fhv.blueroute.session.domain.model.Session;
+import at.fhv.blueroute.session.domain.model.SessionPlayer;
+import at.fhv.blueroute.session.domain.model.SessionPlayerStatus;
+import at.fhv.blueroute.session.domain.model.SessionStatus;
+import at.fhv.blueroute.session.domain.repository.SessionRepository;
+import at.fhv.blueroute.session.presentation.dto.SessionResponse;
+import org.springframework.stereotype.Service;
+
+import java.util.List;
+import java.util.Random;
+
+@Service
+public class SessionService {
+
+    private final SessionRepository sessionRepository;
+    private final PlayerServiceClient playerServiceClient;
+    private final SessionMapper sessionMapper;
+    private final WebSocketSender webSocketSender;
+
+    public SessionService(SessionRepository sessionRepository,
+                          PlayerServiceClient playerServiceClient,
+                          SessionMapper sessionMapper,
+                          WebSocketSender webSocketSender) {
+        this.sessionRepository = sessionRepository;
+        this.playerServiceClient = playerServiceClient;
+        this.sessionMapper = sessionMapper;
+        this.webSocketSender = webSocketSender;
+    }
+
+    public List<SessionResponse> getAllSessions() {
+        return sessionRepository.findAll()
+                .stream()
+                .map(sessionMapper::toResponse)
+                .toList();
+    }
+
+    public SessionResponse getSessionByCode(String sessionCode) {
+        Session session = sessionRepository.findBySessionCode(sessionCode)
+                .orElseThrow(() -> new SessionNotFoundException(sessionCode));
+
+        return sessionMapper.toResponse(session);
+    }
+
+
+    public SessionResponse createSession() {
+        Session session = new Session(generateSessionCode(), SessionStatus.RUNNING, 0, 5);
+        Session savedSession = sessionRepository.save(session);
+        return sessionMapper.toResponse(savedSession);
+    }
+
+    public SessionResponse joinSession(String sessionCode, Long playerId) {
+        Session session = sessionRepository.findBySessionCode(sessionCode)
+                .orElseThrow(() -> new SessionNotFoundException(sessionCode));
+
+        PlayerResponse player = playerServiceClient.getPlayer(playerId);
+
+        if (player == null) {
+            throw new RuntimeException("Player not found: " + playerId);
+        }
+
+        SessionPlayer existingSessionPlayer = session.getSessionPlayerByPlayerId(playerId);
+
+        if (existingSessionPlayer != null) {
+            throw new PlayerAlreadyInSessionException(playerId, sessionCode);
+        }
+
+        if (session.isFull()) {
+            throw new SessionFullException(sessionCode);
+        }
+
+        session.addPlayer(player.getId(), false);
+
+        if (session.isFull()) {
+            session.setStatus(SessionStatus.RUNNING);
+        }
+
+        Session updatedSession = sessionRepository.save(session);
+
+        if (updatedSession.getStatus() == SessionStatus.RUNNING) {
+            webSocketSender.sendSessionUpdate(
+                    updatedSession.getSessionCode(),
+                    new SessionStatusMessage(
+                            "SESSION_RUNNING",
+                            updatedSession.getSessionCode(),
+                            updatedSession.getStatus().name()
+                    )
+            );
+        }
+
+        return sessionMapper.toResponse(updatedSession);
+    }
+
+    public SessionResponse createSession(Long playerId, int maxPlayers) {
+
+        PlayerResponse creator = playerServiceClient.getPlayer(playerId);
+
+        if (creator == null) {
+            throw new RuntimeException("Player not found: " + playerId);
+        }
+
+        SessionStatus status = maxPlayers == 1 ? SessionStatus.RUNNING : SessionStatus.WAITING;
+
+        Session session = new Session(
+                generateSessionCode(),
+                status,
+                0,
+                maxPlayers
+        );
+
+        session.addPlayer(creator.getId(), true);
+
+        Session savedSession = sessionRepository.save(session);
+        return sessionMapper.toResponse(savedSession);
+    }
+
+    private String generateSessionCode() {
+        String characters = "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
+        Random random = new Random();
+
+        String sessionCode;
+        do {
+            StringBuilder builder = new StringBuilder();
+            for (int i = 0; i < 6; i++) {
+                builder.append(characters.charAt(random.nextInt(characters.length())));
+            }
+            sessionCode = builder.toString();
+        } while (sessionRepository.findBySessionCode(sessionCode).isPresent());
+
+        return sessionCode;
+    }
+
+    public SessionResponse leaveSession(String sessionCode, Long playerId) {
+
+        Session session = sessionRepository.findBySessionCode(sessionCode)
+                .orElseThrow(() -> new SessionNotFoundException(sessionCode));
+
+        SessionPlayer sessionPlayer = session.getSessionPlayerByPlayerId(playerId);
+
+        if (sessionPlayer == null) {
+            throw new SessionPlayerNotFoundException(playerId);
+        }
+
+        sessionPlayer.markDisconnected();
+
+        boolean hasActivePlayers = session.getSessionPlayers().stream()
+                .anyMatch(sp -> sp.getStatus() == SessionPlayerStatus.ACTIVE);
+
+        if (!hasActivePlayers) {
+            session.setStatus(SessionStatus.PAUSED);
+        }
+
+        Session updatedSession = sessionRepository.save(session);
+
+        if (updatedSession.getStatus() == SessionStatus.PAUSED) {
+            webSocketSender.sendSessionUpdate(
+                    updatedSession.getSessionCode(),
+                    new SessionStatusMessage(
+                            "SESSION_PAUSED",
+                            updatedSession.getSessionCode(),
+                            updatedSession.getStatus().name()
+                    )
+            );
+        }
+
+        return sessionMapper.toResponse(updatedSession);
+    }
+
+    public void heartbeat(String sessionCode, Long playerId) {
+        Session session = sessionRepository.findBySessionCode(sessionCode)
+                .orElseThrow(() -> new SessionNotFoundException(sessionCode));
+
+        SessionPlayer sessionPlayer = session.getSessionPlayerByPlayerId(playerId);
+
+        if (sessionPlayer == null) {
+            throw new SessionPlayerNotFoundException(playerId);
+        }
+
+        sessionPlayer.markActive();
+
+        boolean hasActivePlayers = session.getSessionPlayers().stream()
+                .anyMatch(sp -> sp.getStatus() == SessionPlayerStatus.ACTIVE);
+
+        if (hasActivePlayers) {
+            session.setStatus(SessionStatus.RUNNING);
+        }
+
+        sessionRepository.save(session);
+    }
+
+    public SessionResponse resumeSession(String sessionCode, Long playerId) {
+        System.out.println("RESUME 1 - start");
+
+        Session session = sessionRepository.findBySessionCode(sessionCode)
+                .orElseThrow(() -> new SessionNotFoundException(sessionCode));
+        System.out.println("RESUME 2 - session found: " + session.getSessionCode());
+
+        PlayerResponse player = playerServiceClient.getPlayer(playerId);
+
+        if (player == null) {
+            throw new RuntimeException("Player not found: " + playerId);
+        }
+
+        System.out.println("RESUME 3 - player found: " + player.getId());
+
+        SessionPlayer sessionPlayer = session.getSessionPlayerByPlayerId(player.getId());
+
+        System.out.println("RESUME 4 - sessionPlayer: " + sessionPlayer);
+
+        if (sessionPlayer == null) {
+            throw new SessionPlayerNotFoundException(playerId);
+        }
+
+        System.out.println("RESUME 5 - status before: " + sessionPlayer.getStatus());
+
+        if (sessionPlayer.getStatus() == SessionPlayerStatus.ACTIVE) {
+            throw new PlayerAlreadyActiveException(playerId, sessionCode);
+        }
+
+        sessionPlayer.markActive();
+        System.out.println("RESUME 6 - marked active");
+
+        boolean hasActivePlayers = session.getSessionPlayers().stream()
+                .anyMatch(sp -> sp.getStatus() == SessionPlayerStatus.ACTIVE);
+        System.out.println("RESUME 7 - hasActivePlayers: " + hasActivePlayers);
+
+        if (hasActivePlayers) {
+            session.setStatus(SessionStatus.RUNNING);
+        }
+
+        Session updatedSession = sessionRepository.save(session);
+        System.out.println("RESUME 8 - session saved");
+
+        if (updatedSession.getStatus() == SessionStatus.RUNNING) {
+            webSocketSender.sendSessionUpdate(
+                    updatedSession.getSessionCode(),
+                    new SessionStatusMessage(
+                            "SESSION_RUNNING",
+                            updatedSession.getSessionCode(),
+                            updatedSession.getStatus().name()
+                    )
+            );
+            System.out.println("RESUME 9 - websocket sent");
+        }
+
+        SessionResponse response = sessionMapper.toResponse(updatedSession);
+        System.out.println("RESUME 10 - mapped response");
+
+        return response;
+    }
+
+}

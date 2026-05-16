@@ -1,0 +1,58 @@
+### Health Check
+GET http://localhost:8084/sessions/health
+
+###
+
+### Get All Sessions
+GET http://localhost:8084/sessions
+
+###
+
+### Create Session
+POST http://localhost:8084/sessions
+Content-Type: application/json
+
+{
+  "playerId": 1,
+  "maxPlayers": 4
+}
+
+###
+
+### Get Session By Code
+GET http://localhost:8084/sessions/REPLACE_SESSION_CODE
+
+###
+
+### Join Session
+POST http://localhost:8084/sessions/REPLACE_SESSION_CODE/join
+Content-Type: application/json
+
+{
+  "playerId": 1
+}
+
+###
+
+### Resume Session
+POST http://localhost:8084/sessions/REPLACE_SESSION_CODE/resume
+Content-Type: application/json
+
+{
+  "playerId": 1
+}
+
+###
+
+### Leave Session
+POST http://localhost:8084/sessions/REPLACE_SESSION_CODE/leave
+Content-Type: application/json
+
+{
+  "playerId": 1
+}
+
+###
+
+### Heartbeat
+PATCH http://localhost:8084/sessions/REPLACE_SESSION_CODE/players/1/heartbeat
