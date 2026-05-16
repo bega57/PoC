@@ -121,7 +121,15 @@ function GamePage() {
         lastHeartbeatRef.current = now;
 
         api.patch(`/sessions/${sessionCode}/players/${player.id}/heartbeat`)
-            .catch(err => console.error("Heartbeat failed:", err));
+            .catch(err => {
+
+                if (err?.response?.status === 404) {
+                    console.warn("Session no longer exists, stopping heartbeat");
+                    return;
+                }
+
+                console.error("Heartbeat failed:", err);
+            });
     };
 
     const safeFetchData = async () => {

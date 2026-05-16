@@ -1,4 +1,4 @@
-import { useState, useContext } from "react";
+import { useState, useContext, useEffect } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import api from "../api/api";
 import "./ShipRepairPage.css";
@@ -17,8 +17,6 @@ function ShipRepairPage() {
         p => p.id === player?.id
     );
 
-    const ships = currentPlayer?.ships || [];
-
     const [repairAmount, setRepairAmount] = useState(0);
     const [repairCost, setRepairCost] = useState(0);
 
@@ -27,6 +25,15 @@ function ShipRepairPage() {
     const netCost = repairCost / (1 + VAT);
     const vatAmount = repairCost - netCost;
 
+    const [ships, setShips] = useState([]);
+
+    useEffect(() => {
+        if (!player?.id) return;
+
+        api.get(`/ships/player/${player.id}`)
+            .then(res => setShips(res.data))
+            .catch(err => console.error("Failed to load ships:", err));
+    }, [player?.id]);
 
     const handleRepair = async () => {
         try {
@@ -36,6 +43,19 @@ function ShipRepairPage() {
             });
 
             setToast("Ship repaired 🔧");
+
+            setShips(prev =>
+                prev.map(ship => {
+                    if (ship.id === selectedShip.id) {
+                        return {
+                            ...ship,
+                            condition: Math.min(100, (ship.condition ?? 0) + repairAmount)
+                        };
+                    }
+
+                    return ship;
+                })
+            );
 
             setSelectedShip(null);
             setRepairAmount(0);

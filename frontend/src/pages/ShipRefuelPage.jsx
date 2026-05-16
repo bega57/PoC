@@ -1,4 +1,4 @@
-import { useState, useContext } from "react";
+import { useState, useContext, useEffect } from "react";
 import { GameContext } from "../layouts/AppLayout";
 import { useNavigate, useParams } from "react-router-dom";
 import api from "../api/api";
@@ -17,7 +17,6 @@ function ShipRefuelPage() {
         p => p.id === player?.id
     );
 
-    const ships = currentPlayer?.ships || [];
 
     const [toastType, setToastType] = useState("success");
 
@@ -30,6 +29,16 @@ function ShipRefuelPage() {
     const netCost = refuelCost / (1 + VAT);
     const vatAmount = refuelCost - netCost;
 
+    const [ships, setShips] = useState([]);
+
+    useEffect(() => {
+        if (!player?.id) return;
+
+        api.get(`/ships/player/${player.id}`)
+            .then(res => setShips(res.data))
+            .catch(err => console.error("Failed to load ships:", err));
+    }, [player?.id]);
+
     const handleRefuel = async () => {
         try {
             await api.post(`/ships/${selectedShip.id}/refuel`, {
@@ -38,6 +47,20 @@ function ShipRefuelPage() {
             });
 
             setToast("Ship refueled ⛽");
+
+            setShips(prev =>
+                prev.map(ship => {
+                    if (ship.id === selectedShip.id) {
+                        return {
+                            ...ship,
+                            fuelLevel: Math.min(100, (ship.fuelLevel ?? 0) + fuelAmount)
+                        };
+                    }
+
+                    return ship;
+                })
+            );
+
             setToastType("success");
 
             setSelectedShip(null);

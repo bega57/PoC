@@ -1,7 +1,6 @@
 package at.fhv.blueroute.session.application.service;
 
 import at.fhv.blueroute.session.common.websocket.SessionUpdateMessage;
-import at.fhv.blueroute.session.common.websocket.WebSocketSender;
 import at.fhv.blueroute.session.domain.model.Session;
 import at.fhv.blueroute.session.domain.model.SessionStatus;
 import at.fhv.blueroute.session.domain.repository.SessionRepository;
@@ -19,18 +18,15 @@ import java.util.List;
 public class SessionTickService {
 
     private final SessionRepository sessionRepository;
-    private final WebSocketSender webSocketSender;
     private final VoyageServiceClient voyageServiceClient;
     private final BackendWebSocketClient backendWebSocketClient;
 
     public SessionTickService(
             SessionRepository sessionRepository,
-            WebSocketSender webSocketSender,
             VoyageServiceClient voyageServiceClient,
             BackendWebSocketClient backendWebSocketClient
     ) {
         this.sessionRepository = sessionRepository;
-        this.webSocketSender = webSocketSender;
         this.voyageServiceClient = voyageServiceClient;
         this.backendWebSocketClient = backendWebSocketClient;
     }
@@ -67,7 +63,7 @@ public class SessionTickService {
             }
             sessionRepository.save(session);
 
-            webSocketSender.sendSessionUpdate(
+            backendWebSocketClient.publish(
                     session.getSessionCode(),
                     new SessionUpdateMessage(
                             "TICK",
