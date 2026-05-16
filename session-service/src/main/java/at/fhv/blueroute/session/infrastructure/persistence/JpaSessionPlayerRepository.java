@@ -1,4 +1,4 @@
-package at.fhv.blueroute.session.persistence;
+package at.fhv.blueroute.session.infrastructure.persistence;
 
 import at.fhv.blueroute.session.domain.model.SessionPlayer;
 import at.fhv.blueroute.session.domain.model.SessionPlayerStatus;
