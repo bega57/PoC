@@ -12,3 +12,19 @@ spring:
   h2:
     console:
       enabled: false
+
+player:
+  service:
+    url: http://localhost:8081
+
+ship:
+  service:
+    url: http://localhost:8082
+
+travel:
+  service:
+    url: http://localhost:8083
+
+session:
+  service:
+    url: http://localhost:8084
