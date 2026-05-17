@@ -2,7 +2,7 @@ import "../styles/background.css";
 import { useEffect, useState } from "react";
 import { Client } from "@stomp/stompjs";
 import SockJS from "sockjs-client";
-import api from "../api/api";
+import api, { API_BASE_URL } from "../api/api";
 import CreatePlayerForm from "../components/CreatePlayerForm";
 import JoinSessionForm from "../components/JoinSessionForm";
 import ResumeSessionForm from "../components/ResumeSessionForm";
@@ -39,7 +39,7 @@ function MainPage() {
     useEffect(() => {
         if (!session?.sessionCode) return;
 
-        const socket = new SockJS(`${import.meta.env.VITE_API_BASE_URL}/ws`);
+        const socket = new SockJS(`${API_BASE_URL}/ws`);
 
         const client = new Client({
             webSocketFactory: () => socket,

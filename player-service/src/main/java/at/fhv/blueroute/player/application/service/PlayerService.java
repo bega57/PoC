@@ -7,19 +7,29 @@ import at.fhv.blueroute.player.domain.model.Player;
 import at.fhv.blueroute.player.infrastructure.persistence.JpaPlayerRepository;
 import at.fhv.blueroute.player.presentation.dto.PlayerRequest;
 import at.fhv.blueroute.player.presentation.dto.PlayerResponse;
+import at.fhv.blueroute.player.presentation.dto.LeaderboardEntryResponse;
+import at.fhv.blueroute.player.session.client.SessionServiceClient;
+import at.fhv.blueroute.player.session.client.dto.PlayerSummaryResponse;
+
 import org.springframework.stereotype.Service;
 
 import java.util.List;
+import java.util.Comparator;
 
 @Service
 public class PlayerService {
 
     private final JpaPlayerRepository playerRepository;
     private final PlayerMapper playerMapper;
+    private final SessionServiceClient sessionServiceClient;
 
-    public PlayerService(JpaPlayerRepository playerRepository, PlayerMapper playerMapper) {
+    public PlayerService(JpaPlayerRepository playerRepository,
+                         PlayerMapper playerMapper,
+                         SessionServiceClient sessionServiceClient) {
+
         this.playerRepository = playerRepository;
         this.playerMapper = playerMapper;
+        this.sessionServiceClient = sessionServiceClient;
     }
 
     public List<PlayerResponse> getAllPlayers() {
@@ -78,5 +88,21 @@ public class PlayerService {
         player.setCompanyName(companyName.trim());
 
         return playerMapper.toResponse(playerRepository.save(player));
+    }
+
+    public List<LeaderboardEntryResponse> getLeaderboard(String sessionCode) {
+
+        return sessionServiceClient.getSessionByCode(sessionCode)
+                .getPlayers()
+                .stream()
+                .map(player -> new LeaderboardEntryResponse(
+                        player.getId(),
+                        player.getUsername(),
+                        player.getBalance() == null
+                                ? 0
+                                : player.getBalance().intValue()
+                ))
+                .sorted(Comparator.comparingInt(LeaderboardEntryResponse::getScore).reversed())
+                .toList();
     }
 }
