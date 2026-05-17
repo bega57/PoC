@@ -1,0 +1,34 @@
+package at.fhv.blueroute.event.presentation.dto;
+
+import at.fhv.blueroute.event.domain.model.VoyageEventType;
+
+import java.util.List;
+
+public class VoyageEventDto {
+
+    private String type = "VOYAGE_EVENT";
+    private Long voyageId;
+    private VoyageEventType eventType;
+    private String title;
+    private String description;
+    private List<VoyageEventOptionDto> options;
+
+    public VoyageEventDto() {}
+
+    public VoyageEventDto(Long voyageId, VoyageEventType eventType,
+                          String title, String description,
+                          List<VoyageEventOptionDto> options) {
+        this.voyageId = voyageId;
+        this.eventType = eventType;
+        this.title = title;
+        this.description = description;
+        this.options = options;
+    }
+
+    public String getType() { return type; }
+    public Long getVoyageId() { return voyageId; }
+    public VoyageEventType getEventType() { return eventType; }
+    public String getTitle() { return title; }
+    public String getDescription() { return description; }
+    public List<VoyageEventOptionDto> getOptions() { return options; }
+}

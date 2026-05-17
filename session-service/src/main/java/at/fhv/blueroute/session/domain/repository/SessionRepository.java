@@ -11,4 +11,5 @@ public interface SessionRepository {
     Optional<Session> findBySessionCode(String sessionCode);
     Session save(Session session);
     List<Session> findByStatus(SessionStatus status);
+    Optional<Session> findById(Long id);
 }
