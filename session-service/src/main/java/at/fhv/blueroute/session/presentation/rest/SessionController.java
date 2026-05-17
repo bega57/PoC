@@ -68,4 +68,10 @@ public class SessionController {
         return "session-service running";
     }
 
+
+    @PostMapping("/by-id/{sessionId}/event-resolved")
+    public ResponseEntity<Void> resumeAfterEvent(@PathVariable Long sessionId) {
+        sessionService.resumeAfterEvent(sessionId);
+        return ResponseEntity.noContent().build();
+    }
 }

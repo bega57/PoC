@@ -28,3 +28,7 @@ travel:
 session:
   service:
     url: http://localhost:8084
+
+event:
+  service:
+    url: http://localhost:8085
