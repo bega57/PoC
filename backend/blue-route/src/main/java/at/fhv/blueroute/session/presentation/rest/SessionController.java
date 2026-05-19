@@ -1,11 +1,9 @@
 package at.fhv.blueroute.session.presentation.rest;
 
-import at.fhv.blueroute.session.application.service.GetLeaderboardService;
 import at.fhv.blueroute.session.application.service.SessionService;
-import at.fhv.blueroute.session.presentation.dto.CreateSessionRequest;
-import at.fhv.blueroute.session.presentation.dto.JoinSessionRequest;
-import at.fhv.blueroute.session.presentation.dto.LeaderboardEntryResponse;
-import at.fhv.blueroute.session.presentation.dto.SessionResponse;
+import at.fhv.blueroute.session.client.dto.*;
+import at.fhv.blueroute.player.client.PlayerServiceClient;
+import at.fhv.blueroute.session.client.dto.LeaderboardEntryResponse;
 import jakarta.validation.Valid;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -17,11 +15,11 @@ import java.util.List;
 public class SessionController {
 
     private final SessionService sessionService;
-    private final GetLeaderboardService leaderboardService;
+    private final PlayerServiceClient playerServiceClient;
 
-    public SessionController(SessionService sessionService, GetLeaderboardService leaderboardService) {
+    public SessionController(SessionService sessionService, PlayerServiceClient playerServiceClient) {
         this.sessionService = sessionService;
-        this.leaderboardService = leaderboardService;
+        this.playerServiceClient = playerServiceClient;
     }
 
     @GetMapping
@@ -32,11 +30,6 @@ public class SessionController {
     @GetMapping("/{sessionCode}")
     public SessionResponse getSessionByCode(@PathVariable String sessionCode) {
         return sessionService.getSessionByCode(sessionCode);
-    }
-
-    @GetMapping("/{sessionCode}/leaderboard")
-    public List<LeaderboardEntryResponse> getLeaderboard(@PathVariable String sessionCode) {
-        return leaderboardService.getLeaderboard(sessionCode);
     }
 
     @PostMapping
@@ -60,6 +53,11 @@ public class SessionController {
     public SessionResponse leaveSession(@PathVariable String sessionCode,
                                         @Valid @RequestBody JoinSessionRequest request) {
         return sessionService.leaveSession(sessionCode, request.getPlayerId());
+    }
+
+    @GetMapping("/{sessionCode}/leaderboard")
+    public List<LeaderboardEntryResponse> getLeaderboard(@PathVariable String sessionCode) {
+        return playerServiceClient.getLeaderboard(sessionCode);
     }
 
     @PatchMapping("/{sessionCode}/players/{playerId}/heartbeat")

@@ -28,6 +28,7 @@ function getPositionOnRoute(route, progress) {
 
 function GameMap({
                      session,
+                     ships,
                      ports,
                      voyages,
                      hoveredPort,
@@ -222,9 +223,8 @@ function GameMap({
                     </Marker>
                 )}
 
-                {session.players.flatMap(p =>
-                    (p.ships || []).map(ship => ({ ship, player: p }))
-                ).map(({ ship, player }) => {
+                {ships.map(ship => {
+                    const shipOwner = session.players.find(p => p.id === ship.ownerId) || session.players[0];
 
                     const voyage = voyages.find(
                         v => v.shipId === ship.id && v.status === "RUNNING"
@@ -248,7 +248,7 @@ function GameMap({
                                         y={-26}
                                     />
 
-                                    {player.ships?.length > 0 && (
+                                    {shipOwner && (
                                         <text
                                             y={24}
                                             textAnchor="middle"
@@ -259,7 +259,7 @@ function GameMap({
                                                 textShadow: "0 0 4px rgba(0,0,0,0.8)"
                                             }}
                                         >
-                                            {player.username}
+                                            {shipOwner.username}
                                         </text>
                                     )}
                                 </>
@@ -331,7 +331,7 @@ function GameMap({
                                             textShadow: "0 0 4px rgba(0,0,0,0.8)"
                                         }}
                                     >
-                                        {player.username}
+                                        {shipOwner?.username}
                                     </text>
                                 </>
 

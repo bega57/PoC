@@ -1,7 +1,5 @@
 package at.fhv.blueroute.voyage.client.dto;
 
-import at.fhv.blueroute.event.domain.model.VoyageEventType;
-
 import java.util.List;
 
 public class VoyageResponse {
@@ -24,8 +22,6 @@ public class VoyageResponse {
     private double progress;
 
     private double reward;
-
-    private VoyageEventType pendingEventType;
 
     private Boolean eventResolved;
 
@@ -89,10 +85,6 @@ public class VoyageResponse {
 
     public double getReward() {
         return reward;
-    }
-
-    public VoyageEventType getPendingEventType() {
-        return pendingEventType;
     }
 
     public boolean isEventResolved() {

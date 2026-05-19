@@ -43,6 +43,11 @@ public class ShipController {
         return shipService.getShipsByPlayer(playerId);
     }
 
+    @GetMapping
+    public List<ShipResponse> getAllShips() {
+        return shipService.getAllShips();
+    }
+
     @GetMapping("/{shipId}")
     public ShipResponse getShip(
             @PathVariable Long shipId

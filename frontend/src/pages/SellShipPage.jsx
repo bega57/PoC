@@ -18,14 +18,20 @@ function SellShipPage() {
     const [message, setMessage] = useState("");
     const [toastMessage, setToastMessage] = useState("");
     const [isSelling, setIsSelling] = useState(false);
-
+    const [playerShips, setPlayerShips] = useState([]);
 
 
     const currentPlayer = session?.players?.find(
         p => p.id === player?.id
     );
 
-    const playerShips = currentPlayer?.ships || [];
+    useEffect(() => {
+        if (!player?.id) return;
+
+        api.get(`/ships/player/${player.id}`)
+            .then(res => setPlayerShips(res.data))
+            .catch(err => console.error("Failed to load player ships:", err));
+    }, [player?.id]);
 
     useEffect(() => {
         if (playerShips.length > 0 && !selectedShip) {
@@ -66,6 +72,10 @@ function SellShipPage() {
 
             setShowSellModal(false);
             setSelectedShip(null);
+
+            setPlayerShips(prev =>
+                prev.filter(ship => ship.id !== selectedShip.id)
+            );
 
             showToast(`Sold ${selectedShip.name} for $${selectedShip.sellPrice}`);
         } catch (error) {

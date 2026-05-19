@@ -17,6 +17,8 @@ function CompanyPage() {
 
     const storedPlayer = JSON.parse(sessionStorage.getItem(`player-${sessionCode}`));
 
+    const [ships, setShips] = useState([]);
+
     const getBarColor = (value) => {
         if (value <= 20) return "#ef4444";
         if (value <= 50) return "#f59e0b";
@@ -28,6 +30,9 @@ function CompanyPage() {
         try {
             const sessionResponse = await api.get(`/sessions/${sessionCode}`);
             const sessionData = sessionResponse.data;
+
+            const shipsResponse = await api.get(`/ships/player/${storedPlayer.id}`);
+            setShips(shipsResponse.data);
 
             const voyagesResponse = await api.get(
                 `/voyages?sessionId=${sessionData.id}&currentTick=${session.currentTick}`
@@ -128,11 +133,11 @@ function CompanyPage() {
                 <div className="fleet-section">
                     <h2>Your Ships</h2>
 
-                    {!currentPlayer.ships || currentPlayer.ships.length === 0 ? (
+                    {ships.length === 0 ? (
                         <p className="empty-text">No ships owned yet.</p>
                     ) : (
                         <div className="fleet-list">
-                            {currentPlayer.ships.map((ship) => (
+                            {ships.map((ship) => (
                                 <div key={ship.id} className="fleet-card">
                                     <div className="fleet-image-box">
                                         <img src={getShipImage(ship.type)} alt={ship.name} />

@@ -2,7 +2,7 @@ import { useEffect, useState, useRef, useContext } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import SockJS from "sockjs-client";
 import { Client } from "@stomp/stompjs";
-import api from "../api/api";
+import api, { API_BASE_URL } from "../api/api";
 import "./GamePage.css";
 import "leaflet/dist/leaflet.css";
 import cheapShip from "../assets/ships/cheapSide.png";
@@ -38,7 +38,8 @@ function GamePage() {
     const [selectedShip, setSelectedShip] = useState(null);
 
     const [ports, setPorts] = useState([]);
-
+    const [ships, setShips] = useState([]);
+    const shipsRef = useRef([]);
     const [hoveredPort, setHoveredPort] = useState(null);
     const [portCargo, setPortCargo] = useState([]);
     const [cargoCache, setCargoCache] = useState({});
@@ -121,7 +122,15 @@ function GamePage() {
         lastHeartbeatRef.current = now;
 
         api.patch(`/sessions/${sessionCode}/players/${player.id}/heartbeat`)
-            .catch(err => console.error("Heartbeat failed:", err));
+            .catch(err => {
+
+                if (err?.response?.status === 404) {
+                    console.warn("Session no longer exists, stopping heartbeat");
+                    return;
+                }
+
+                console.error("Heartbeat failed:", err);
+            });
     };
 
     const safeFetchData = async () => {
@@ -169,17 +178,18 @@ function GamePage() {
     }, [voyages, session, sessionCode, player, lastFinishedVoyageId]);
 
     useEffect(() => {
-        if (!session || !player) return;
+        if (!player?.id) return;
 
-        const me = session.players.find(p => p.id === player?.id);
+        const myFirstShip = ships.find(
+            ship => ship.ownerId === player.id || ship.owner?.id === player.id
+        );
 
-        if (!me?.ships?.length) return;
+        setSelectedShip(myFirstShip || null);
+    }, [ships, player?.id]);
 
-        const backendShip = me.ships[0];
-
-        setSelectedShip(backendShip);
-
-    }, [session]);
+    useEffect(() => {
+        shipsRef.current = ships;
+    }, [ships]);
 
     const fetchData = async () => {
 
@@ -189,6 +199,9 @@ function GamePage() {
             const sessionData = sessionRes.data;
 
             setSession(sessionData);
+
+            const shipsRes = await api.get(`/ships`);
+            setShips(shipsRes.data);
 
             const me = sessionData.players.find(p => p.id === player.id);
             if (!me) return;
@@ -203,6 +216,22 @@ function GamePage() {
                 `/voyages?sessionId=${sessionData.id}&currentTick=${sessionData.currentTick}`
             );
             setVoyages(voyagesRes.data);
+
+            if (sessionData.status === "PAUSED") {
+                const activeVoyageWithEvent = voyagesRes.data.find(
+                    v => v.pendingEventType && v.eventTriggered === true && v.eventResolved === false
+                );
+                if (activeVoyageWithEvent) {
+                    try {
+                        const eventRes = await api.get(`/voyage-events/${activeVoyageWithEvent.id}/active`);
+                        if (eventRes.data) {
+                            setActiveEvent(eventRes.data);
+                        }
+                    } catch (err) {
+                        console.error("Failed to load active event:", err);
+                    }
+                }
+            }
 
             const leaderboardRes = await api.get(`/sessions/${sessionCode}/leaderboard`);
 
@@ -309,9 +338,6 @@ function GamePage() {
 
     useEffect(() => {
 
-        const API_BASE_URL =
-            import.meta.env.VITE_API_BASE_URL || "http://localhost:8080";
-
         const socket = new SockJS(`${API_BASE_URL}/ws`);
 
         const client = new Client({
@@ -332,12 +358,14 @@ function GamePage() {
                 }
 
                 if (data.type === "TICK") {
-                    setSession(prev =>
-                        prev ? { ...prev, currentTick: data.currentTick } : prev
-                    );
+                    setSession(prev => {
+                        if (!prev || prev.status === "PAUSED") return prev;
+                        return { ...prev, currentTick: data.currentTick };
+                    });
 
-                    await fetchVoyagesOnly(sessionIdRef.current, data.currentTick);
-
+                    if (session?.status !== "PAUSED") {
+                        await fetchVoyagesOnly(sessionIdRef.current, data.currentTick);
+                    }
                     return;
                 }
 
@@ -350,6 +378,17 @@ function GamePage() {
                 if (data.type === "VOYAGE_FINISHED") {
                     console.log("VOYAGE FINISHED EVENT:", data);
 
+                    const isMyVoyage = shipsRef.current.some(
+                        ship =>
+                            ship.id === data.shipId &&
+                            (ship.ownerId === player.id || ship.owner?.id === player.id)
+                    );
+
+                    if (!isMyVoyage) {
+                        await safeFetchData();
+                        return;
+                    }
+
                     setRewardAmount(data.reward || 0);
                     setFinishedVoyageInfo(data);
                     setLastFinishedVoyageId(data.voyageId);
@@ -359,35 +398,32 @@ function GamePage() {
                     );
                     setShowRewardPopup(true);
 
+                    setShips(prevShips =>
+                        prevShips.map(ship => {
+                            if (ship.id === data.shipId) {
+                                return {
+                                    ...ship,
+                                    currentPort: data.destinationPort,
+                                    traveling: false
+                                };
+                            }
+
+                            return ship;
+                        })
+                    );
+
                     setSession(prev => {
                         if (!prev) return prev;
 
-                        const updated = {
-                            ...prev,
-                            players: prev.players.map(p => ({
-                                ...p,
-                                ships: p.ships.map(ship => {
-                                    if (ship.id === data.shipId) {
-                                        return {
-                                            ...ship,
-                                            currentPort: data.destinationPort,
-                                            traveling: false
-                                        };
-                                    }
-                                    return ship;
-                                })
-                            }))
-                        };
-
-                        if (updated.maxPlayers === 1) {
-                            const myPlayer = updated.players.find(p => p.id === player.id);
+                        if (prev.maxPlayers === 1) {
+                            const myPlayer = prev.players.find(p => p.id === player.id);
 
                             if (myPlayer) {
                                 saveScore(myPlayer.balance);
                             }
                         }
 
-                        return updated;
+                        return prev;
                     });
 
                     setTimeout(() => {
@@ -549,14 +585,28 @@ function GamePage() {
         );
     }
 
-    const myShips = session.players
-        .find(p => p.id === player?.id)?.ships || [];
+    const myShips = ships.filter(
+        ship => ship.ownerId === player.id || ship.owner?.id === player.id
+    );
 
     const myShipIds = myShips.map(s => s.id);
 
-    const myActiveVoyages = voyages.filter(
-        v => myShipIds.includes(v.shipId) && v.status === "RUNNING"
+    const myActiveVoyages = voyages
+        .filter(v => myShipIds.includes(v.shipId) && v.status === "RUNNING")
+        .map(v => {
+            const realShip = myShips.find(ship => ship.id === v.shipId);
+
+            return {
+                ...v,
+                shipName: realShip?.name || v.shipName
+            };
+        });
+
+    const activeOwnShip = myShips.find(ship =>
+        myActiveVoyages.some(v => v.shipId === ship.id)
     );
+
+    const statusBarShip = activeOwnShip || selectedShip;
 
     const mainPort = savedPort;
     const shipPorts = myShips
@@ -594,6 +644,7 @@ function GamePage() {
 
             <GameMap
                 session={session}
+                ships={ships}
                 ports={ports}
                 voyages={voyages}
                 hoveredPort={hoveredPort}
@@ -621,7 +672,7 @@ function GamePage() {
 
             <GameStatusBar
                 session={session}
-                selectedShip={selectedShip}
+                selectedShip={statusBarShip}
                 currentPlayer={currentPlayer}
                 myActiveVoyages={myActiveVoyages}
             />

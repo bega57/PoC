@@ -1,8 +1,6 @@
 import GameDay from "../ui/GameDay.jsx";
 
-function GameStatusBar({ session, currentPlayer, myActiveVoyages }) {
-
-    const allShips = session.players.flatMap(p => p.ships || []);
+function GameStatusBar({ myActiveVoyages }) {
 
     return (
         <div className="status-bar">
@@ -14,20 +12,15 @@ function GameStatusBar({ session, currentPlayer, myActiveVoyages }) {
                 </span>
             </div>
 
-            {/* SHIPS */}
             {myActiveVoyages.length > 0 ? (
                 myActiveVoyages.map(v => {
-                    const ship = allShips.find(s => s.id === v.shipId);
-
                     const progress = v.progress ?? 0;
-
-                    const currentDay =
-                        Math.max(1, v.currentDay ?? 1);
+                    const currentDay = Math.max(1, v.currentDay ?? 1);
 
                     return (
                         <div key={v.id} style={{ marginTop: "8px" }}>
 
-                            <p>🚢 Ship: {ship?.name || v.shipId}</p>
+                            <p>🚢 Ship: {v.shipName || v.shipId}</p>
 
                             <p>
                                 ⏳ Traveling {v.originPort} → {v.destinationPort}

@@ -2,6 +2,7 @@ package at.fhv.blueroute.player.presentation.rest;
 
 import at.fhv.blueroute.player.application.service.PlayerService;
 import at.fhv.blueroute.player.presentation.dto.*;
+import at.fhv.blueroute.player.presentation.dto.LeaderboardEntryResponse;
 import jakarta.validation.Valid;
 import org.springframework.web.bind.annotation.*;
 
@@ -58,5 +59,12 @@ public class PlayerController {
             @RequestBody UpdateCompanyNameRequest request
     ) {
         return playerService.updateCompanyName(playerId, request.getCompanyName());
+    }
+
+    @GetMapping("/leaderboard")
+    public List<LeaderboardEntryResponse> getLeaderboard(
+            @RequestParam String sessionCode
+    ) {
+        return playerService.getLeaderboard(sessionCode);
     }
 }

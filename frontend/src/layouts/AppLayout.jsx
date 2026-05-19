@@ -1,7 +1,7 @@
 import { Outlet, useParams } from "react-router-dom";
 import { useEffect, useState } from "react";
 import TopBar from "../pages/TopBar";
-import api from "../api/api";
+import api, { API_BASE_URL } from "../api/api";
 import { createContext } from "react";
 import { Client } from "@stomp/stompjs";
 import SockJS from "sockjs-client";
@@ -39,7 +39,6 @@ function AppLayout() {
     useEffect(() => {
         if (!sessionCode || !activePlayerId) return;
 
-        const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || "http://localhost:8080";
         const socket = new SockJS(`${API_BASE_URL}/ws`);
 
         const client = new Client({

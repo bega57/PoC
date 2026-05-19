@@ -16,8 +16,6 @@ import at.fhv.blueroute.session.application.exception.PlayerAlreadyInSessionExce
 import at.fhv.blueroute.session.application.exception.SessionPlayerNotFoundException;
 import at.fhv.blueroute.ship.application.exception.ShipOutOfStockException;
 import at.fhv.blueroute.ship.application.exception.ShipCurrentlyTravelingException;
-import at.fhv.blueroute.event.application.exception.InvalidVoyageEventActionException;
-import at.fhv.blueroute.event.application.exception.VoyageEventNotFoundException;
 
 import java.time.LocalDateTime;
 
@@ -194,36 +192,6 @@ public class GlobalExceptionHandler {
         );
 
         return ResponseEntity.status(HttpStatus.CONFLICT).body(response);
-    }
-
-    @ExceptionHandler(VoyageEventNotFoundException.class)
-    public ResponseEntity<ErrorResponse> handleVoyageEventNotFound(
-            VoyageEventNotFoundException ex,
-            HttpServletRequest request
-    ) {
-        ErrorResponse response = new ErrorResponse(
-                ex.getMessage(),
-                HttpStatus.NOT_FOUND.value(),
-                request.getRequestURI(),
-                LocalDateTime.now()
-        );
-
-        return ResponseEntity.status(HttpStatus.NOT_FOUND).body(response);
-    }
-
-    @ExceptionHandler(InvalidVoyageEventActionException.class)
-    public ResponseEntity<ErrorResponse> handleInvalidVoyageEventAction(
-            InvalidVoyageEventActionException ex,
-            HttpServletRequest request
-    ) {
-        ErrorResponse response = new ErrorResponse(
-                ex.getMessage(),
-                HttpStatus.BAD_REQUEST.value(),
-                request.getRequestURI(),
-                LocalDateTime.now()
-        );
-
-        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(response);
     }
 
     //handleGeneric(Exception.class) sollte idealerweise ganz unten stehen, weil es der Catch-All ist

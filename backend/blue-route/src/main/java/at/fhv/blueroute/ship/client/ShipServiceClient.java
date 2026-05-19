@@ -3,6 +3,7 @@ package at.fhv.blueroute.ship.client;
 import at.fhv.blueroute.ship.client.dto.*;
 
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.core.ParameterizedTypeReference;
 import org.springframework.stereotype.Component;
 import org.springframework.web.client.RestTemplate;
 
@@ -243,5 +244,21 @@ public class ShipServiceClient {
                 request,
                 Void.class
         );
+    }
+
+    public List<ShipResponse> getAllShips() {
+
+        String url =
+                shipServiceUrl + "/ships";
+
+        ShipResponse[] response =
+                restTemplate.getForObject(
+                        url,
+                        ShipResponse[].class
+                );
+
+        return response == null
+                ? List.of()
+                : List.of(response);
     }
 }

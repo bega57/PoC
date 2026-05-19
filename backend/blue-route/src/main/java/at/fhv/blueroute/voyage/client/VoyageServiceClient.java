@@ -1,13 +1,7 @@
 package at.fhv.blueroute.voyage.client;
 
-import at.fhv.blueroute.event.domain.model.VoyageEventType;
 import at.fhv.blueroute.voyage.client.dto.StartVoyageRequest;
 import at.fhv.blueroute.voyage.client.dto.VoyageResponse;
-import at.fhv.blueroute.voyage.client.dto.DelayVoyageRequest;
-import at.fhv.blueroute.voyage.client.dto.EventCostRequest;
-import at.fhv.blueroute.voyage.client.dto.EventResolvedRequest;
-import at.fhv.blueroute.voyage.client.dto.RewardLossRequest;
-import at.fhv.blueroute.voyage.client.dto.EventPlanRequest;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 import org.springframework.web.client.RestTemplate;
@@ -111,112 +105,6 @@ public class VoyageServiceClient {
         return restTemplate.getForObject(
                 url,
                 VoyageResponse.class
-        );
-    }
-
-    public void markEventResolved(Long voyageId, String resultMessage) {
-
-        String url =
-                travelServiceUrl
-                        + "/voyages/"
-                        + voyageId
-                        + "/event-resolved";
-
-        restTemplate.postForObject(
-                url,
-                new EventResolvedRequest(resultMessage),
-                Void.class
-        );
-    }
-
-    public void setEventCost(Long voyageId, double eventCost) {
-
-        String url =
-                travelServiceUrl
-                        + "/voyages/"
-                        + voyageId
-                        + "/event-cost";
-
-        restTemplate.postForObject(
-                url,
-                new EventCostRequest(eventCost),
-                Void.class
-        );
-    }
-
-    public void delayVoyage(
-            Long voyageId,
-            int extraDelayTicks,
-            double extraFuelLoss,
-            double extraConditionLoss
-    ) {
-
-        String url =
-                travelServiceUrl
-                        + "/voyages/"
-                        + voyageId
-                        + "/delay";
-
-        restTemplate.postForObject(
-                url,
-                new DelayVoyageRequest(
-                        extraDelayTicks,
-                        extraFuelLoss,
-                        extraConditionLoss
-                ),
-                Void.class
-        );
-    }
-
-    public void reduceReward(Long voyageId, double rewardLossPercent) {
-
-        String url =
-                travelServiceUrl
-                        + "/voyages/"
-                        + voyageId
-                        + "/reward-loss";
-
-        restTemplate.postForObject(
-                url,
-                new RewardLossRequest(rewardLossPercent),
-                Void.class
-        );
-    }
-
-    public void markEventTriggered(Long voyageId) {
-
-        String url =
-                travelServiceUrl
-                        + "/voyages/"
-                        + voyageId
-                        + "/event-triggered";
-
-        restTemplate.postForObject(
-                url,
-                null,
-                Void.class
-        );
-    }
-
-    public void assignEventToVoyage(
-            Long voyageId,
-            VoyageEventType eventType,
-            int eventTriggerTick
-    ) {
-
-        String url =
-                travelServiceUrl
-                        + "/voyages/"
-                        + voyageId
-                        + "/event-plan";
-
-        restTemplate.postForObject(
-                url,
-                new EventPlanRequest(
-                        eventType,
-                        eventTriggerTick
-                ),
-                Void.class
         );
     }
 }
