@@ -38,6 +38,12 @@ public class Session {
     @OneToMany(mappedBy = "session", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<SessionPlayer> sessionPlayers = new ArrayList<>();
 
+    @Column(nullable = false)
+    private boolean pausedByEvent = false;
+
+    public boolean isPausedByEvent() { return pausedByEvent; }
+    public void setPausedByEvent(boolean pausedByEvent) { this.pausedByEvent = pausedByEvent; }
+
     public Session() {
     }
 

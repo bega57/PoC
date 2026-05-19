@@ -188,7 +188,7 @@ public class SessionService {
         boolean hasActivePlayers = session.getSessionPlayers().stream()
                 .anyMatch(sp -> sp.getStatus() == SessionPlayerStatus.ACTIVE);
 
-        if (hasActivePlayers) {
+        if (hasActivePlayers && !session.isPausedByEvent()) {
             session.setStatus(SessionStatus.RUNNING);
         }
 
@@ -254,6 +254,24 @@ public class SessionService {
         System.out.println("RESUME 10 - mapped response");
 
         return response;
+    }
+
+    public void resumeAfterEvent(Long sessionId) {
+        Session session = sessionRepository.findById(sessionId)
+                .orElseThrow(() -> new RuntimeException("Session not found: " + sessionId));
+
+        session.setPausedByEvent(false);
+        session.setStatus(SessionStatus.RUNNING);
+        Session saved = sessionRepository.save(session);
+
+        backendWebSocketClient.publish(
+                saved.getSessionCode(),
+                new SessionStatusMessage(
+                        "SESSION_RUNNING",
+                        saved.getSessionCode(),
+                        "RUNNING"
+                )
+        );
     }
 
 }

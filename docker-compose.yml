@@ -25,6 +25,7 @@ services:
       SHIP_SERVICE_URL: http://ship-service:8082
       TRAVEL_SERVICE_URL: http://travel-service:8083
       SESSION_SERVICE_URL: http://session-service:8084
+      EVENT_SERVICE_URL: http://event-service:8085
     ports:
       - "8080:8080"
 
@@ -85,11 +86,30 @@ services:
       PLAYER_SERVICE_URL: http://player-service:8081
       SHIP_SERVICE_URL: http://ship-service:8082
       TRAVEL_SERVICE_URL: http://travel-service:8083
+      EVENT_SERVICE_URL: http://event-service:8085
     depends_on:
       - postgres
       - player-service
       - ship-service
       - travel-service
+      - event-service
+
+  event-service:
+    build: ./event-service
+    container_name: blueroute-event-service
+    depends_on:
+      - postgres
+      - player-service
+      - ship-service
+      - travel-service
+    environment:
+      TRAVEL_SERVICE_URL: http://travel-service:8083
+      SHIP_SERVICE_URL: http://ship-service:8082
+      PLAYER_SERVICE_URL: http://player-service:8081
+      SESSION_SERVICE_URL: http://session-service:8084
+      BACKEND_URL: http://backend:8080
+    ports:
+      - "8085:8085"
 
   frontend:
     build:

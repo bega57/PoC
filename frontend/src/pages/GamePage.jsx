@@ -217,6 +217,22 @@ function GamePage() {
             );
             setVoyages(voyagesRes.data);
 
+            if (sessionData.status === "PAUSED") {
+                const activeVoyageWithEvent = voyagesRes.data.find(
+                    v => v.pendingEventType && v.eventTriggered === true && v.eventResolved === false
+                );
+                if (activeVoyageWithEvent) {
+                    try {
+                        const eventRes = await api.get(`/voyage-events/${activeVoyageWithEvent.id}/active`);
+                        if (eventRes.data) {
+                            setActiveEvent(eventRes.data);
+                        }
+                    } catch (err) {
+                        console.error("Failed to load active event:", err);
+                    }
+                }
+            }
+
             const leaderboardRes = await api.get(`/sessions/${sessionCode}/leaderboard`);
 
             setLeaderboard(leaderboardRes.data);
@@ -342,12 +358,14 @@ function GamePage() {
                 }
 
                 if (data.type === "TICK") {
-                    setSession(prev =>
-                        prev ? { ...prev, currentTick: data.currentTick } : prev
-                    );
+                    setSession(prev => {
+                        if (!prev || prev.status === "PAUSED") return prev;
+                        return { ...prev, currentTick: data.currentTick };
+                    });
 
-                    await fetchVoyagesOnly(sessionIdRef.current, data.currentTick);
-
+                    if (session?.status !== "PAUSED") {
+                        await fetchVoyagesOnly(sessionIdRef.current, data.currentTick);
+                    }
                     return;
                 }
 
