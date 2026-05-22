@@ -3,6 +3,7 @@
   <component name="ExternalStorageConfigurationManager" enabled="true" />
   <component name="FrameworkDetectionExcludesConfiguration">
     <file type="web" url="file://$PROJECT_DIR$/backend/blue-route" />
+    <file type="web" url="file://$PROJECT_DIR$/event-service" />
     <file type="web" url="file://$PROJECT_DIR$/player-service" />
     <file type="web" url="file://$PROJECT_DIR$/session-service" />
     <file type="web" url="file://$PROJECT_DIR$/ship-service" />

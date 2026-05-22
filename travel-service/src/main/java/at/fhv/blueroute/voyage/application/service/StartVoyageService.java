@@ -41,7 +41,8 @@ public class StartVoyageService {
             Long shipId,
             Long cargoId,
             Long sessionId,
-            int currentTick
+            int currentTick,
+            boolean smuggling
     ) {
 
         ShipResponse ship =
@@ -145,6 +146,14 @@ public class StartVoyageService {
         voyage.setReward(cargo.getReward());
         voyage.setRewardGranted(false);
 
+        // ==================== SMUGGLING ====================
+        voyage.setSmuggling(smuggling);
+        if (smuggling) {
+            double smugglingBonus = cargo.getReward() * 0.3;
+            voyage.setSmugglingReward(smugglingBonus);
+            System.out.println("SMUGGLING ACCEPTED - bonus: " + smugglingBonus);
+        }
+        // ===================================================
 
         shipServiceClient.startVoyage(
                 ship.getId(),

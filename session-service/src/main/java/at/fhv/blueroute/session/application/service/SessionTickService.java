@@ -81,7 +81,14 @@ public class SessionTickService {
                                     finishedVoyage.getShipName(),
                                     finishedVoyage.getOriginPort(),
                                     finishedVoyage.getDestinationPort(),
-                                    finishedVoyage.getReward()
+                                    finishedVoyage.getReward(),
+                                    finishedVoyage.isSmuggling(),
+                                    finishedVoyage.getSmugglingReward(),
+                                    finishedVoyage.isCustomsChecked(),
+                                    finishedVoyage.isSmugglingDetected(),
+                                    finishedVoyage.getSmugglingPenalty(),
+                                    finishedVoyage.getSmugglingDetentionTicks(),
+                                    finishedVoyage.isSmugglingResolved()
                             )
                     );
                 }
