@@ -22,6 +22,9 @@ export default function VoyagePage() {
     const [errorMessage, setErrorMessage] = useState(null);
     const previousPortRef = useRef(null);
 
+    // ==================== SMUGGLING STATE ====================
+    const [showSmugglingOffer, setShowSmugglingOffer] = useState(false);
+    // =========================================================
 
     const fetchVoyages = async () => {
         if (!session) return;
@@ -162,6 +165,43 @@ export default function VoyagePage() {
         return Number(value).toLocaleString("de-DE");
     };
 
+    // ==================== SMUGGLING: actual start with flag ====================
+    const startVoyageWithSmuggling = async (smuggling) => {
+        try {
+            await api.post("/voyages/start", {
+                shipId: selectedShip.id,
+                cargoId: Number(selectedCargoId),
+                sessionId: session.id,
+                currentTick: session.currentTick,
+                smuggling: smuggling
+            });
+
+            await fetchVoyages();
+
+            setStartedVoyageInfo({
+                shipName: selectedShip.name,
+                origin: selectedShip.currentPort,
+                destination: selectedCargo?.destinationPort?.name,
+                cargoName: selectedCargo?.name,
+                cargoType: selectedCargo?.type,
+                duration: selectedCargo.requiredTicks,
+                price: selectedCargo?.price,
+                reward: selectedCargo?.reward,
+                smuggling: smuggling
+            });
+
+            setShowVoyageStartedPopup(true);
+        } catch (err) {
+            console.error(err);
+            setErrorMessage(
+                err.response?.data?.message ||
+                err.response?.data ||
+                "Failed to start voyage"
+            );
+        }
+    };
+    // ==========================================================================
+
     const handleStartVoyage = async () => {
         if (availableDestinations.length === 0) {
             setErrorMessage("No cargo available from this port");
@@ -187,36 +227,15 @@ export default function VoyagePage() {
             return;
         }
 
-        try {
-            await api.post("/voyages/start", {
-                shipId: selectedShip.id,
-                cargoId: Number(selectedCargoId),
-                sessionId: session.id,
-                currentTick: session.currentTick
-            });
-
-            await fetchVoyages();
-
-            setStartedVoyageInfo({
-                shipName: selectedShip.name,
-                origin: selectedShip.currentPort,
-                destination: selectedCargo?.destinationPort?.name,
-                cargoName: selectedCargo?.name,
-                cargoType: selectedCargo?.type,
-                duration: selectedCargo.requiredTicks,
-                price: selectedCargo?.price,
-                reward: selectedCargo?.reward
-            });
-
-            setShowVoyageStartedPopup(true);
-        } catch (err) {
-            console.error(err);
-            setErrorMessage(
-                err.response?.data?.message ||
-                err.response?.data ||
-                "Failed to start voyage"
-            );
+        // ==================== SMUGGLING OFFER (~30% chance) ====================
+        const offerSmuggling = Math.random() < 0.3;
+        if (offerSmuggling) {
+            setShowSmugglingOffer(true);
+            return;
         }
+        // =======================================================================
+
+        await startVoyageWithSmuggling(false);
     };
 
     const capacity = selectedShip?.cargoCapacity || 0;
@@ -277,23 +296,23 @@ export default function VoyagePage() {
                                             className="active-voyage-card"
                                         >
 
-                                        <div className="active-voyage-top">
+                                            <div className="active-voyage-top">
 
-                                            <span className="voyage-live-dot"></span>
+                                                <span className="voyage-live-dot"></span>
 
-                                            <span className="voyage-live-text">
+                                                <span className="voyage-live-text">
                             EN ROUTE
                         </span>
 
-                                        </div>
+                                            </div>
 
-                                        <h4>
-                                            {v.shipName}
-                                        </h4>
+                                            <h4>
+                                                {v.shipName}
+                                            </h4>
 
-                                        <p>
-                                            {v.originPort || "Unknown"} → {v.destinationPort || "Unknown"}
-                                        </p>
+                                            <p>
+                                                {v.originPort || "Unknown"} → {v.destinationPort || "Unknown"}
+                                            </p>
 
                                         </div>
 
@@ -633,24 +652,70 @@ export default function VoyagePage() {
                 </div>
             </div>
 
+            {/* ==================== SMUGGLING OFFER DIALOG ==================== */}
+            {showSmugglingOffer && (
+                <RetroModal
+                    title="Smuggling Offer"
+                    onClose={() => {
+                        setShowSmugglingOffer(false);
+                        startVoyageWithSmuggling(false);
+                    }}
+                >
+                    <p>A shady figure approaches you at the dock...</p>
+                    <p>
+                        "Psst... Want to smuggle some 'special cargo'
+                        to {selectedCargo?.destinationPort?.name}?
+                        I'll pay you an extra{" "}
+                        {formatNumber(Math.round((selectedCargo?.reward || 0) * 0.3))} Talers
+                        if you don't get caught..."
+                    </p>
+
+                    <button
+                        className="retro-button"
+                        onClick={() => {
+                            setShowSmugglingOffer(false);
+                            startVoyageWithSmuggling(true);
+                        }}
+                    >
+                        Accept Smuggling
+                    </button>
+
+                    <button
+                        className="retro-button secondary"
+                        onClick={() => {
+                            setShowSmugglingOffer(false);
+                            startVoyageWithSmuggling(false);
+                        }}
+                    >
+                        Decline
+                    </button>
+                </RetroModal>
+            )}
+            {/* ================================================================= */}
+
             {showVoyageStartedPopup && (
                 <RetroModal
                     title="Voyage Started"
                     onClose={() => setShowVoyageStartedPopup(false)}
                 >
-                        <p>Your ship is now on its way.</p>
+                    <p>Your ship is now on its way.</p>
 
-                        {startedVoyageInfo && (
-                            <>
-                                <p>Ship: {startedVoyageInfo.shipName}</p>
-                                <p>Route: {startedVoyageInfo.origin} → {startedVoyageInfo.destination}</p>
-                                <p>
-                                    Duration: {startedVoyageInfo.duration} days
+                    {startedVoyageInfo && (
+                        <>
+                            <p>Ship: {startedVoyageInfo.shipName}</p>
+                            <p>Route: {startedVoyageInfo.origin} → {startedVoyageInfo.destination}</p>
+                            <p>
+                                Duration: {startedVoyageInfo.duration} days
+                            </p>
+                            <p>Paid: {startedVoyageInfo.price} Talers</p>
+                            <p>Potential Reward: {startedVoyageInfo.reward} Talers</p>
+                            {startedVoyageInfo.smuggling && (
+                                <p style={{ color: "#f59e0b" }}>
+                                    🤫 Smuggling cargo on board!
                                 </p>
-                                <p>Paid: {startedVoyageInfo.price} Talers</p>
-                                <p>Potential Reward: {startedVoyageInfo.reward} Talers</p>
-                            </>
-                        )}
+                            )}
+                        </>
+                    )}
 
                     <button
                         className="retro-button"
@@ -666,7 +731,7 @@ export default function VoyagePage() {
                     title="Error"
                     onClose={() => setErrorMessage(null)}
                 >
-                        <p>{errorMessage}</p>
+                    <p>{errorMessage}</p>
 
                     <button
                         className="retro-button"

@@ -36,6 +36,16 @@ public class VoyageResponse {
     private Boolean eventTriggered;
     private Integer eventTriggerTick;
 
+    // ==================== SMUGGLING FIELDS ====================
+    private boolean smuggling;
+    private double smugglingReward;
+    private boolean customsChecked;
+    private boolean smugglingDetected;
+    private double smugglingPenalty;
+    private int smugglingDetentionTicks;
+    private boolean smugglingResolved;
+    // ==========================================================
+
     public VoyageResponse() {
     }
 
@@ -125,5 +135,35 @@ public class VoyageResponse {
 
     public Integer getEventTriggerTick() {
         return eventTriggerTick;
+    }
+
+    // ==================== SMUGGLING GETTERS ====================
+
+    public boolean isSmuggling() {
+        return smuggling;
+    }
+
+    public double getSmugglingReward() {
+        return smugglingReward;
+    }
+
+    public boolean isCustomsChecked() {
+        return customsChecked;
+    }
+
+    public boolean isSmugglingDetected() {
+        return smugglingDetected;
+    }
+
+    public double getSmugglingPenalty() {
+        return smugglingPenalty;
+    }
+
+    public int getSmugglingDetentionTicks() {
+        return smugglingDetentionTicks;
+    }
+
+    public boolean isSmugglingResolved() {
+        return smugglingResolved;
     }
 }

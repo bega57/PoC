@@ -10,6 +10,8 @@ public class StartVoyageRequest {
 
     private int currentTick;
 
+    private boolean smuggling;
+
 
     public int getCurrentTick() {
         return currentTick;
@@ -31,6 +33,10 @@ public class StartVoyageRequest {
         return sessionCode;
     }
 
+    public boolean isSmuggling() {
+        return smuggling;
+    }
+
     public void setShipId(Long shipId) {
         this.shipId = shipId;
     }
@@ -46,7 +52,12 @@ public class StartVoyageRequest {
     public void setSessionId(Long sessionId) {
         this.sessionId = sessionId;
     }
+
     public void setCurrentTick(int currentTick) {
         this.currentTick = currentTick;
+    }
+
+    public void setSmuggling(boolean smuggling) {
+        this.smuggling = smuggling;
     }
 }

@@ -60,6 +60,16 @@ public class Voyage {
     private double fuelPerTick;
     private double conditionPerTick;
 
+    // ==================== SMUGGLING FIELDS ====================
+    private boolean smuggling = false;
+    private double smugglingReward = 0.0;
+    private boolean customsChecked = false;
+    private boolean smugglingDetected = false;
+    private double smugglingPenalty = 0.0;
+    private int smugglingDetentionTicks = 0;
+    private boolean smugglingResolved = false;
+    // ==========================================================
+
     @Transient
     public int getDurationInTicks() {
         return arrivalTick - startTick;
@@ -264,6 +274,64 @@ public class Voyage {
 
     public void setEventResolved(boolean eventResolved) {
         this.eventResolved = eventResolved;
+    }
+
+    // ==================== SMUGGLING GETTERS/SETTERS ====================
+
+    public boolean isSmuggling() {
+        return smuggling;
+    }
+
+    public void setSmuggling(boolean smuggling) {
+        this.smuggling = smuggling;
+    }
+
+    public double getSmugglingReward() {
+        return smugglingReward;
+    }
+
+    public void setSmugglingReward(double smugglingReward) {
+        this.smugglingReward = smugglingReward;
+    }
+
+    public boolean isCustomsChecked() {
+        return customsChecked;
+    }
+
+    public void setCustomsChecked(boolean customsChecked) {
+        this.customsChecked = customsChecked;
+    }
+
+    public boolean isSmugglingDetected() {
+        return smugglingDetected;
+    }
+
+    public void setSmugglingDetected(boolean smugglingDetected) {
+        this.smugglingDetected = smugglingDetected;
+    }
+
+    public double getSmugglingPenalty() {
+        return smugglingPenalty;
+    }
+
+    public void setSmugglingPenalty(double smugglingPenalty) {
+        this.smugglingPenalty = smugglingPenalty;
+    }
+
+    public int getSmugglingDetentionTicks() {
+        return smugglingDetentionTicks;
+    }
+
+    public void setSmugglingDetentionTicks(int smugglingDetentionTicks) {
+        this.smugglingDetentionTicks = smugglingDetentionTicks;
+    }
+
+    public boolean isSmugglingResolved() {
+        return smugglingResolved;
+    }
+
+    public void setSmugglingResolved(boolean smugglingResolved) {
+        this.smugglingResolved = smugglingResolved;
     }
 
 }

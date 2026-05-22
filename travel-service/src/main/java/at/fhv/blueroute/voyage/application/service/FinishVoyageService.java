@@ -11,6 +11,8 @@ import at.fhv.blueroute.voyage.infrastructure.persistence.JpaVoyageRepository;
 import jakarta.transaction.Transactional;
 import org.springframework.stereotype.Service;
 
+import java.util.Random;
+
 @Service
 @Transactional
 public class FinishVoyageService {
@@ -19,6 +21,8 @@ public class FinishVoyageService {
     private final ShipServiceClient shipServiceClient;
     private final PlayerServiceClient playerServiceClient;
     private final JpaCargoRepository cargoRepository;
+
+    private final Random random = new Random();
 
     public FinishVoyageService(JpaVoyageRepository voyageRepository,
                                ShipServiceClient shipServiceClient,
@@ -57,6 +61,46 @@ public class FinishVoyageService {
                 voyage.getDestinationPort(),
                 cargo.getRequiredCapacity()
         );
+
+        // ==================== CUSTOMS CHECK ====================
+        // Random customs check (~40% chance), regardless of smuggling
+        boolean customsCheck = random.nextInt(100) < 40;
+        voyage.setCustomsChecked(customsCheck);
+
+        if (customsCheck && voyage.isSmuggling()) {
+            // Smuggling detected? (~60% chance if checked)
+            boolean detected = random.nextInt(100) < 60;
+            voyage.setSmugglingDetected(detected);
+
+            if (detected) {
+                // Calculate penalty (25% of reward) and detention (2-4 days)
+                double penalty = voyage.getReward() * 0.25;
+                int detentionTicks = 2 + random.nextInt(3);
+                voyage.setSmugglingPenalty(penalty);
+                voyage.setSmugglingDetentionTicks(detentionTicks);
+                voyage.setSmugglingResolved(false);
+
+                System.out.println("SMUGGLING DETECTED! Penalty: " + penalty
+                        + ", Detention: " + detentionTicks + " days");
+            }
+        }
+
+        // Pay smuggling bonus if smuggling was NOT detected
+        if (voyage.isSmuggling() && !voyage.isSmugglingDetected()) {
+            playerServiceClient.updateBalance(
+                    ship.getOwnerId(),
+                    voyage.getSmugglingReward(),
+                    "SMUGGLING_REWARD"
+            );
+            voyage.setSmugglingResolved(true);
+            System.out.println("SMUGGLING SUCCESS! Bonus paid: " + voyage.getSmugglingReward());
+        }
+
+        // If no smuggling or customs passed without issues, mark resolved
+        if (!voyage.isSmuggling() || !voyage.isSmugglingDetected()) {
+            voyage.setSmugglingResolved(true);
+        }
+        // ========================================================
 
         if (!voyage.isRewardGranted()) {
 
