@@ -1,9 +1,35 @@
+import { useState } from "react";
 import "./VoyageEventModal.css";
+import PilotStrikeMinigame from "./PilotStrikeMinigame";
 
 export default function VoyageEventModal({ event, onSelect, loading }) {
-    if (!event) {
-        return null;
+    const [showMinigame, setShowMinigame] = useState(false);
+
+    if (!event) return null;
+
+    if (showMinigame) {
+        return (
+            <PilotStrikeMinigame
+                onResult={(won) => {
+                    setShowMinigame(false);
+                    if (won) {
+                        onSelect(1);
+                    } else {
+                        onSelect(2);
+                    }
+                }}
+            />
+        );
     }
+
+    const handleOptionClick = (index) => {
+        const option = event.options[index];
+        if (option?.minigame) {
+            setShowMinigame(true);
+            return;
+        }
+        onSelect(index);
+    };
 
     return (
         <div className="voyage-event-overlay">
@@ -20,8 +46,8 @@ export default function VoyageEventModal({ event, onSelect, loading }) {
                     {event.options.map((option, index) => (
                         <button
                             key={option.label}
-                            className="voyage-event-option-button"
-                            onClick={() => onSelect(index)}
+                            className={`voyage-event-option-button ${option.minigame ? "minigame-option" : ""}`}
+                            onClick={() => handleOptionClick(index)}
                             disabled={loading}
                         >
                             <span className="voyage-event-option-label">

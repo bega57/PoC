@@ -132,3 +132,13 @@
 
     opacity: 0.75;
 }
+
+.voyage-event-option-button.minigame-option {
+    border-color: #f59e0b;
+    background: rgba(245, 158, 11, 0.08);
+}
+
+.voyage-event-option-button.minigame-option:hover {
+    background: rgba(245, 158, 11, 0.18);
+    border-color: #fbbf24;
+}
