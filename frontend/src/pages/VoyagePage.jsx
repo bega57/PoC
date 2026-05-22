@@ -228,7 +228,7 @@ export default function VoyagePage() {
         }
 
         // ==================== SMUGGLING OFFER (~30% chance) ====================
-        const offerSmuggling = Math.random() < 0.3;
+        const offerSmuggling = Math.random() < 0.3; //für immer smuggel offer 0.3 zu 1 ändern zum testen
         if (offerSmuggling) {
             setShowSmugglingOffer(true);
             return;

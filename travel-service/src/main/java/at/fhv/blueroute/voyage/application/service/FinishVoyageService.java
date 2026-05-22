@@ -64,12 +64,12 @@ public class FinishVoyageService {
 
         // ==================== CUSTOMS CHECK ====================
         // Random customs check (~40% chance), regardless of smuggling
-        boolean customsCheck = random.nextInt(100) < 40;
+        boolean customsCheck = random.nextInt(100) < 40; //für immer custom checks 40 auf 100 ändern zum testen
         voyage.setCustomsChecked(customsCheck);
 
         if (customsCheck && voyage.isSmuggling()) {
             // Smuggling detected? (~60% chance if checked)
-            boolean detected = random.nextInt(100) < 60;
+            boolean detected = random.nextInt(100) < 60; //für immer custom checks 60 auf 100 ändern zum testen
             voyage.setSmugglingDetected(detected);
 
             if (detected) {
