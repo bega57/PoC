@@ -107,4 +107,22 @@ public class VoyageServiceClient {
                 VoyageResponse.class
         );
     }
+
+    // ==================== SMUGGLING RESOLVE ====================
+    public VoyageResponse resolveSmuggling(Long voyageId, boolean bribe) {
+
+        String url =
+                travelServiceUrl
+                        + "/voyages/"
+                        + voyageId
+                        + "/smuggling-resolve?bribe="
+                        + bribe;
+
+        return restTemplate.postForObject(
+                url,
+                null,
+                VoyageResponse.class
+        );
+    }
+    // ===========================================================
 }

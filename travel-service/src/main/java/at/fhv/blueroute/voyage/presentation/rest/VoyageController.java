@@ -1,5 +1,8 @@
 package at.fhv.blueroute.voyage.presentation.rest;
 
+import at.fhv.blueroute.player.client.PlayerServiceClient;
+import at.fhv.blueroute.ship.client.ShipServiceClient;
+import at.fhv.blueroute.ship.client.dto.ShipResponse;
 import at.fhv.blueroute.voyage.application.service.FinishVoyageService;
 import at.fhv.blueroute.voyage.application.service.GetVoyagesService;
 import at.fhv.blueroute.voyage.application.service.ProcessVoyageTickService;
@@ -13,6 +16,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
+import java.util.Random;
 
 @RestController
 @RequestMapping("/voyages")
@@ -23,19 +27,25 @@ public class VoyageController {
     private final JpaVoyageRepository voyageRepository;
     private final FinishVoyageService finishVoyageService;
     private final ProcessVoyageTickService processVoyageTickService;
+    private final ShipServiceClient shipServiceClient;
+    private final PlayerServiceClient playerServiceClient;
 
     public VoyageController(
             StartVoyageService startVoyageService,
             GetVoyagesService getVoyagesService,
             JpaVoyageRepository voyageRepository,
             FinishVoyageService finishVoyageService,
-            ProcessVoyageTickService processVoyageTickService
+            ProcessVoyageTickService processVoyageTickService,
+            ShipServiceClient shipServiceClient,
+            PlayerServiceClient playerServiceClient
     ) {
         this.startVoyageService = startVoyageService;
         this.getVoyagesService = getVoyagesService;
         this.voyageRepository = voyageRepository;
         this.finishVoyageService = finishVoyageService;
         this.processVoyageTickService = processVoyageTickService;
+        this.shipServiceClient = shipServiceClient;
+        this.playerServiceClient = playerServiceClient;
     }
 
     @PostMapping("/start")
@@ -51,7 +61,8 @@ public class VoyageController {
                                     request.getShipId(),
                                     request.getCargoId(),
                                     request.getSessionId(),
-                                    request.getCurrentTick()
+                                    request.getCurrentTick(),
+                                    request.isSmuggling()
                             ),
                             request.getCurrentTick()
                     );
@@ -239,5 +250,56 @@ public class VoyageController {
                 .map(voyage -> VoyageResponse.from(voyage, currentTick))
                 .toList();
     }
+
+    // ==================== SMUGGLING RESOLVE ====================
+    @PostMapping("/{id}/smuggling-resolve")
+    public ResponseEntity<VoyageResponse> resolveSmuggling(
+            @PathVariable Long id,
+            @RequestParam boolean bribe
+    ) {
+        Voyage voyage = voyageRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("Voyage not found"));
+
+        if (voyage.isSmugglingResolved()) {
+            return ResponseEntity.ok(
+                    VoyageResponse.from(voyage, voyage.getArrivalTick()));
+        }
+
+        Random random = new Random();
+
+        if (bribe) {
+            boolean accepted = random.nextInt(100) < 50;
+            if (accepted) {
+                voyage.setSmugglingPenalty(0);
+                voyage.setSmugglingDetentionTicks(0);
+                voyage.setEventResultMessage(
+                        "The customs officer pocketed the money. You're free to go!");
+            } else {
+                voyage.setSmugglingPenalty(voyage.getSmugglingPenalty() * 2);
+                voyage.setEventResultMessage(
+                        "The bribe was rejected! Your fine has been doubled!");
+            }
+        } else {
+            voyage.setEventResultMessage(
+                    "You accepted the fine and the detention.");
+        }
+
+        voyage.setSmugglingResolved(true);
+
+        // Apply penalty
+        if (voyage.getSmugglingPenalty() > 0) {
+            ShipResponse ship = shipServiceClient.getShip(voyage.getShipId());
+            playerServiceClient.updateBalance(
+                    ship.getOwnerId(),
+                    -voyage.getSmugglingPenalty(),
+                    "SMUGGLING_PENALTY"
+            );
+        }
+
+        Voyage saved = voyageRepository.save(voyage);
+        return ResponseEntity.ok(
+                VoyageResponse.from(saved, saved.getArrivalTick()));
+    }
+    // ===========================================================
 
 }

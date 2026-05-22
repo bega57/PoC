@@ -710,6 +710,7 @@ function GamePage() {
                 setShowLeaveModal={setShowLeaveModal}
                 handleLeaveSession={handleLeaveSession}
                 closeLeaveModal={closeLeaveModal}
+                onDataRefresh={safeFetchData}
             />
 
             <VoyageEventModal
