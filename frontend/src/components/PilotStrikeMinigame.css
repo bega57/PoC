@@ -166,3 +166,21 @@
 .psm-fullscreen:focus {
     outline: none;
 }
+.psm-ok-button {
+    margin-top: 20px;
+    background: #f59e0b;
+    color: #1a1a2e;
+    border: none;
+    border-radius: 6px;
+    font-size: 14px;
+    font-weight: 900;
+    font-family: 'Courier New', monospace;
+    letter-spacing: 2px;
+    padding: 12px 40px;
+    cursor: pointer;
+    text-transform: uppercase;
+}
+
+.psm-ok-button:hover {
+    background: #fbbf24;
+}

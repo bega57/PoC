@@ -10,7 +10,7 @@ import java.util.Random;
 @Service
 public class VoyageEventPlanningService {
 
-    private static final int PILOT_STRIKE_CHANCE = 100; // nach Test auf 25 setzen
+    private static final int PILOT_STRIKE_CHANCE = 25;
     private final Random random = new Random();
 
     public Optional<PlannedVoyageEvent> planEventForVoyage(
