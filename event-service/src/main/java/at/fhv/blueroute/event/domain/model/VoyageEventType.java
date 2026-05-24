@@ -6,5 +6,6 @@ public enum VoyageEventType {
     RAT_BUFFET,
     HACKER_SEAGULLS,
     MEDICAL_EMERGENCY,
-    BAD_WEATHER
+    BAD_WEATHER,
+    PILOT_STRIKE
 }

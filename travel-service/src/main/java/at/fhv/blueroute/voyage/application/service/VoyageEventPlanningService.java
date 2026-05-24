@@ -10,6 +10,7 @@ import java.util.Random;
 @Service
 public class VoyageEventPlanningService {
 
+    private static final int PILOT_STRIKE_CHANCE = 25;
     private final Random random = new Random();
 
     public Optional<PlannedVoyageEvent> planEventForVoyage(
@@ -23,7 +24,11 @@ public class VoyageEventPlanningService {
             return Optional.empty();
         }
 
-        if (!shouldEventHappen(cargo.getRiskLevel().name())) {
+        if (random.nextInt(100) < PILOT_STRIKE_CHANCE) {
+            return Optional.of(new PlannedVoyageEvent(VoyageEventType.PILOT_STRIKE, arrivalTick - 1));
+        }
+
+        if (!shouldMidVoyageEventHappen(cargo.getRiskLevel().name())) {
             return Optional.empty();
         }
 
@@ -39,31 +44,29 @@ public class VoyageEventPlanningService {
         return Optional.of(new PlannedVoyageEvent(eventType, eventTriggerTick));
     }
 
-    private boolean shouldEventHappen(String riskLevel) {
+    private boolean shouldMidVoyageEventHappen(String riskLevel) {
         int chance = switch (riskLevel) {
-            case "LOW" -> 100;
-            case "MEDIUM" -> 100;
-            case "HIGH" -> 100;
-            default -> 0;
+            case "LOW"    -> 40;
+            case "MEDIUM" -> 65;
+            case "HIGH"   -> 90;
+            default       -> 0;
         };
-
         return random.nextInt(100) < chance;
     }
 
     private VoyageEventType chooseEventType(String cargoType) {
         return switch (cargoType) {
-            case "OIL" -> VoyageEventType.BURNING_BARRELS;
+            case "OIL"          -> VoyageEventType.BURNING_BARRELS;
             case "LUXURY_GOODS" -> VoyageEventType.PIRATE_DRIP_CHECK;
-            case "FOOD" -> VoyageEventType.RAT_BUFFET;
-            case "ELECTRONICS" -> VoyageEventType.HACKER_SEAGULLS;
-            case "MEDICINE" -> VoyageEventType.MEDICAL_EMERGENCY;
-            default -> VoyageEventType.BAD_WEATHER;
+            case "FOOD"         -> VoyageEventType.RAT_BUFFET;
+            case "ELECTRONICS"  -> VoyageEventType.HACKER_SEAGULLS;
+            case "MEDICINE"     -> VoyageEventType.MEDICAL_EMERGENCY;
+            default             -> VoyageEventType.BAD_WEATHER;
         };
     }
 
     public record PlannedVoyageEvent(
             VoyageEventType eventType,
             int eventTriggerTick
-    ) {
-    }
+    ) {}
 }

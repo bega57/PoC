@@ -85,6 +85,7 @@ public class VoyageEventResolveService {
             case HACKER_SEAGULLS   -> resolveHackerSeagulls(voyage, ship, playerId, option);
             case MEDICAL_EMERGENCY -> resolveMedicalEmergency(voyage, playerId, option);
             case BAD_WEATHER       -> resolveBadWeather(voyage, ship, option);
+            case PILOT_STRIKE      -> resolvePilotStrike(voyage, ship, playerId, option);
         };
     }
 
@@ -202,5 +203,22 @@ public class VoyageEventResolveService {
             throw new InvalidVoyageEventActionException("This option requires a ship owner.");
         }
         playerServiceClient.updateBalance(playerId, -amount, "EVENT_PENALTY");
+    }
+
+    private String resolvePilotStrike(VoyageResponse voyage, ShipResponse ship, Long playerId, VoyageEventOption option) {
+        return switch (option) {
+            case OPTION_A -> {
+                chargePlayer(playerId, 700);
+                voyageServiceClient.setEventCost(voyage.getId(), 700.0);
+                yield "The pilots took the bribe and guided your ship in. Cost you 700 coins, but the ship is safe.";
+            }
+            case OPTION_B -> {
+                yield "Impressive! You docked the ship yourself like a seasoned captain. No damage, no cost.";
+            }
+            case OPTION_C -> {
+                damageShip(ship.getId(), 0, 40);
+                yield "You misjudged the docking and scraped the hull badly. Ship condition -40!";
+            }
+        };
     }
 }

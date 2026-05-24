@@ -52,9 +52,7 @@ public class VoyageController {
     public ResponseEntity<?> startVoyage(
             @RequestBody StartVoyageRequest request
     ) {
-
         try {
-
             VoyageResponse voyage =
                     VoyageResponse.from(
                             startVoyageService.startVoyage(
@@ -69,11 +67,10 @@ public class VoyageController {
 
             return ResponseEntity.ok(voyage);
 
-        } catch (IllegalStateException e) {
-
+        } catch (RuntimeException e) {
             return ResponseEntity
                     .badRequest()
-                    .body(e.getMessage());
+                    .body(java.util.Map.of("message", e.getMessage()));
         }
     }
 

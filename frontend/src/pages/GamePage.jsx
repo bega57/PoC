@@ -206,11 +206,10 @@ function GamePage() {
             const me = sessionData.players.find(p => p.id === player.id);
             if (!me) return;
 
-            setPlayer(prev => ({
-                ...prev,
-                balance: me.balance,
-                companyName: me.companyName
-            }));
+            setPlayer(prev => {
+                if (prev?.balance === me.balance && prev?.companyName === me.companyName) return prev;
+                return { ...prev, balance: me.balance, companyName: me.companyName };
+            });
 
             const voyagesRes = await api.get(
                 `/voyages?sessionId=${sessionData.id}&currentTick=${sessionData.currentTick}`
@@ -566,7 +565,7 @@ function GamePage() {
         switch (ship.type) {
             case "CHEAP":
                 return cheapShip;
-            case "MIDDLE":
+            case "MEDIUM":
                 return middleShip;
             case "EXPENSIVE":
                 return expensiveShip;

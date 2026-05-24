@@ -109,6 +109,15 @@ public class VoyageEventTriggerService {
                             new VoyageEventOptionDto("Sail through it", "-15 ship condition")
                     )
             );
+            case PILOT_STRIKE -> new VoyageEventDto(
+                    voyage.getId(), type,
+                    "⚓ Pilot Strike!",
+                    "The harbor pilots are on strike and refuse to guide your ship into port. You're almost there — act fast!",
+                    List.of(
+                            new VoyageEventOptionDto("💰 Bribe the pilots", "-700 coins, safe docking guaranteed"),
+                            new VoyageEventOptionDto("🕹️ Dock manually", "Minigame: success = free, failure = heavy damage!", true)
+                    )
+            );
         };
     }
 

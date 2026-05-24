@@ -20,15 +20,19 @@ public class VoyageController {
 
     @PostMapping("/start")
     public ResponseEntity<?> startVoyage(@RequestBody StartVoyageRequest request) {
-
         try {
-            VoyageResponse voyage =
-                    voyageServiceClient.startVoyage(request);
-
+            VoyageResponse voyage = voyageServiceClient.startVoyage(request);
             return ResponseEntity.ok(voyage);
-
-        } catch (IllegalStateException e) {
-            return ResponseEntity.badRequest().body(e.getMessage());
+        } catch (Exception e) {
+            String msg = e.getMessage();
+            if (msg != null && msg.contains("\"message\"")) {
+                int s = msg.indexOf("\"message\":\"") + 11;
+                int end = msg.indexOf("\"", s);
+                if (s > 10 && end > s) msg = msg.substring(s, end);
+            }
+            return ResponseEntity
+                    .badRequest()
+                    .body(java.util.Map.of("message", msg != null ? msg : "Failed to start voyage"));
         }
     }
 

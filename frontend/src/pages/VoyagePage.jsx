@@ -193,11 +193,17 @@ export default function VoyagePage() {
             setShowVoyageStartedPopup(true);
         } catch (err) {
             console.error(err);
-            setErrorMessage(
-                err.response?.data?.message ||
-                err.response?.data ||
-                "Failed to start voyage"
-            );
+            let msg = "Failed to start voyage";
+            const data = err.response?.data;
+            if (typeof data === "string") {
+                const match = data.match(/"message"\s*:\s*"([^"]+)"/);
+                msg = match ? match[1] : data;
+            } else if (data?.message) {
+                msg = data.message;
+            } else if (data?.error) {
+                msg = data.error;
+            }
+            setErrorMessage(msg);
         }
     };
     // ==========================================================================

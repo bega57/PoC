@@ -242,10 +242,10 @@ function GameMap({
                                     <image
                                         className="ship-icon"
                                         href={getShipImage(ship)}
-                                        width={52}
-                                        height={52}
-                                        x={-26}
-                                        y={-26}
+                                        width={60}
+                                        height={60}
+                                        x={-30}
+                                        y={-30}
                                     />
 
                                     {shipOwner && (
@@ -315,10 +315,10 @@ function GameMap({
                                     <image
                                         className="ship-icon"
                                         href={getShipImage(ship)}
-                                        width={40}
-                                        height={40}
-                                        x={-20}
-                                        y={-20}
+                                        width={60}
+                                        height={60}
+                                        x={-30}
+                                        y={-30}
                                     />
 
                                     <text
