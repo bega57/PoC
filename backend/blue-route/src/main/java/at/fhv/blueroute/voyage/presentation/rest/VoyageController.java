@@ -47,4 +47,15 @@ public class VoyageController {
                 currentTick
         );
     }
+
+    // ==================== SMUGGLING RESOLVE ====================
+    @PostMapping("/{id}/smuggling-resolve")
+    public ResponseEntity<VoyageResponse> resolveSmuggling(
+            @PathVariable Long id,
+            @RequestParam boolean bribe
+    ) {
+        VoyageResponse result = voyageServiceClient.resolveSmuggling(id, bribe);
+        return ResponseEntity.ok(result);
+    }
+    // ===========================================================
 }

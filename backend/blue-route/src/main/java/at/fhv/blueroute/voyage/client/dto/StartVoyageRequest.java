@@ -7,6 +7,7 @@ public class StartVoyageRequest {
     private Long sessionId;
     private String sessionCode;
     private int currentTick;
+    private boolean smuggling;
 
     public int getCurrentTick() {
         return currentTick;
@@ -46,6 +47,14 @@ public class StartVoyageRequest {
 
     public void setSessionCode(String sessionCode) {
         this.sessionCode = sessionCode;
+    }
+
+    public boolean isSmuggling() {
+        return smuggling;
+    }
+
+    public void setSmuggling(boolean smuggling) {
+        this.smuggling = smuggling;
     }
 
 }

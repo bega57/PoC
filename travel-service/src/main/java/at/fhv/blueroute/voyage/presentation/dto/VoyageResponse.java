@@ -39,6 +39,16 @@ public class VoyageResponse {
     public Double eventCost;
     public Double rewardLossPercent;
 
+    // ==================== SMUGGLING FIELDS ====================
+    public boolean smuggling;
+    public double smugglingReward;
+    public boolean customsChecked;
+    public boolean smugglingDetected;
+    public double smugglingPenalty;
+    public int smugglingDetentionTicks;
+    public boolean smugglingResolved;
+    // ==========================================================
+
     public static VoyageResponse from(Voyage voyage, int currentTick) {
 
         VoyageResponse response = new VoyageResponse();
@@ -72,6 +82,16 @@ public class VoyageResponse {
         response.extraConditionLoss = voyage.getExtraConditionLoss();
         response.eventCost = voyage.getEventCost();
         response.rewardLossPercent = voyage.getRewardLossPercent();
+
+        // ==================== SMUGGLING ====================
+        response.smuggling = voyage.isSmuggling();
+        response.smugglingReward = voyage.getSmugglingReward();
+        response.customsChecked = voyage.isCustomsChecked();
+        response.smugglingDetected = voyage.isSmugglingDetected();
+        response.smugglingPenalty = voyage.getSmugglingPenalty();
+        response.smugglingDetentionTicks = voyage.getSmugglingDetentionTicks();
+        response.smugglingResolved = voyage.isSmugglingResolved();
+        // ===================================================
 
         int duration =
                 Math.max(1, voyage.getDurationInTicks());
