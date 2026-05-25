@@ -64,7 +64,8 @@ public class VoyageResponse {
         response.status = voyage.getStatus().name();
 
         response.duration = voyage.getDurationInTicks();
-        response.currentDay = currentTick;
+        response.currentDay = Math.min(voyage.getDurationInTicks(),
+                Math.max(0, currentTick - voyage.getStartTick()));
 
         response.reward = voyage.getReward();
         response.arrivalTick = voyage.getArrivalTick();
@@ -100,10 +101,7 @@ public class VoyageResponse {
                 Math.max(0, currentTick - voyage.getStartTick());
 
         response.progress =
-                Math.min(
-                        100,
-                        (traveledTicks * 100.0) / duration
-                );
+                Math.min(1.0, (double) traveledTicks / duration);
 
         return response;
     }

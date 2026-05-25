@@ -5,6 +5,9 @@
       <module name="blue-route" options="-parameters" />
       <module name="blue-route.main" options="-parameters" />
       <module name="blue-route.test" options="-parameters" />
+      <module name="event-service" options="-parameters" />
+      <module name="event-service.main" options="-parameters" />
+      <module name="event-service.test" options="-parameters" />
       <module name="player-service" options="-parameters" />
       <module name="player-service.main" options="-parameters" />
       <module name="player-service.test" options="-parameters" />

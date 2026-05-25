@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 
 import {
     ComposableMap,
@@ -26,11 +26,14 @@ function getPositionOnRoute(route, progress) {
     return [lng, lat];
 }
 
+const TICK_RATE_MS = 5000;
+
 function GameMap({
                      session,
                      ships,
                      ports,
                      voyages,
+                     lastTickTimeRef,
                      hoveredPort,
                      setHoveredPort,
                      handlePortHover,
@@ -55,34 +58,32 @@ function GameMap({
                      geoUrl
                  }) {
     const [animatedProgress, setAnimatedProgress] = useState({});
+    const internalTickRef = useRef(Date.now());
+    const effectiveTickRef = lastTickTimeRef ?? internalTickRef;
+    const voyagesRef = useRef(voyages);
 
     useEffect(() => {
+        voyagesRef.current = voyages;
+    }, [voyages]);
 
+    useEffect(() => {
         const interval = setInterval(() => {
+            const elapsed = Date.now() - effectiveTickRef.current;
+            const subTickFraction = Math.min(1, elapsed / TICK_RATE_MS);
 
-            setAnimatedProgress(prev => {
-
-                const updated = { ...prev };
-
-                voyages.forEach(v => {
-
-                    const target = v.progress ?? 0;
-
-                    const current =
-                        updated[v.id] ?? target;
-
-                    updated[v.id] =
-                        current + (target - current) * 0.03;
-                });
-
-                return updated;
+            const next = {};
+            voyagesRef.current.forEach(v => {
+                if (v.status !== "RUNNING") return;
+                const base = v.progress ?? 0;
+                const perTick = 1 / Math.max(1, v.duration);
+                next[v.id] = Math.min(1, base + subTickFraction * perTick);
             });
 
+            setAnimatedProgress(next);
         }, 16);
 
         return () => clearInterval(interval);
-
-    }, [voyages]);
+    }, [effectiveTickRef]);
 
     return (
         <div className="map-container">

@@ -5,6 +5,7 @@ import at.fhv.blueroute.player.client.dto.PlayerResponse;
 import at.fhv.blueroute.player.client.dto.UpdateCompanyNameRequest;
 import at.fhv.blueroute.player.presentation.dto.PlayerRequest;
 import at.fhv.blueroute.player.presentation.dto.SelectPortRequest;
+import at.fhv.blueroute.ship.client.ShipServiceClient;
 import jakarta.validation.Valid;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -16,9 +17,14 @@ import java.util.List;
 public class PlayerController {
 
     private final PlayerServiceClient playerServiceClient;
+    private final ShipServiceClient shipServiceClient;
 
-    public PlayerController(PlayerServiceClient playerServiceClient) {
+    public PlayerController(
+            PlayerServiceClient playerServiceClient,
+            ShipServiceClient shipServiceClient
+    ) {
         this.playerServiceClient = playerServiceClient;
+        this.shipServiceClient = shipServiceClient;
     }
 
     @GetMapping
@@ -38,7 +44,9 @@ public class PlayerController {
 
     @PostMapping("/select-port")
     public PlayerResponse selectPort(@RequestBody SelectPortRequest request) {
-        return playerServiceClient.selectPort(request.getPlayerId(), request.getPort());
+        PlayerResponse player = playerServiceClient.selectPort(request.getPlayerId(), request.getPort());
+        shipServiceClient.assignPortToUnlocatedShips(request.getPlayerId(), request.getPort());
+        return player;
     }
 
     @PatchMapping("/{playerId}/heartbeat")

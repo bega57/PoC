@@ -69,6 +69,8 @@ function GamePage() {
     const [toastMessage, setToastMessage] = useState("");
     const [toastType, setToastType] = useState("success");
 
+    const lastTickTimeRef = useRef(Date.now());
+
     const getLocalLeaderboard = () => {
         return JSON.parse(localStorage.getItem("leaderboard") || "[]");
     };
@@ -108,6 +110,7 @@ function GamePage() {
                 `/voyages?sessionId=${sessionId}&currentTick=${currentTick}`
             );
             setVoyages(res.data);
+            lastTickTimeRef.current = Date.now();
         } catch (err) {
             console.error(err);
         }
@@ -200,8 +203,10 @@ function GamePage() {
 
             setSession(sessionData);
 
+            const sessionPlayerIds = new Set(sessionData.players.map(p => p.id));
             const shipsRes = await api.get(`/ships`);
-            setShips(shipsRes.data);
+            const sessionShips = shipsRes.data.filter(s => sessionPlayerIds.has(s.ownerId));
+            setShips(sessionShips);
 
             const me = sessionData.players.find(p => p.id === player.id);
             if (!me) return;
@@ -215,6 +220,7 @@ function GamePage() {
                 `/voyages?sessionId=${sessionData.id}&currentTick=${sessionData.currentTick}`
             );
             setVoyages(voyagesRes.data);
+            lastTickTimeRef.current = Date.now();
 
             if (sessionData.status === "PAUSED") {
                 const activeVoyageWithEvent = voyagesRes.data.find(
@@ -646,6 +652,7 @@ function GamePage() {
                 ships={ships}
                 ports={ports}
                 voyages={voyages}
+                lastTickTimeRef={lastTickTimeRef}
                 hoveredPort={hoveredPort}
                 setHoveredPort={setHoveredPort}
                 handlePortHover={handlePortHover}
@@ -674,6 +681,7 @@ function GamePage() {
                 selectedShip={statusBarShip}
                 currentPlayer={currentPlayer}
                 myActiveVoyages={myActiveVoyages}
+                lastTickTimeRef={lastTickTimeRef}
             />
 
             <GameSidebar
