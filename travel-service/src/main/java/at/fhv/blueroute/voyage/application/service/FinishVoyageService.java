@@ -52,6 +52,11 @@ public class FinishVoyageService {
         ShipResponse ship =
                 shipServiceClient.getShip(voyage.getShipId());
 
+        if (ship == null) {
+            throw new RuntimeException("Ship not found for voyage " + voyageId
+                    + " (shipId=" + voyage.getShipId() + ") — ship may have been deleted");
+        }
+
         Cargo cargo = cargoRepository.findById(voyage.getCargoId())
                 .orElseThrow(() ->
                         new RuntimeException("Cargo not found"));
