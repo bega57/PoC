@@ -45,6 +45,13 @@ public class VoyageEventResolveService {
             throw new VoyageEventNotFoundException(voyageId);
         }
         if (voyage.isEventResolved()) {
+            // Recovery: session may have stayed PAUSED if resumeAfterEvent previously failed
+            try {
+                sessionServiceClient.resumeAfterEvent(voyage.getSessionId());
+                System.out.println("RECOVERY: resumed session " + voyage.getSessionId() + " for already-resolved event");
+            } catch (Exception e) {
+                System.err.println("RECOVERY resumeAfterEvent failed: " + e.getMessage());
+            }
             throw new InvalidVoyageEventActionException("Event has already been resolved.");
         }
         if (selectedOption == null) {
@@ -58,22 +65,34 @@ public class VoyageEventResolveService {
 
         Long playerId = ship.getOwnerId();
 
+        // Apply consequence and mark event resolved
+        String resultMessage;
         try {
-            String resultMessage = applyConsequence(
+            resultMessage = applyConsequence(
                     voyage, ship, playerId,
                     voyage.getPendingEventType(),
                     selectedOption
             );
             System.out.println("CONSEQUENCE APPLIED: " + resultMessage);
-
-            voyageServiceClient.markEventResolved(voyageId, resultMessage);
-            sessionServiceClient.resumeAfterEvent(voyage.getSessionId());
-
-            return resultMessage;
         } catch (Exception e) {
             System.err.println("CONSEQUENCE FAILED: " + e.getClass().getSimpleName() + ": " + e.getMessage());
             throw e;
         }
+
+        voyageServiceClient.markEventResolved(voyageId, resultMessage);
+
+        // Resume session separately — a failure here must not block the success response,
+        // because the event is already marked resolved and the player cannot retry.
+        // The "already resolved" recovery path above will attempt resumeAfterEvent again
+        // on the next resolve call (e.g. from the other player).
+        try {
+            sessionServiceClient.resumeAfterEvent(voyage.getSessionId());
+        } catch (Exception e) {
+            System.err.println("Failed to resume session " + voyage.getSessionId()
+                    + " after event resolution — session may stay PAUSED: " + e.getMessage());
+        }
+
+        return resultMessage;
     }
 
     private String applyConsequence(VoyageResponse voyage, ShipResponse ship, Long playerId,

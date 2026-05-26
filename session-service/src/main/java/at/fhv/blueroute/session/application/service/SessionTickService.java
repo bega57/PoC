@@ -53,6 +53,7 @@ public class SessionTickService {
                 if (anyEventTriggered) {
                     session.setPausedByEvent(true);
                     session.setStatus(SessionStatus.PAUSED);
+                    sessionRepository.save(session);
                     backendWebSocketClient.publish(
                             session.getSessionCode(),
                             new SessionStatusMessage(
@@ -61,7 +62,6 @@ public class SessionTickService {
                                     "PAUSED"
                             )
                     );
-                    sessionRepository.save(session);
                     continue;
                 }
 
