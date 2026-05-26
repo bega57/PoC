@@ -227,23 +227,23 @@ function GamePage() {
             setVoyages(voyagesRes.data);
             lastTickTimeRef.current = Date.now();
 
-            if (sessionData.status === "PAUSED") {
-                const myCurrentShipIds = sessionShips
-                    .filter(s => s.ownerId === player.id)
-                    .map(s => s.id);
-                const activeVoyageWithEvent = voyagesRes.data.find(
-                    v => myCurrentShipIds.includes(v.shipId) &&
-                        v.pendingEventType && v.eventTriggered === true && v.eventResolved === false
-                );
-                if (activeVoyageWithEvent) {
-                    try {
-                        const eventRes = await api.get(`/voyage-events/${activeVoyageWithEvent.id}/active`);
-                        if (eventRes.data) {
-                            setActiveEvent(eventRes.data);
-                        }
-                    } catch (err) {
-                        console.error("Failed to load active event:", err);
+            // Check if any of the current player's voyages has an unresolved event
+            // (handles reconnect case where the WS event message was missed)
+            const myCurrentShipIds = sessionShips
+                .filter(s => s.ownerId === player.id)
+                .map(s => s.id);
+            const myVoyageWithEvent = voyagesRes.data.find(
+                v => myCurrentShipIds.includes(v.shipId) &&
+                    v.pendingEventType && v.eventTriggered === true && v.eventResolved === false
+            );
+            if (myVoyageWithEvent && !activeEvent) {
+                try {
+                    const eventRes = await api.get(`/voyage-events/${myVoyageWithEvent.id}/active`);
+                    if (eventRes.data) {
+                        setActiveEvent(eventRes.data);
                     }
+                } catch (err) {
+                    console.error("Failed to load active event:", err);
                 }
             }
 

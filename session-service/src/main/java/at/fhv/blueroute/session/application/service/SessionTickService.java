@@ -43,29 +43,15 @@ public class SessionTickService {
             try {
                 session.setCurrentTick(session.getCurrentTick() + 1);
 
-                // 1. ZUERST Events prüfen
-                boolean anyEventTriggered = eventServiceClient.processTick(
+                // 1. Events prüfen — triggered voyages werden im travel-service eingefroren,
+                //    die Session selbst wird nicht mehr pausiert
+                eventServiceClient.processTick(
                         session.getId(),
                         session.getSessionCode(),
                         session.getCurrentTick()
                 );
 
-                if (anyEventTriggered) {
-                    session.setPausedByEvent(true);
-                    session.setStatus(SessionStatus.PAUSED);
-                    sessionRepository.save(session);
-                    backendWebSocketClient.publish(
-                            session.getSessionCode(),
-                            new SessionStatusMessage(
-                                    "SESSION_PAUSED",
-                                    session.getSessionCode(),
-                                    "PAUSED"
-                            )
-                    );
-                    continue;
-                }
-
-                // 2. NUR wenn kein Event → Voyage weiterführen
+                // 2. Voyages weiterführen (triggered-but-unresolved werden dort gefiltert)
                 List<VoyageResponse> finishedVoyages =
                         voyageServiceClient.processTick(
                                 session.getId(),

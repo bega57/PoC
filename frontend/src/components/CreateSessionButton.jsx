@@ -23,7 +23,7 @@ function CreateSessionButton({ player, onSessionCreated, showToast }) {
 
             onSessionCreated(response.data);
             setMessage("");
-            showToast(`${maxPlayers} personen session created`, "success");
+            showToast(`${maxPlayers}-player session created`, "success");
         } catch (error) {
             console.error(error);
             setMessage(error.response?.data?.message || "Failed to create session");

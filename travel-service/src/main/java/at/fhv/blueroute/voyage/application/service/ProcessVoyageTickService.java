@@ -36,6 +36,7 @@ public class ProcessVoyageTickService {
                 voyageRepository.findBySessionId(sessionId)
                         .stream()
                         .filter(v -> v.getStatus() == VoyageStatus.RUNNING)
+                        .filter(v -> !v.isEventTriggered() || v.isEventResolved())
                         .toList();
 
         for (Voyage voyage : voyages) {
