@@ -128,6 +128,7 @@ function GameModals({
                             sessionStorage.setItem(`currentPort-${sessionCode}`, res.data.currentPort);
 
                             setSelectedPort(null);
+                            if (onDataRefresh) onDataRefresh();
                         }}
                     >
                         Confirm

@@ -113,7 +113,8 @@ public class StartVoyageService {
         voyage.setSessionId(sessionId);
 
         int requiredTicks = cargo.getRequiredTicks();
-        int adjustedTicks = requiredTicks;
+        int tickModifier = resolveTickModifier(ship.getSpeedCategory());
+        int adjustedTicks = Math.max(2, requiredTicks + tickModifier);
 
         double fuelPerTick =
                 cargo.getFuelConsumption() / (double) adjustedTicks;
@@ -163,6 +164,15 @@ public class StartVoyageService {
         Voyage savedVoyage = voyageRepository.save(voyage);
 
         return savedVoyage;
+    }
+
+    private int resolveTickModifier(String speedCategory) {
+        if (speedCategory == null) return 0;
+        return switch (speedCategory) {
+            case "SLOW" -> +2;
+            case "FAST" -> -1;
+            default -> 0;
+        };
     }
 
 }

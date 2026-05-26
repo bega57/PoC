@@ -26,6 +26,7 @@ public class ShipMapper {
         response.setUsedCapacity(ship.getUsedCapacity());
         response.setSellPrice(sellPrice);
         response.setRefuelCost(refuelCost);
+        response.setSpeedCategory(ship.getType().getSpeedCategory());
 
         return response;
     }

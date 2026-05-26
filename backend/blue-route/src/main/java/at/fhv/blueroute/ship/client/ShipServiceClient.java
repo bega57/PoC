@@ -261,4 +261,16 @@ public class ShipServiceClient {
                 ? List.of()
                 : List.of(response);
     }
+
+    public void assignPortToUnlocatedShips(Long playerId, String port) {
+
+        String url =
+                shipServiceUrl
+                        + "/ships/player/"
+                        + playerId
+                        + "/assign-port?port="
+                        + port;
+
+        restTemplate.postForObject(url, null, Void.class);
+    }
 }

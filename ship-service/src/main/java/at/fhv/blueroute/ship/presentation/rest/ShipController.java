@@ -171,4 +171,12 @@ public class ShipController {
                 conditionLoss
         );
     }
+
+    @PostMapping("/player/{playerId}/assign-port")
+    public void assignPortToUnlocatedShips(
+            @PathVariable Long playerId,
+            @RequestParam String port
+    ) {
+        shipService.assignPortToUnlocatedShips(playerId, port);
+    }
 }

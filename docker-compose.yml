@@ -10,12 +10,18 @@ services:
       - "5432:5432"
     volumes:
       - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres -d blueroute"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
 
   backend:
     build: ./backend/blue-route
     container_name: blueroute-backend
     depends_on:
-      - postgres
+      postgres:
+        condition: service_healthy
     environment:
       SPRING_PROFILES_ACTIVE: prod
       DB_URL: jdbc:postgresql://postgres:5432/blueroute
@@ -33,7 +39,8 @@ services:
     build: ./player-service
     container_name: blueroute-player-service
     depends_on:
-      - postgres
+      postgres:
+        condition: service_healthy
     environment:
       SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/blueroute
       SPRING_DATASOURCE_USERNAME: postgres
@@ -46,8 +53,10 @@ services:
     build: ./ship-service
     container_name: blueroute-ship-service
     depends_on:
-      - postgres
-      - player-service
+      postgres:
+        condition: service_healthy
+      player-service:
+        condition: service_started
     environment:
       SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/blueroute
       SPRING_DATASOURCE_USERNAME: postgres
@@ -60,9 +69,12 @@ services:
     build: ./travel-service
     container_name: blueroute-travel-service
     depends_on:
-      - postgres
-      - player-service
-      - ship-service
+      postgres:
+        condition: service_healthy
+      player-service:
+        condition: service_started
+      ship-service:
+        condition: service_started
     environment:
       SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/blueroute
       SPRING_DATASOURCE_USERNAME: postgres
@@ -88,20 +100,29 @@ services:
       TRAVEL_SERVICE_URL: http://travel-service:8083
       EVENT_SERVICE_URL: http://event-service:8085
     depends_on:
-      - postgres
-      - player-service
-      - ship-service
-      - travel-service
-      - event-service
+      postgres:
+        condition: service_healthy
+      player-service:
+        condition: service_started
+      ship-service:
+        condition: service_started
+      travel-service:
+        condition: service_started
+      event-service:
+        condition: service_started
 
   event-service:
     build: ./event-service
     container_name: blueroute-event-service
     depends_on:
-      - postgres
-      - player-service
-      - ship-service
-      - travel-service
+      postgres:
+        condition: service_healthy
+      player-service:
+        condition: service_started
+      ship-service:
+        condition: service_started
+      travel-service:
+        condition: service_started
     environment:
       TRAVEL_SERVICE_URL: http://travel-service:8083
       SHIP_SERVICE_URL: http://ship-service:8082

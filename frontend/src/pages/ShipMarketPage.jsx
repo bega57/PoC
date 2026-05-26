@@ -33,7 +33,8 @@ function ShipMarketPage() {
             name: "Cutter",
             image: cheapSide,
             price: 12000,
-            speed: 30,
+            speedCategory: "SLOW",
+            tickModifier: +2,
             capacity: 50,
             fuel: 70,
             description: "Starter ship for short routes."
@@ -44,7 +45,8 @@ function ShipMarketPage() {
             name: "Brigantine",
             image: middleSide,
             price: 30000,
-            speed: 55,
+            speedCategory: "NORMAL",
+            tickModifier: 0,
             capacity: 100,
             fuel: 60,
             description: "Balanced ship with solid cargo."
@@ -55,12 +57,44 @@ function ShipMarketPage() {
             name: "Galleon",
             image: expensiveSide,
             price: 42000,
-            speed: 80,
+            speedCategory: "FAST",
+            tickModifier: -1,
             capacity: 180,
             fuel: 50,
             description: "High capacity long-distance ship."
         }
     ];
+
+    const getSpeedCategory = (ship) => {
+        if (activeTab === "USED") {
+            const typeMap = { CHEAP: "SLOW", MEDIUM: "NORMAL", EXPENSIVE: "FAST" };
+            return typeMap[ship.type] || "NORMAL";
+        }
+        return ship.speedCategory || "NORMAL";
+    };
+
+    const getTickModifier = (ship) => {
+        if (activeTab === "USED") {
+            const modMap = { CHEAP: +2, MEDIUM: 0, EXPENSIVE: -1 };
+            return modMap[ship.type] ?? 0;
+        }
+        return ship.tickModifier ?? 0;
+    };
+
+    const getSpeedBadgeStyle = (category) => {
+        const styles = {
+            SLOW:   { background: "rgba(239,68,68,0.12)",  color: "#dc2626", border: "1px solid rgba(239,68,68,0.3)" },
+            NORMAL: { background: "rgba(59,130,246,0.12)", color: "#3b82f6", border: "1px solid rgba(59,130,246,0.3)" },
+            FAST:   { background: "rgba(34,197,94,0.12)",  color: "#22c55e", border: "1px solid rgba(34,197,94,0.3)" },
+        };
+        return styles[category] || styles.NORMAL;
+    };
+
+    const getModifierLabel = (modifier) => {
+        if (modifier > 0) return `+${modifier} days per voyage`;
+        if (modifier < 0) return `${modifier} day per voyage`;
+        return "base voyage duration";
+    };
 
     const isBetter = (value, key) => {
         const max = Math.max(...ships.map(s => s[key]));
@@ -337,14 +371,19 @@ function ShipMarketPage() {
                                     <div className="ship-stats">
                                         <div className="stat-block">
                                             <span className="stat-label">Speed</span>
-                                            <div className="bar small">
-                                                <div
-                                                    style={{
-                                                        width: `${getPercent(ship.speed, "speed")}%`,
-                                                        background: "#22c55e"
-                                                    }}
-                                                />
-                                                <span className="bar-text">{ship.speed}</span>
+                                            <div style={{ display: "flex", alignItems: "center", gap: "8px", marginTop: "4px" }}>
+                                                <span style={{
+                                                    fontSize: "12px",
+                                                    fontWeight: "600",
+                                                    padding: "2px 10px",
+                                                    borderRadius: "20px",
+                                                    ...getSpeedBadgeStyle(getSpeedCategory(ship))
+                                                }}>
+                                                    {getSpeedCategory(ship)}
+                                                </span>
+                                                <span style={{ fontSize: "11px", color: "rgba(255,255,255,0.45)" }}>
+                                                    {getModifierLabel(getTickModifier(ship))}
+                                                </span>
                                             </div>
                                         </div>
 

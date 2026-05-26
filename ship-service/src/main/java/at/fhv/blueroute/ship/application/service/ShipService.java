@@ -300,4 +300,15 @@ public class ShipService {
                 })
                 .toList();
     }
+
+    @Transactional
+    public void assignPortToUnlocatedShips(Long playerId, String port) {
+        shipRepository.findByOwnerId(playerId)
+                .stream()
+                .filter(s -> s.getCurrentPort() == null && !s.isTraveling())
+                .forEach(s -> {
+                    s.setCurrentPort(port);
+                    shipRepository.save(s);
+                });
+    }
 }

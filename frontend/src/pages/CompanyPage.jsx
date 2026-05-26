@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import api from "../api/api";
 import cheapSide from "../assets/ships/cheapSide.png";
@@ -14,6 +14,9 @@ function CompanyPage() {
 
     const { session } = useContext(GameContext);
     const [voyages, setVoyages] = useState([]);
+
+    const lastTickTimeRef = useRef(Date.now());
+    const [subTickFraction, setSubTickFraction] = useState(0);
 
     const storedPlayer = JSON.parse(sessionStorage.getItem(`player-${sessionCode}`));
 
@@ -46,9 +49,21 @@ function CompanyPage() {
 
     useEffect(() => {
         if (!session) return;
-
         fetchData();
     }, [session]);
+
+    useEffect(() => {
+        lastTickTimeRef.current = Date.now();
+        setSubTickFraction(0);
+    }, [session?.currentTick]);
+
+    useEffect(() => {
+        const interval = setInterval(() => {
+            const elapsed = Date.now() - lastTickTimeRef.current;
+            setSubTickFraction(Math.min(1, elapsed / 5000));
+        }, 100);
+        return () => clearInterval(interval);
+    }, []);
 
     const currentPlayer = session?.players?.find(
         (player) => player.id === storedPlayer?.id
@@ -157,7 +172,10 @@ function CompanyPage() {
 
                                             if (!progress) return null;
 
-                                            const percent = (progress.current / progress.total) * 100;
+                                            const base = progress.current / Math.max(1, progress.total);
+                                            const perTick = 1 / Math.max(1, progress.total);
+                                            const smooth = Math.min(1, base + subTickFraction * perTick);
+                                            const percent = smooth * 100;
 
                                             return (
                                                 <div className="voyage-progress">

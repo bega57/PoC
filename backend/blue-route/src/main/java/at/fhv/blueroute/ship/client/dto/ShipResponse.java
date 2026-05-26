@@ -16,6 +16,7 @@ public class ShipResponse {
     private Double sellPrice;
     private double usedCapacity;
     private double refuelCost;
+    private String speedCategory;
 
 
     public ShipResponse() {
@@ -118,5 +119,13 @@ public class ShipResponse {
 
     public void setFuelLevel(Integer fuelLevel) {
         this.fuelLevel = fuelLevel;
+    }
+
+    public String getSpeedCategory() {
+        return speedCategory;
+    }
+
+    public void setSpeedCategory(String speedCategory) {
+        this.speedCategory = speedCategory;
     }
 }
