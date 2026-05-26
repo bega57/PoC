@@ -40,6 +40,7 @@ function GamePage() {
     const [ports, setPorts] = useState([]);
     const [ships, setShips] = useState([]);
     const shipsRef = useRef([]);
+    const voyagesRef = useRef([]);
     const [hoveredPort, setHoveredPort] = useState(null);
     const [portCargo, setPortCargo] = useState([]);
     const [cargoCache, setCargoCache] = useState({});
@@ -194,6 +195,10 @@ function GamePage() {
         shipsRef.current = ships;
     }, [ships]);
 
+    useEffect(() => {
+        voyagesRef.current = voyages;
+    }, [voyages]);
+
     const fetchData = async () => {
 
         if (!player?.id) return;
@@ -223,8 +228,12 @@ function GamePage() {
             lastTickTimeRef.current = Date.now();
 
             if (sessionData.status === "PAUSED") {
+                const myCurrentShipIds = sessionShips
+                    .filter(s => s.ownerId === player.id)
+                    .map(s => s.id);
                 const activeVoyageWithEvent = voyagesRes.data.find(
-                    v => v.pendingEventType && v.eventTriggered === true && v.eventResolved === false
+                    v => myCurrentShipIds.includes(v.shipId) &&
+                        v.pendingEventType && v.eventTriggered === true && v.eventResolved === false
                 );
                 if (activeVoyageWithEvent) {
                     try {
@@ -358,7 +367,14 @@ function GamePage() {
                 console.log("RAW WS EVENT:", data);
 
                 if (data.eventType && data.voyageId) {
-                    setActiveEvent(data);
+                    const voyage = voyagesRef.current.find(v => v.id === data.voyageId);
+                    const isMyVoyage = voyage && shipsRef.current.some(
+                        ship => ship.id === voyage.shipId &&
+                            (ship.ownerId === player.id || ship.owner?.id === player.id)
+                    );
+                    if (isMyVoyage) {
+                        setActiveEvent(data);
+                    }
                     return;
                 }
 
