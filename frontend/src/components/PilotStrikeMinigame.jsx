@@ -348,7 +348,7 @@ export default function PilotStrikeMinigame({ onResult }) {
                             <div className="psm-result-text">No damage, no cost. You are a natural captain!</div>
                         </>) : (<>
                             <div className="psm-result-icon">💥</div>
-                            <div className="psm-result-title">Ship Sunk!</div>
+                            <div className="psm-result-title">Crash!</div>
                             <div className="psm-result-text">Hull damage: -40 condition. Should have bribed them.</div>
                         </>)}
                         <button

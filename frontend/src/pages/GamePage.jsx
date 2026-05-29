@@ -506,6 +506,26 @@ function GamePage() {
         };
     }, [sessionCode, player?.id]);
 
+    // Auto-Update Player-Status alle 8 Sekunden
+    useEffect(() => {
+        if (!sessionCode || !player?.id) return;
+
+        const interval = setInterval(async () => {
+            try {
+                const res = await api.get(`/sessions/${sessionCode}`);
+                setSession(prev => {
+                    if (!prev) return res.data;
+                    // nur players updaten, rest bleibt wie er ist
+                    return { ...prev, players: res.data.players };
+                });
+            } catch (err) {
+                console.error("Player status poll failed:", err);
+            }
+        }, 8000);
+
+        return () => clearInterval(interval);
+    }, [sessionCode, player?.id]);
+
 
     const handleEventChoice = async (optionIndex) => {
         if (!activeEvent) {
@@ -725,6 +745,7 @@ function GamePage() {
                 finishedVoyageInfo={finishedVoyageInfo}
                 setFinishedVoyageInfo={setFinishedVoyageInfo}
                 currentPlayer={currentPlayer}
+                leaderboard={leaderboard}
                 setSelectedShip={setSelectedShip}
                 sessionCode={sessionCode}
                 storedPlayer={player}
