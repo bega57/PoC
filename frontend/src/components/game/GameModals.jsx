@@ -23,6 +23,7 @@ function GameModals({
                         setShowLeaveModal,
                         handleLeaveSession,
                         closeLeaveModal,
+                        leaderboard,
                         setSession,
                         onDataRefresh
                     }) {
@@ -288,15 +289,62 @@ function GameModals({
                     title="Leave Session"
                     onClose={() => setShowLeaveModal(false)}
                 >
-                    <p>
-                        You can resume this session later with the following details:
+                    {/* Leaderboard */}
+                    {leaderboard && leaderboard.length > 0 && (
+                        <div style={{
+                            margin: "16px 0 20px",
+                            display: "flex",
+                            flexDirection: "column",
+                            gap: "4px"
+                        }}>
+                            <p style={{ marginBottom: "10px", opacity: 0.5, fontSize: "11px", textTransform: "uppercase", letterSpacing: "0.08em" }}>
+                                Final Standings
+                            </p>
+                            {leaderboard.map((p, index) => {
+                                const medals = ["🥇", "🥈", "🥉"];
+                                const medal = medals[index] ?? `#${index + 1}`;
+                                const isMe = p.playerId === storedPlayer?.id;
+                                return (
+                                    <div key={p.playerId ?? index} style={{
+                                        display: "flex",
+                                        alignItems: "center",
+                                        gap: "10px",
+                                        padding: "6px 4px",
+                                        borderBottom: "1px solid rgba(255,255,255,0.06)",
+                                        fontWeight: isMe ? "bold" : "normal",
+                                        opacity: isMe ? 1 : 0.75
+                                    }}>
+                    <span style={{ width: "28px", textAlign: "center", fontSize: "16px" }}>
+                        {medal}
+                    </span>
+                                        <span style={{ flex: 1, color: isMe ? "#38bdf8" : "inherit" }}>
+                        {p.username ?? `Player ${index + 1}`}
+                                            {isMe && (
+                                                <span style={{
+                                                    fontSize: "10px",
+                                                    color: "#38bdf8",
+                                                    marginLeft: "6px",
+                                                    opacity: 0.8
+                                                }}>
+                                (du)
+                            </span>
+                                            )}
+                    </span>
+                                        <span style={{ fontSize: "13px", opacity: 0.8 }}>
+                        {(p.score ?? 0).toLocaleString("de-DE")} $
+                    </span>
+                                    </div>
+                                );
+                            })}
+                        </div>
+                    )}
+
+                    {/* Session Info */}
+                    <p style={{ opacity: 0.6, fontSize: "12px", marginBottom: "4px" }}>
+                        Session Code: <strong>{sessionCode}</strong> · Player ID: <strong>{storedPlayer?.id}</strong>
                     </p>
-
-                    <p><strong>Session Code:</strong> {sessionCode}</p>
-                    <p><strong>Player ID:</strong> {storedPlayer?.id}</p>
-
-                    <p>
-                        Make sure to save this information before leaving.
+                    <p style={{ opacity: 0.5, fontSize: "11px", marginBottom: "16px" }}>
+                        Save this info to resume later.
                     </p>
 
                     <button
@@ -305,7 +353,6 @@ function GameModals({
                             localStorage.setItem(`sessionCode-${storedPlayer.id}`, sessionCode);
                             localStorage.setItem("lastSessionCode", sessionCode);
                             localStorage.setItem("lastPlayerId", storedPlayer.id);
-
                             await handleLeaveSession();
                             closeLeaveModal();
                         }}

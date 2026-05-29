@@ -9,7 +9,6 @@ function GameSidebar({
                          leaderboard,
                          handleLeaveSession
                      }) {
-
     const getMedal = (i) => {
         if (i === 0) return "🥇";
         if (i === 1) return "🥈";
@@ -20,12 +19,14 @@ function GameSidebar({
     const storedPlayer = JSON.parse(
         sessionStorage.getItem(`player-${sessionCode}`) || "null"
     );
-
     const myId = storedPlayer?.id;
-    const myName = storedPlayer?.username;
 
-    const isMe = (p) =>
-        p.playerId === myId;
+    const isMe = (p) => p.playerId === myId;
+
+    const isActive = (playerId) => {
+        const p = session?.players?.find(pl => pl.id === playerId);
+        return p?.status !== "DISCONNECTED";
+    };
 
     return (
         <div className={`sidebar ${sidebarOpen ? "open" : "closed"}`}>
@@ -40,91 +41,52 @@ function GameSidebar({
                 <>
                     <h2 className="sidebar-title">Actions</h2>
 
-                    <button
-                        className="action-btn"
-                        onClick={() => navigate(`/session/${sessionCode}/market`)}
-                    >
+                    <button className="action-btn" onClick={() => navigate(`/session/${sessionCode}/market`)}>
                         Ship Market
                     </button>
-
-                    <button
-                        className="action-btn"
-                        onClick={() => navigate(`/session/${sessionCode}/cargo-offers`)}
-                    >
+                    <button className="action-btn" onClick={() => navigate(`/session/${sessionCode}/cargo-offers`)}>
                         Cargo Offers
                     </button>
-
-                    <button
-                        className="action-btn"
-                        onClick={() => navigate(`/session/${sessionCode}/company`)}
-                    >
+                    <button className="action-btn" onClick={() => navigate(`/session/${sessionCode}/company`)}>
                         Company
                     </button>
-
-                    <button
-                        className="action-btn"
-                        onClick={() => navigate(`/session/${sessionCode}/voyage`)}
-                    >
+                    <button className="action-btn" onClick={() => navigate(`/session/${sessionCode}/voyage`)}>
                         Voyage
                     </button>
 
-                    <div className="players-section">
+                    <div className="divider" />
 
-                        {/* 👥 Players mit Status */}
-                        <h3>Players</h3>
-                        <div className="player-list">
-                            {session?.players?.map((p) => (
-                                <div key={p.id} className="player-item">
-                                    {p.username}{" "}
-                                    {p.status === "DISCONNECTED"
-                                        ? "(disconnected)"
-                                        : "(active)"}
-                                </div>
-                            ))}
-                        </div>
+                    <div className="scoreboard-section">
+                        <div className="scoreboard-label">Scoreboard</div>
 
-                        {/* 🏆 Leaderboard */}
-                        <h3 style={{ marginTop: "15px" }}>🏆 Leaderboard</h3>
-                        <div className="player-list">
-                            {leaderboard === null ? (
-                                <div className="player-item" style={{ opacity: 0.6 }}>
-                                    Loading...
+                        {leaderboard === null ? (
+                            <div className="score-row other">
+                                <span className="pname" style={{ opacity: 0.5 }}>Loading...</span>
+                            </div>
+                        ) : leaderboard.length === 0 ? (
+                            <div className="score-row other">
+                                <span className="pname" style={{ opacity: 0.5 }}>No scores yet</span>
+                            </div>
+                        ) : (
+                            leaderboard.map((p, index) => (
+                                <div
+                                    key={`${p.playerId ?? p.username ?? "player"}-${index}`}
+                                    className={`score-row ${isMe(p) ? "me" : "other"}`}
+                                >
+                                    <span className={`rank rank-${index}`}>{getMedal(index)}</span>
+                                    <span className="pname">
+                                        {p.username ?? `Player ${index + 1}`}
+                                        {isMe(p) && <span className="you-tag">du</span>}
+                                    </span>
+                                    <span className={`status-dot ${isActive(p.playerId) ? "active" : "off"}`} />
+                                    <span className="pscore">{(p.score ?? 0).toLocaleString("de-DE")} $</span>
                                 </div>
-                            ) : leaderboard.length === 0 ? (
-                                <div className="player-item" style={{ opacity: 0.6 }}>
-                                    No scores yet
-                                </div>
-                            ) : (
-                                leaderboard.map((p, index) => (
-                                    <div
-                                        key={`${p.playerId ?? p.username ?? "player"}-${index}`}
-                                        className="player-item"
-                                        style={{
-                                            fontWeight: index < 3 ? "bold" : "normal",
-                                            fontSize: index < 3 ? "1.05rem" : "0.95rem",
-                                            color:
-                                                index === 0 ? "gold" :
-                                                    index === 1 ? "#c0c0c0" :
-                                                        index === 2 ? "#cd7f32" :
-                                                            "white",
-                                            backgroundColor: isMe(p)
-                                                ? "rgba(255,255,255,0.1)"
-                                                : "transparent"
-                                        }}
-                                    >
-                                        {p.username && `${getMedal(index)} ${p.username} – ${p.score}`}
-                                    </div>
-                                ))
-                            )}
-                        </div>
-
+                            ))
+                        )}
                     </div>
 
                     <div className="leave-section">
-                        <button
-                            className="action-btn leave-btn"
-                            onClick={() => handleLeaveSession()}
-                        >
+                        <button className="action-btn leave-btn" onClick={() => handleLeaveSession()}>
                             Leave Session
                         </button>
                     </div>
