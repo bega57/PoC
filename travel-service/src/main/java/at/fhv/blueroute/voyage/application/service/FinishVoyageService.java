@@ -57,14 +57,16 @@ public class FinishVoyageService {
                     + " (shipId=" + voyage.getShipId() + ") — ship may have been deleted");
         }
 
-        Cargo cargo = cargoRepository.findById(voyage.getCargoId())
-                .orElseThrow(() ->
-                        new RuntimeException("Cargo not found"));
+        // Empty voyage has no cargo
+        Cargo cargo = voyage.getCargoId() != null
+                ? cargoRepository.findById(voyage.getCargoId())
+                        .orElseThrow(() -> new RuntimeException("Cargo not found"))
+                : null;
 
         shipServiceClient.finishVoyage(
                 ship.getId(),
                 voyage.getDestinationPort(),
-                cargo.getRequiredCapacity()
+                cargo != null ? cargo.getRequiredCapacity() : 0
         );
 
         // ==================== CUSTOMS CHECK ====================
@@ -107,7 +109,7 @@ public class FinishVoyageService {
         }
         // ========================================================
 
-        if (!voyage.isRewardGranted()) {
+        if (!voyage.isRewardGranted() && cargo != null) {
 
             playerServiceClient.updateBalance(
                     ship.getOwnerId(),
