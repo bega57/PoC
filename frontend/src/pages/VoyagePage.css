@@ -772,3 +772,48 @@ select:focus {
 .summary-item.full-width {
     grid-column: 1 / -1;
 }
+
+/* ── VOYAGE TABS ── */
+.voyage-tabs {
+    display: flex;
+    justify-content: center;
+    gap: 12px;
+    margin: 0 0 32px;
+}
+
+.voyage-tab {
+    min-width: 180px;
+    padding: 13px 24px;
+    border-radius: 14px;
+    border: 1px solid rgba(96, 165, 250, 0.45);
+    background: rgba(15, 23, 42, 0.85);
+    color: #bfdbfe;
+    font-size: 16px;
+    font-weight: 700;
+    cursor: pointer;
+    transition: all 0.18s ease;
+}
+
+.voyage-tab:hover {
+    border-color: rgba(96, 165, 250, 0.7);
+    background: rgba(30, 41, 59, 0.9);
+}
+
+.voyage-tab.active {
+    background: linear-gradient(135deg, #2563eb, #38bdf8);
+    color: white;
+    border-color: #60a5fa;
+    box-shadow: 0 6px 20px rgba(37, 99, 235, 0.35);
+}
+
+/* ── EMPTY VOYAGE CARD ── */
+.empty-voyage-notice {
+    padding: 16px 20px;
+    border-radius: 14px;
+    background: rgba(251, 191, 36, 0.08);
+    border: 1px solid rgba(251, 191, 36, 0.3);
+    color: #fde68a;
+    font-size: 14px;
+    margin-bottom: 8px;
+    line-height: 1.5;
+}

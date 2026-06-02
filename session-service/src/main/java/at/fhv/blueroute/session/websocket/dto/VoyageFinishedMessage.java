@@ -11,6 +11,15 @@ public class VoyageFinishedMessage {
     private String destinationPort;
     private double reward;
 
+    // ==================== EVENT FIELDS ====================
+    private String eventResultMessage;
+    private Integer extraDelayTicks;
+    private Double extraFuelLoss;
+    private Double extraConditionLoss;
+    private Double eventCost;
+    private Double rewardLossPercent;
+    // ======================================================
+
     // ==================== SMUGGLING FIELDS ====================
     private boolean smuggling;
     private double smugglingReward;
@@ -28,6 +37,12 @@ public class VoyageFinishedMessage {
             String originPort,
             String destinationPort,
             double reward,
+            String eventResultMessage,
+            Integer extraDelayTicks,
+            Double extraFuelLoss,
+            Double extraConditionLoss,
+            Double eventCost,
+            Double rewardLossPercent,
             boolean smuggling,
             double smugglingReward,
             boolean customsChecked,
@@ -43,6 +58,12 @@ public class VoyageFinishedMessage {
         this.originPort = originPort;
         this.destinationPort = destinationPort;
         this.reward = reward;
+        this.eventResultMessage = eventResultMessage;
+        this.extraDelayTicks = extraDelayTicks;
+        this.extraFuelLoss = extraFuelLoss;
+        this.extraConditionLoss = extraConditionLoss;
+        this.eventCost = eventCost;
+        this.rewardLossPercent = rewardLossPercent;
         this.smuggling = smuggling;
         this.smugglingReward = smugglingReward;
         this.customsChecked = customsChecked;
@@ -79,6 +100,13 @@ public class VoyageFinishedMessage {
     public double getReward() {
         return reward;
     }
+
+    public String getEventResultMessage() { return eventResultMessage; }
+    public Integer getExtraDelayTicks() { return extraDelayTicks; }
+    public Double getExtraFuelLoss() { return extraFuelLoss; }
+    public Double getExtraConditionLoss() { return extraConditionLoss; }
+    public Double getEventCost() { return eventCost; }
+    public Double getRewardLossPercent() { return rewardLossPercent; }
 
     public boolean isSmuggling() {
         return smuggling;

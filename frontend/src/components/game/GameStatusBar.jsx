@@ -6,6 +6,8 @@ function GameStatusBar({ myActiveVoyages, lastTickTimeRef }) {
     const [subTickFraction, setSubTickFraction] = useState(0);
     const internalRef = useRef(Date.now());
     const effectiveRef = lastTickTimeRef ?? internalRef;
+    // Track highest seen progress per voyage so bar never goes backwards
+    const lastProgressRef = useRef({});
 
     useEffect(() => {
         const interval = setInterval(() => {
@@ -29,7 +31,20 @@ function GameStatusBar({ myActiveVoyages, lastTickTimeRef }) {
                 myActiveVoyages.map(v => {
                     const base = v.progress ?? 0;
                     const perTick = 1 / Math.max(1, v.duration);
-                    const smoothProgress = Math.min(1, base + subTickFraction * perTick);
+
+                    const frozen = v.eventTriggered && !v.eventResolved;
+
+                    let smoothProgress;
+                    if (frozen) {
+                        // Keep the exact position from when the event triggered — ignore server updates
+                        smoothProgress = lastProgressRef.current[v.id] ?? base;
+                    } else {
+                        const rawProgress = Math.min(1, base + subTickFraction * perTick);
+                        const prev = lastProgressRef.current[v.id] ?? 0;
+                        smoothProgress = Math.max(prev, rawProgress); // never go backwards
+                        lastProgressRef.current[v.id] = smoothProgress;
+                    }
+
                     const smoothPercent = smoothProgress * 100;
 
                     const traveledDays = v.currentDay ?? 0;
@@ -63,6 +78,12 @@ function GameStatusBar({ myActiveVoyages, lastTickTimeRef }) {
                             <p style={{ fontSize: "12px", opacity: 0.7 }}>
                                 Day {traveledDays} / {totalDays}
                             </p>
+
+                            {frozen && (
+                                <p style={{ fontSize: "11px", color: "#f59e0b", marginTop: "2px" }}>
+                                    ⚠️ Awaiting event resolution
+                                </p>
+                            )}
 
                         </div>
                     );

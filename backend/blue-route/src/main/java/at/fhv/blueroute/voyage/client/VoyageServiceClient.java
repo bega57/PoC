@@ -1,5 +1,6 @@
 package at.fhv.blueroute.voyage.client;
 
+import at.fhv.blueroute.voyage.client.dto.StartEmptyVoyageRequest;
 import at.fhv.blueroute.voyage.client.dto.StartVoyageRequest;
 import at.fhv.blueroute.voyage.client.dto.VoyageResponse;
 import org.springframework.beans.factory.annotation.Value;
@@ -32,6 +33,11 @@ public class VoyageServiceClient {
                 request,
                 VoyageResponse.class
         );
+    }
+
+    public VoyageResponse startEmptyVoyage(StartEmptyVoyageRequest request) {
+        String url = travelServiceUrl + "/voyages/start-empty";
+        return restTemplate.postForObject(url, request, VoyageResponse.class);
     }
 
     public List<VoyageResponse> getVoyages(

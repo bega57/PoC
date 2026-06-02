@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import api from "../api/api";
 import cheapSide from "../assets/ships/cheapSide.png";
@@ -17,6 +17,7 @@ function CompanyPage() {
 
     const lastTickTimeRef = useRef(Date.now());
     const [subTickFraction, setSubTickFraction] = useState(0);
+    const lastProgressRef = useRef({});
 
     const storedPlayer = JSON.parse(sessionStorage.getItem(`player-${sessionCode}`));
 
@@ -174,7 +175,18 @@ function CompanyPage() {
 
                                             const base = progress.current / Math.max(1, progress.total);
                                             const perTick = 1 / Math.max(1, progress.total);
-                                            const smooth = Math.min(1, base + subTickFraction * perTick);
+
+                                            // Freeze when event is pending
+                                            const frozen = voyage.eventTriggered && !voyage.eventResolved;
+                                            const raw = frozen
+                                                ? base
+                                                : Math.min(1, base + subTickFraction * perTick);
+
+                                            // Never go backwards
+                                            const prev = lastProgressRef.current[voyage.id] ?? 0;
+                                            const smooth = Math.max(prev, raw);
+                                            lastProgressRef.current[voyage.id] = smooth;
+
                                             const percent = smooth * 100;
 
                                             return (

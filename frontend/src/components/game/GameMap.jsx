@@ -61,6 +61,8 @@ function GameMap({
     const internalTickRef = useRef(Date.now());
     const effectiveTickRef = lastTickTimeRef ?? internalTickRef;
     const voyagesRef = useRef(voyages);
+    // Track highest seen progress per voyage so ships never go backwards
+    const lastProgressRef = useRef({});
 
     useEffect(() => {
         voyagesRef.current = voyages;
@@ -74,9 +76,20 @@ function GameMap({
             const next = {};
             voyagesRef.current.forEach(v => {
                 if (v.status !== "RUNNING") return;
+
                 const base = v.progress ?? 0;
                 const perTick = 1 / Math.max(1, v.duration);
-                next[v.id] = Math.min(1, base + subTickFraction * perTick);
+                const frozen = v.eventTriggered && !v.eventResolved;
+
+                if (frozen) {
+                    // Keep the exact position from when the event triggered — ignore server updates
+                    next[v.id] = lastProgressRef.current[v.id] ?? base;
+                } else {
+                    const rawProgress = Math.min(1, base + subTickFraction * perTick);
+                    const prev = lastProgressRef.current[v.id] ?? 0;
+                    next[v.id] = Math.max(prev, rawProgress); // never go backwards
+                    lastProgressRef.current[v.id] = next[v.id];
+                }
             });
 
             setAnimatedProgress(next);

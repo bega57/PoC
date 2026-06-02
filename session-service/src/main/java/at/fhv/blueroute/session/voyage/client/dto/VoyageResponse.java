@@ -25,6 +25,15 @@ public class VoyageResponse {
 
     private List<double[]> route;
 
+    // ==================== EVENT FIELDS ====================
+    private String eventResultMessage;
+    private Integer extraDelayTicks;
+    private Double extraFuelLoss;
+    private Double extraConditionLoss;
+    private Double eventCost;
+    private Double rewardLossPercent;
+    // ======================================================
+
     // ==================== SMUGGLING FIELDS ====================
     private boolean smuggling;
     private double smugglingReward;
@@ -89,6 +98,13 @@ public class VoyageResponse {
     public List<double[]> getRoute() {
         return route;
     }
+
+    public String getEventResultMessage() { return eventResultMessage; }
+    public Integer getExtraDelayTicks() { return extraDelayTicks; }
+    public Double getExtraFuelLoss() { return extraFuelLoss; }
+    public Double getExtraConditionLoss() { return extraConditionLoss; }
+    public Double getEventCost() { return eventCost; }
+    public Double getRewardLossPercent() { return rewardLossPercent; }
 
     public boolean isSmuggling() {
         return smuggling;

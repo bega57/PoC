@@ -9,6 +9,7 @@ import at.fhv.blueroute.voyage.application.service.ProcessVoyageTickService;
 import at.fhv.blueroute.voyage.application.service.StartVoyageService;
 import at.fhv.blueroute.voyage.domain.model.Voyage;
 import at.fhv.blueroute.voyage.infrastructure.persistence.JpaVoyageRepository;
+import at.fhv.blueroute.voyage.presentation.dto.StartEmptyVoyageRequest;
 import at.fhv.blueroute.voyage.presentation.dto.StartVoyageRequest;
 import at.fhv.blueroute.voyage.presentation.dto.VoyageResponse;
 import at.fhv.blueroute.voyage.presentation.dto.*;
@@ -67,6 +68,28 @@ public class VoyageController {
 
             return ResponseEntity.ok(voyage);
 
+        } catch (RuntimeException e) {
+            return ResponseEntity
+                    .badRequest()
+                    .body(java.util.Map.of("message", e.getMessage()));
+        }
+    }
+
+    @PostMapping("/start-empty")
+    public ResponseEntity<?> startEmptyVoyage(
+            @RequestBody StartEmptyVoyageRequest request
+    ) {
+        try {
+            VoyageResponse voyage = VoyageResponse.from(
+                    startVoyageService.startEmptyVoyage(
+                            request.getShipId(),
+                            request.getDestinationPortName(),
+                            request.getSessionId(),
+                            request.getCurrentTick()
+                    ),
+                    request.getCurrentTick()
+            );
+            return ResponseEntity.ok(voyage);
         } catch (RuntimeException e) {
             return ResponseEntity
                     .badRequest()
