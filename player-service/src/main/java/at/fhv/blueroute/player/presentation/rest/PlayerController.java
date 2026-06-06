@@ -56,9 +56,17 @@ public class PlayerController {
     @PostMapping("/{playerId}/company-name")
     public PlayerResponse updateCompanyName(
             @PathVariable Long playerId,
-            @RequestBody UpdateCompanyNameRequest request
+            @Valid @RequestBody UpdateCompanyNameRequest request
     ) {
         return playerService.updateCompanyName(playerId, request.getCompanyName());
+    }
+
+    @PostMapping("/{playerId}/points")
+    public PlayerResponse addPoints(
+            @PathVariable Long playerId,
+            @RequestBody PointsUpdateRequest request
+    ) {
+        return playerService.addPoints(playerId, request.getAmount());
     }
 
     @GetMapping("/leaderboard")

@@ -2,6 +2,7 @@ package at.fhv.blueroute.player.client;
 
 import at.fhv.blueroute.player.client.dto.BalanceUpdateRequest;
 import at.fhv.blueroute.player.client.dto.PlayerResponse;
+import at.fhv.blueroute.player.client.dto.PointsUpdateRequest;
 import at.fhv.blueroute.player.client.dto.UpdateCompanyNameRequest;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpEntity;
@@ -50,6 +51,22 @@ public class PlayerServiceClient {
             throw new RuntimeException("Player not found in player service: " + playerId);
         } catch (org.springframework.web.client.ResourceAccessException ex) {
             throw new RuntimeException("Player service is currently not reachable.");
+        }
+    }
+
+    public void addPoints(Long playerId, int amount) {
+        String url = playerServiceUrl + "/players/" + playerId + "/points";
+
+        HttpHeaders headers = new HttpHeaders();
+        headers.setContentType(MediaType.APPLICATION_JSON);
+
+        HttpEntity<PointsUpdateRequest> entity =
+                new HttpEntity<>(new PointsUpdateRequest(amount), headers);
+
+        try {
+            restTemplate.postForObject(url, entity, Void.class);
+        } catch (Exception ex) {
+            System.err.println("Failed to add points for player " + playerId + ": " + ex.getMessage());
         }
     }
 

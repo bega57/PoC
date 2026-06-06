@@ -80,7 +80,9 @@ public class SessionTickService {
                                     finishedVoyage.isSmugglingDetected(),
                                     finishedVoyage.getSmugglingPenalty(),
                                     finishedVoyage.getSmugglingDetentionTicks(),
-                                    finishedVoyage.isSmugglingResolved()
+                                    finishedVoyage.isSmugglingResolved(),
+                                    finishedVoyage.getEarnedPoints(),
+                                    finishedVoyage.getPointsBreakdown()
                             )
                     );
                 }

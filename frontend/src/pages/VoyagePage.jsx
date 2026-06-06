@@ -95,6 +95,12 @@ export default function VoyagePage() {
     const grossPrice = selectedCargo ? toGross(selectedCargo.price) : 0;
     const formatNumber = (value) => Number(value).toLocaleString("de-DE");
 
+    const calcEstimatedPoints = (reward, riskLevel) => {
+        const base = Math.floor(reward / 100);
+        const multiplier = riskLevel === "HIGH" ? 2.0 : riskLevel === "MEDIUM" ? 1.5 : 1.0;
+        return Math.floor(base * multiplier);
+    };
+
     const startVoyageWithSmuggling = async (smuggling) => {
         try {
             await api.post("/voyages/start", { shipId: selectedShip.id, cargoId: Number(selectedCargoId), sessionId: session.id, currentTick: session.currentTick, smuggling });
@@ -381,6 +387,7 @@ export default function VoyagePage() {
                                                     <span>🏆 {item.reward}</span>
                                                     <span>⏱ {item.requiredTicks}</span>
                                                     <span>📦 {item.type?.replaceAll("_", " ")}</span>
+                                                    <span style={{ color: "#facc15" }}>⭐ {calcEstimatedPoints(item.reward, item.riskLevel)} pts</span>
                                                 </div>
                                                 <p style={{ fontSize: "12px", opacity: 0.7 }}>{item.description}</p>
                                             </div>
@@ -408,6 +415,7 @@ export default function VoyagePage() {
                                         <div className="summary-item"><span>💰 Price</span><strong>{formatNumber(grossPrice)} Talers</strong></div>
                                         <div className="summary-item"><span>🏆 Reward</span><strong>{formatNumber(selectedCargo.reward)} Talers</strong></div>
                                         <div className="summary-item"><span>📈 Profit</span><strong>{formatNumber(selectedCargo.reward - grossPrice)} Talers</strong></div>
+                                        <div className="summary-item"><span>⭐ Est. Points</span><strong style={{ color: "#facc15" }}>{calcEstimatedPoints(selectedCargo.reward, selectedCargo.riskLevel)} pts</strong></div>
                                         <div className="summary-item"><span>📦 Capacity</span><strong>{selectedCargo.requiredCapacity}</strong></div>
                                         <div className="summary-item"><span>⏱ Duration</span><strong>{selectedCargo.requiredTicks} days</strong></div>
                                         <div className="summary-item"><span>⛽ Fuel Consumption</span><strong>{selectedCargo.fuelConsumption}%</strong></div>
@@ -444,6 +452,11 @@ export default function VoyagePage() {
                         "Psst... Want to smuggle some 'special cargo' to {selectedCargo?.destinationPort?.name}?
                         I'll pay you an extra {formatNumber(Math.round((selectedCargo?.reward || 0) * 0.3))} Talers if you don't get caught..."
                     </p>
+                    <div style={{ background: "rgba(250,204,21,0.08)", border: "1px solid #facc15", borderRadius: "8px", padding: "10px 14px", margin: "10px 0", fontSize: "13px" }}>
+                        <p style={{ margin: 0 }}>⭐ Base points: <strong>{calcEstimatedPoints(selectedCargo?.reward || 0, selectedCargo?.riskLevel)} pts</strong></p>
+                        <p style={{ margin: "4px 0 0", color: "#facc15" }}>🤫 Smuggling bonus (if undetected): <strong>+{Math.floor(calcEstimatedPoints(selectedCargo?.reward || 0, selectedCargo?.riskLevel) * 0.5)} pts</strong></p>
+                        <p style={{ margin: "4px 0 0", color: "#f87171" }}>🚨 Penalty if caught: <strong>-30 pts</strong></p>
+                    </div>
                     <button className="retro-button" onClick={() => { setShowSmugglingOffer(false); startVoyageWithSmuggling(true); }}>Accept Smuggling</button>
                     <button className="retro-button secondary" onClick={() => { setShowSmugglingOffer(false); startVoyageWithSmuggling(false); }}>Decline</button>
                 </RetroModal>

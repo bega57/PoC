@@ -13,6 +13,7 @@ public class Player {
     private String companyName;
     private Double balance;
     private String currentPort;
+    private int points = 0;
 
     public Player() {
     }
@@ -56,5 +57,17 @@ public class Player {
 
     public void setCurrentPort(String currentPort) {
         this.currentPort = currentPort;
+    }
+
+    public int getPoints() {
+        return points;
+    }
+
+    public void setPoints(int points) {
+        this.points = points;
+    }
+
+    public void addPoints(int amount) {
+        this.points += amount;
     }
 }

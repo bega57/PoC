@@ -79,7 +79,7 @@ function GameSidebar({
                                         {isMe(p) && <span className="you-tag">du</span>}
                                     </span>
                                     <span className={`status-dot ${isActive(p.playerId) ? "active" : "off"}`} />
-                                    <span className="pscore">{(p.score ?? 0).toLocaleString("de-DE")} $</span>
+                                    <span className="pscore">{(p.score ?? 0).toLocaleString("de-DE")} pts</span>
                                 </div>
                             ))
                         )}

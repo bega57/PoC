@@ -49,6 +49,13 @@ function TopBar({ session, player }) {
                     </div>
                 </div>
 
+                <div className="card points">
+                    <div className="card-label">POINTS</div>
+                    <div className="card-main">
+                        ⭐ {(player.points ?? 0).toLocaleString("de-DE")} pts
+                    </div>
+                </div>
+
                 <div className="player-info">
                     👤 {player.username} #{player.id}
                 </div>

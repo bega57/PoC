@@ -90,17 +90,25 @@ public class PlayerService {
         return playerMapper.toResponse(playerRepository.save(player));
     }
 
-    public List<LeaderboardEntryResponse> getLeaderboard(String sessionCode) {
+    public PlayerResponse addPoints(Long playerId, int amount) {
+        Player player = findPlayer(playerId);
+        player.addPoints(amount);
+        return playerMapper.toResponse(playerRepository.save(player));
+    }
 
-        return sessionServiceClient.getSessionByCode(sessionCode)
+    public List<LeaderboardEntryResponse> getLeaderboard(String sessionCode) {
+        List<Long> playerIds = sessionServiceClient.getSessionByCode(sessionCode)
                 .getPlayers()
+                .stream()
+                .map(p -> p.getId())
+                .toList();
+
+        return playerRepository.findAllById(playerIds)
                 .stream()
                 .map(player -> new LeaderboardEntryResponse(
                         player.getId(),
                         player.getUsername(),
-                        player.getBalance() == null
-                                ? 0
-                                : player.getBalance().intValue()
+                        player.getPoints()
                 ))
                 .sorted(Comparator.comparingInt(LeaderboardEntryResponse::getScore).reversed())
                 .toList();

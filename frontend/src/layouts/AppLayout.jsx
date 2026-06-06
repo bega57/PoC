@@ -66,7 +66,8 @@ function AppLayout() {
                     data.type === "SHIP_BOUGHT" ||
                     data.type === "SHIP_SOLD" ||
                     data.type === "SHIP_REPAIRED" ||
-                    data.type === "SHIP_REFUELED"
+                    data.type === "SHIP_REFUELED" ||
+                    data.type === "VOYAGE_FINISHED"
                 ) {
 
                     try {
