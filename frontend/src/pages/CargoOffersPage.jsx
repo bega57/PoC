@@ -44,6 +44,12 @@ function CargoOffersPage() {
         return riskMap[riskLevel] ?? 999;
     };
 
+    const calcEstimatedPoints = (reward, riskLevel) => {
+        const base = Math.floor(reward / 100);
+        const multiplier = riskLevel === "HIGH" ? 2.0 : riskLevel === "MEDIUM" ? 1.5 : 1.0;
+        return Math.floor(base * multiplier);
+    };
+
     const filteredOffers = useMemo(() => {
         let data = Array.isArray(offers) ? [...offers] : [];
 
@@ -132,6 +138,9 @@ function CargoOffersPage() {
                                     <h2>{offer.name}</h2>
                                     <div className="cargo-reward">
                                         Profit: {offer.reward - Math.round(offer.price * 1.2)} $
+                                    </div>
+                                    <div className="cargo-reward" style={{ color: "#facc15" }}>
+                                        ⭐ {calcEstimatedPoints(offer.reward, offer.riskLevel)} pts
                                     </div>
                                 </div>
 

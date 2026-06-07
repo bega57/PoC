@@ -30,6 +30,9 @@ public class VoyageFinishedMessage {
     private boolean smugglingResolved;
     // ==========================================================
 
+    private int earnedPoints;
+    private String pointsBreakdown;
+
     public VoyageFinishedMessage(
             Long voyageId,
             Long shipId,
@@ -49,7 +52,9 @@ public class VoyageFinishedMessage {
             boolean smugglingDetected,
             double smugglingPenalty,
             int smugglingDetentionTicks,
-            boolean smugglingResolved
+            boolean smugglingResolved,
+            int earnedPoints,
+            String pointsBreakdown
     ) {
         this.type = "VOYAGE_FINISHED";
         this.voyageId = voyageId;
@@ -71,6 +76,8 @@ public class VoyageFinishedMessage {
         this.smugglingPenalty = smugglingPenalty;
         this.smugglingDetentionTicks = smugglingDetentionTicks;
         this.smugglingResolved = smugglingResolved;
+        this.earnedPoints = earnedPoints;
+        this.pointsBreakdown = pointsBreakdown;
     }
 
     public String getType() {
@@ -135,4 +142,7 @@ public class VoyageFinishedMessage {
     public boolean isSmugglingResolved() {
         return smugglingResolved;
     }
+
+    public int getEarnedPoints() { return earnedPoints; }
+    public String getPointsBreakdown() { return pointsBreakdown; }
 }

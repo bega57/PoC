@@ -44,6 +44,9 @@ public class VoyageResponse {
     private boolean smugglingResolved;
     // ==========================================================
 
+    private int earnedPoints;
+    private String pointsBreakdown;
+
     public VoyageResponse() {
     }
 
@@ -133,4 +136,7 @@ public class VoyageResponse {
     public boolean isSmugglingResolved() {
         return smugglingResolved;
     }
+
+    public int getEarnedPoints() { return earnedPoints; }
+    public String getPointsBreakdown() { return pointsBreakdown; }
 }

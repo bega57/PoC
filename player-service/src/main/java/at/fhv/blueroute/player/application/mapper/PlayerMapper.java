@@ -20,7 +20,8 @@ public class PlayerMapper {
                 player.getUsername(),
                 player.getCompanyName(),
                 player.getBalance(),
-                player.getCurrentPort()
+                player.getCurrentPort(),
+                player.getPoints()
         );
     }
 }

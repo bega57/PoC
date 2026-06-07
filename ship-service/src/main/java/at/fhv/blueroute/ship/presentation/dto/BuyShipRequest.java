@@ -1,11 +1,25 @@
 package at.fhv.blueroute.ship.presentation.dto;
 
+import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.NotNull;
+import jakarta.validation.constraints.Size;
+
 public class BuyShipRequest {
 
+    @NotNull(message = "Player ID must not be null")
     private Long playerId;
+
+    @Size(max = 64, message = "Company name must not exceed 64 characters")
     private String companyName;
+
+    @NotBlank(message = "Ship name must not be blank")
+    @Size(max = 64, message = "Ship name must not exceed 64 characters")
     private String shipName;
+
+    @NotBlank(message = "Ship type must not be blank")
     private String shipType;
+
+    @NotBlank(message = "Session code must not be blank")
     private String sessionCode;
 
     public BuyShipRequest() {

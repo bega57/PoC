@@ -175,6 +175,17 @@ function GameModals({
                         +{Number(rewardAmount).toFixed(0)} Coins
                     </h1>
 
+                    {finishedVoyageInfo?.earnedPoints > 0 && (
+                        <div className="voyage-finish-event-box" style={{ borderColor: "#facc15" }}>
+                            <h3>⭐ +{finishedVoyageInfo.earnedPoints} Points earned</h3>
+                            {finishedVoyageInfo.pointsBreakdown && (
+                                <p style={{ fontSize: "12px", opacity: 0.75, marginTop: "4px" }}>
+                                    {finishedVoyageInfo.pointsBreakdown}
+                                </p>
+                            )}
+                        </div>
+                    )}
+
                     {finishedVoyageInfo?.eventResultMessage && !needsCustomsDialog && !smugglingResult && (
                         <div className="voyage-finish-event-box">
                             <h3>Event result</h3>
@@ -331,7 +342,7 @@ function GameModals({
                                             )}
                     </span>
                                         <span style={{ fontSize: "13px", opacity: 0.8 }}>
-                        {(p.score ?? 0).toLocaleString("de-DE")} $
+                        {(p.score ?? 0).toLocaleString("de-DE")} pts
                     </span>
                                     </div>
                                 );

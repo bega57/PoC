@@ -59,10 +59,7 @@ function GamePage() {
     const currentPlayer = player;
     const [finishedVoyageInfo, setFinishedVoyageInfo] = useState(null);
 
-    const [leaderboard, setLeaderboard] = useState(() => {
-        const saved = sessionStorage.getItem(`leaderboard-${sessionCode}`);
-        return saved ? JSON.parse(saved) : null;
-    });
+    const [leaderboard, setLeaderboard] = useState(null);
 
     const [activeEvent, setActiveEvent] = useState(null);
     const [eventLoading, setEventLoading] = useState(false);
@@ -71,27 +68,6 @@ function GamePage() {
     const [toastType, setToastType] = useState("success");
 
     const lastTickTimeRef = useRef(Date.now());
-
-    const getLocalLeaderboard = () => {
-        return JSON.parse(localStorage.getItem("leaderboard") || "[]");
-    };
-
-    const saveScore = (score) => {
-        const existing = getLocalLeaderboard();
-
-        const newEntry = {
-            username: currentPlayer?.username,
-            score: score
-        };
-
-        const filtered = existing.filter(e => e.username !== newEntry.username);
-
-        const updated = [...filtered, newEntry]
-            .sort((a, b) => b.score - a.score)
-            .slice(0, 10);
-
-        localStorage.setItem("leaderboard", JSON.stringify(updated));
-    };
 
     const [lastFinishedVoyageId, setLastFinishedVoyageId] = useState(() => {
         const saved = sessionStorage.getItem(`lastFinishedVoyageId-${sessionCode}`);
@@ -331,16 +307,6 @@ function GamePage() {
     const isMultiplayer = session?.maxPlayers > 1;
 
     useEffect(() => {
-        if (!isMultiplayer) {
-            const local = getLocalLeaderboard();
-
-            setLeaderboard(prev =>
-                (prev?.length ?? 0) > 0 ? prev : local
-            );
-        }
-    }, [isMultiplayer]);
-
-    useEffect(() => {
         if (!toastMessage) return;
 
         const timer = setTimeout(() => {
@@ -432,20 +398,6 @@ function GamePage() {
                             return ship;
                         })
                     );
-
-                    setSession(prev => {
-                        if (!prev) return prev;
-
-                        if (prev.maxPlayers === 1) {
-                            const myPlayer = prev.players.find(p => p.id === player.id);
-
-                            if (myPlayer) {
-                                saveScore(myPlayer.balance);
-                            }
-                        }
-
-                        return prev;
-                    });
 
                     setTimeout(() => {
                         safeFetchData();

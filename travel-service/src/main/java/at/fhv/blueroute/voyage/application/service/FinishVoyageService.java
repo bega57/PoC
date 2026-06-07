@@ -1,6 +1,7 @@
 package at.fhv.blueroute.voyage.application.service;
 
 import at.fhv.blueroute.cargo.domain.model.Cargo;
+import at.fhv.blueroute.cargo.domain.model.RiskLevel;
 import at.fhv.blueroute.cargo.infrastructure.persistence.JpaCargoRepository;
 import at.fhv.blueroute.player.client.PlayerServiceClient;
 import at.fhv.blueroute.ship.client.ShipServiceClient;
@@ -119,6 +120,57 @@ public class FinishVoyageService {
 
             voyage.setRewardGranted(true);
         }
+
+        // ==================== POINTS CALCULATION ====================
+        if (cargo != null) {
+            int basePoints = (int) (voyage.getReward() / 100);
+
+            double riskMultiplier = 1.0;
+            if (cargo.getRiskLevel() == RiskLevel.MEDIUM) riskMultiplier = 1.5;
+            else if (cargo.getRiskLevel() == RiskLevel.HIGH) riskMultiplier = 2.0;
+
+            int riskedPoints = (int) (basePoints * riskMultiplier);
+
+            int bonus = 0;
+            int penalty = 0;
+            StringBuilder breakdown = new StringBuilder();
+            breakdown.append("Base: +").append(basePoints).append(" pts");
+
+            if (riskMultiplier > 1.0) {
+                breakdown.append(" | Risk (").append(cargo.getRiskLevel()).append(" ×")
+                        .append(riskMultiplier).append("): +").append(riskedPoints - basePoints).append(" pts");
+            }
+
+            boolean hasDelay = voyage.getExtraDelayTicks() != null && voyage.getExtraDelayTicks() > 0;
+            boolean hasEvent = voyage.isEventTriggered();
+
+            if (!hasEvent) {
+                bonus += (int) (riskedPoints * 0.2);
+                breakdown.append(" | Clean voyage: +").append((int)(riskedPoints * 0.2)).append(" pts");
+            } else if (hasDelay) {
+                penalty += 10;
+                breakdown.append(" | Event delay: -10 pts");
+            }
+
+            if (voyage.isSmuggling() && !voyage.isSmugglingDetected()) {
+                bonus += (int) (riskedPoints * 0.5);
+                breakdown.append(" | Smuggling bonus: +").append((int)(riskedPoints * 0.5)).append(" pts");
+            }
+
+            if (voyage.isSmugglingDetected()) {
+                penalty += 30;
+                breakdown.append(" | Smuggling caught: -30 pts");
+            }
+
+            int totalPoints = riskedPoints + bonus - penalty;
+            if (totalPoints < 0) totalPoints = 0;
+
+            voyage.setEarnedPoints(totalPoints);
+            voyage.setPointsBreakdown(breakdown.toString());
+
+            playerServiceClient.addPoints(ship.getOwnerId(), totalPoints);
+        }
+        // ============================================================
 
         voyage.setStatus(VoyageStatus.FINISHED);
 

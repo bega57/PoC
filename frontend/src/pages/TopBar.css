@@ -164,6 +164,13 @@
     box-shadow: 0 0 20px rgba(16,185,129,0.35);
 }
 
+/* POINTS STYLE */
+.card.points {
+    color: #facc15;
+    border: 1px solid rgba(250,204,21,0.4);
+    box-shadow: 0 0 20px rgba(250,204,21,0.25);
+}
+
 .tb-right {
     display: flex;
     align-items: center;

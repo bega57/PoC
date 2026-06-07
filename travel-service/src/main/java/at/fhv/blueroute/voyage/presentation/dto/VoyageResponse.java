@@ -49,6 +49,9 @@ public class VoyageResponse {
     public boolean smugglingResolved;
     // ==========================================================
 
+    public int earnedPoints;
+    public String pointsBreakdown;
+
     public static VoyageResponse from(Voyage voyage, int currentTick) {
 
         VoyageResponse response = new VoyageResponse();
@@ -93,6 +96,9 @@ public class VoyageResponse {
         response.smugglingDetentionTicks = voyage.getSmugglingDetentionTicks();
         response.smugglingResolved = voyage.isSmugglingResolved();
         // ===================================================
+
+        response.earnedPoints = voyage.getEarnedPoints();
+        response.pointsBreakdown = voyage.getPointsBreakdown();
 
         int duration =
                 Math.max(1, voyage.getDurationInTicks());

@@ -6,6 +6,7 @@ import at.fhv.blueroute.ship.application.service.RepairShipService;
 import at.fhv.blueroute.ship.application.service.ShipService;
 import at.fhv.blueroute.ship.presentation.dto.*;
 
+import jakarta.validation.Valid;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -32,7 +33,7 @@ public class ShipController {
     }
 
     @PostMapping("/buy")
-    public ShipResponse buyShip(@RequestBody BuyShipRequest request) {
+    public ShipResponse buyShip(@Valid @RequestBody BuyShipRequest request) {
         return shipService.buyShip(request);
     }
 
@@ -58,7 +59,7 @@ public class ShipController {
     @PostMapping("/{shipId}/repair")
     public ShipResponse repairShip(
             @PathVariable Long shipId,
-            @RequestBody RepairShipRequest request
+            @Valid @RequestBody RepairShipRequest request
     ) {
         return repairShipService.repair(
                 shipId,
@@ -69,7 +70,7 @@ public class ShipController {
     @PostMapping("/{shipId}/refuel")
     public ShipResponse refuelShip(
             @PathVariable Long shipId,
-            @RequestBody RefuelShipRequest request
+            @Valid @RequestBody RefuelShipRequest request
     ) {
         return refuelShipService.refuel(
                 shipId,
@@ -79,7 +80,7 @@ public class ShipController {
 
     @PostMapping("/sell")
     public ShipResponse sellShip(
-            @RequestBody SellShipRequest request
+            @Valid @RequestBody SellShipRequest request
     ) {
         return shipService.sellShip(request);
     }
@@ -104,7 +105,7 @@ public class ShipController {
     @PostMapping("/used/{offerId}/buy")
     public ShipResponse buyUsedShip(
             @PathVariable Long offerId,
-            @RequestBody BuyUsedShipRequest request
+            @Valid @RequestBody BuyUsedShipRequest request
     ) {
         return shipService.buyUsedShip(
                 offerId,
@@ -137,7 +138,7 @@ public class ShipController {
     @PostMapping("/{shipId}/start-voyage")
     public void startVoyage(
             @PathVariable Long shipId,
-            @RequestBody StartVoyageRequest request
+            @Valid @RequestBody StartVoyageRequest request
     ) {
         shipService.startVoyage(
                 shipId,
@@ -148,7 +149,7 @@ public class ShipController {
     @PostMapping("/{shipId}/finish-voyage")
     public void finishVoyage(
             @PathVariable Long shipId,
-            @RequestBody FinishVoyageRequest request
+            @Valid @RequestBody FinishVoyageRequest request
     ) {
         shipService.finishVoyage(
                 shipId,

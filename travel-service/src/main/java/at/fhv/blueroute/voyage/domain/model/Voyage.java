@@ -70,6 +70,9 @@ public class Voyage {
     private boolean smugglingResolved = false;
     // ==========================================================
 
+    private int earnedPoints = 0;
+    private String pointsBreakdown;
+
     @Transient
     public int getDurationInTicks() {
         return arrivalTick - startTick;
@@ -334,4 +337,19 @@ public class Voyage {
         this.smugglingResolved = smugglingResolved;
     }
 
+    public int getEarnedPoints() {
+        return earnedPoints;
+    }
+
+    public void setEarnedPoints(int earnedPoints) {
+        this.earnedPoints = earnedPoints;
+    }
+
+    public String getPointsBreakdown() {
+        return pointsBreakdown;
+    }
+
+    public void setPointsBreakdown(String pointsBreakdown) {
+        this.pointsBreakdown = pointsBreakdown;
+    }
 }
