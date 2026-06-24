@@ -71,7 +71,8 @@ function GameStatusBar({ myActiveVoyages, lastTickTimeRef }) {
                                     width: `${smoothPercent}%`,
                                     height: "100%",
                                     background: "linear-gradient(90deg, #22c55e, #4ade80)",
-                                    boxShadow: "0 0 6px #22c55e"
+                                    boxShadow: "0 0 6px #22c55e",
+                                    transition: "width 0.1s linear"
                                 }} />
                             </div>
 

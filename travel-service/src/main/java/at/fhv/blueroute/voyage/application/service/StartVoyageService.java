@@ -48,7 +48,8 @@ public class StartVoyageService {
             Long cargoId,
             Long sessionId,
             int currentTick,
-            boolean smuggling
+            boolean smuggling,
+            String activePowerUp
     ) {
 
         ShipResponse ship =
@@ -101,6 +102,11 @@ public class StartVoyageService {
 
         Long playerId = ship.getOwnerId();
 
+        // Consume power-up from player inventory before starting voyage
+        if (activePowerUp != null && !activePowerUp.isBlank()) {
+            playerServiceClient.usePowerUp(playerId, activePowerUp);
+        }
+
         playerServiceClient.updateBalance(
                 playerId,
                 -cargo.getPrice(),
@@ -120,6 +126,10 @@ public class StartVoyageService {
 
         int requiredTicks = cargo.getRequiredTicks();
         int tickModifier = resolveTickModifier(ship.getSpeedCategory());
+        // RED_BULL power-up: -1 tick bonus
+        if ("RED_BULL".equals(activePowerUp)) {
+            tickModifier -= 1;
+        }
         int adjustedTicks = Math.max(2, requiredTicks + tickModifier);
 
         double fuelPerTick =
@@ -150,8 +160,14 @@ public class StartVoyageService {
         System.out.println("SET StartTick: " + voyage.getStartTick());
         System.out.println("SET ArrivalTick: " + voyage.getArrivalTick());
 
-        voyage.setReward(cargo.getReward());
+        double reward = cargo.getReward();
+        // VIP_PASS power-up: +20% reward
+        if ("VIP_PASS".equals(activePowerUp)) {
+            reward = reward * 1.2;
+        }
+        voyage.setReward(reward);
         voyage.setRewardGranted(false);
+        voyage.setActivePowerUp(activePowerUp);
 
         // ==================== SMUGGLING ====================
         voyage.setSmuggling(smuggling);

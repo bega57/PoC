@@ -85,6 +85,20 @@ public class PlayerServiceClient {
         );
     }
 
+    public void usePowerUp(Long playerId, String powerUpType) {
+        String url = playerServiceUrl + "/shop/use/" + playerId;
+        HttpHeaders headers = new HttpHeaders();
+        headers.setContentType(MediaType.APPLICATION_JSON);
+        HttpEntity<java.util.Map<String, String>> entity = new HttpEntity<>(
+                java.util.Map.of("powerUpType", powerUpType), headers);
+        try {
+            restTemplate.postForObject(url, entity, Void.class);
+        } catch (Exception ex) {
+            System.err.println("Failed to consume power-up " + powerUpType + " for player " + playerId + ": " + ex.getMessage());
+            throw new RuntimeException("Could not use power-up: " + ex.getMessage());
+        }
+    }
+
     public List<PlayerResponse> getAllPlayers() {
         String url = playerServiceUrl + "/players";
 

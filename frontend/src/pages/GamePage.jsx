@@ -87,7 +87,6 @@ function GamePage() {
                 `/voyages?sessionId=${sessionId}&currentTick=${currentTick}`
             );
             setVoyages(res.data);
-            lastTickTimeRef.current = Date.now();
         } catch (err) {
             console.error(err);
         }
@@ -345,6 +344,7 @@ function GamePage() {
                 }
 
                 if (data.type === "TICK") {
+                    lastTickTimeRef.current = Date.now();
                     setSession(prev => {
                         if (!prev || prev.status === "PAUSED") return prev;
                         return { ...prev, currentTick: data.currentTick };

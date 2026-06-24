@@ -61,7 +61,8 @@ public class VoyageController {
                                     request.getCargoId(),
                                     request.getSessionId(),
                                     request.getCurrentTick(),
-                                    request.isSmuggling()
+                                    request.isSmuggling(),
+                                    request.getActivePowerUp()
                             ),
                             request.getCurrentTick()
                     );

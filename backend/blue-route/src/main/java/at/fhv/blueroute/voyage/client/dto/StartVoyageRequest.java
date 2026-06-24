@@ -57,4 +57,9 @@ public class StartVoyageRequest {
         this.smuggling = smuggling;
     }
 
+    private String activePowerUp;
+
+    public String getActivePowerUp() { return activePowerUp; }
+    public void setActivePowerUp(String activePowerUp) { this.activePowerUp = activePowerUp; }
+
 }

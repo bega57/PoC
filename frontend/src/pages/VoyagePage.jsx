@@ -25,6 +25,8 @@ export default function VoyagePage() {
     const [allPorts, setAllPorts] = useState([]);
     const [selectedEmptyDestination, setSelectedEmptyDestination] = useState("");
     const [showSmugglingOffer, setShowSmugglingOffer] = useState(false);
+    const [inventory, setInventory] = useState([]);
+    const [selectedPowerUp, setSelectedPowerUp] = useState(null);
 
     const fetchVoyages = async () => {
         if (!session) return;
@@ -76,6 +78,12 @@ export default function VoyagePage() {
         api.get("/ports").then(res => setAllPorts(res.data || [])).catch(err => console.error(err));
     }, []);
 
+    useEffect(() => {
+        if (player?.id) {
+            api.get(`/shop/inventory/${player.id}`).then(res => setInventory(res.data || [])).catch(() => {});
+        }
+    }, [player?.id]);
+
     const isShipBusy = (shipId) => voyages.some(v => v.shipId === shipId && v.status === "RUNNING");
 
     const availableDestinations = useMemo(() => {
@@ -103,7 +111,18 @@ export default function VoyagePage() {
 
     const startVoyageWithSmuggling = async (smuggling) => {
         try {
-            await api.post("/voyages/start", { shipId: selectedShip.id, cargoId: Number(selectedCargoId), sessionId: session.id, currentTick: session.currentTick, smuggling });
+            await api.post("/voyages/start", {
+                shipId: selectedShip.id,
+                cargoId: Number(selectedCargoId),
+                sessionId: session.id,
+                currentTick: session.currentTick,
+                smuggling,
+                activePowerUp: selectedPowerUp || null
+            });
+            setSelectedPowerUp(null);
+            if (player?.id) {
+                api.get(`/shop/inventory/${player.id}`).then(res => setInventory(res.data || [])).catch(() => {});
+            }
             await fetchVoyages();
             setStartedVoyageInfo({ shipName: selectedShip.name, origin: selectedShip.currentPort, destination: selectedCargo?.destinationPort?.name, cargoName: selectedCargo?.name, cargoType: selectedCargo?.type, duration: selectedCargo.requiredTicks, price: selectedCargo?.price, reward: selectedCargo?.reward, smuggling });
             setShowVoyageStartedPopup(true);
@@ -431,6 +450,28 @@ export default function VoyagePage() {
                             )}
                         </div>
                     </div>
+
+                    {inventory.length > 0 && (
+                        <div className="powerup-panel">
+                            <h3 className="powerup-title">⚡ Activate a Power-Up</h3>
+                            <div className="powerup-list">
+                                {inventory.map(item => (
+                                    <button
+                                        key={item.type}
+                                        className={`powerup-chip ${selectedPowerUp === item.type ? "selected" : ""}`}
+                                        onClick={() => setSelectedPowerUp(prev => prev === item.type ? null : item.type)}
+                                    >
+                                        {item.emoji} {item.displayName} ×{item.quantity}
+                                    </button>
+                                ))}
+                            </div>
+                            {selectedPowerUp && (
+                                <p className="powerup-active-hint">
+                                    {inventory.find(i => i.type === selectedPowerUp)?.emoji} <strong>{inventory.find(i => i.type === selectedPowerUp)?.displayName}</strong> will be used on this voyage.
+                                </p>
+                            )}
+                        </div>
+                    )}
 
                     <div style={{ marginTop: "30px", textAlign: "center" }}>
                         <button

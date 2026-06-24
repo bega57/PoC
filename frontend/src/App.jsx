@@ -12,6 +12,7 @@ import ShipRepairPage from "./pages/ShipRepairPage";
 import CargoOffersPage from "./pages/CargoOffersPage";
 import InfoPage from "./pages/InfoPage";
 import AppLayout from "./layouts/AppLayout";
+import ShopPage from "./pages/ShopPage";
 
 function App() {
     return (
@@ -32,6 +33,7 @@ function App() {
                 <Route path="company" element={<CompanyPage />} />
                 <Route path="voyage" element={<VoyagePage />} />
                 <Route path="cargo-offers" element={<CargoOffersPage />} />
+                <Route path="shop" element={<ShopPage />} />
             </Route>
 
         </Routes>
