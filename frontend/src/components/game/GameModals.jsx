@@ -85,7 +85,7 @@ function GameModals({
                     title="Select Main Port"
                     onClose={() => setSelectedPort(null)}
                 >
-                    <h2>Select {selectedPort} as your main port?</h2>
+                    <p>Set <strong>{selectedPort}</strong> as your main port?</p>
 
                     <button
                         className="retro-button"

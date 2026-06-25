@@ -5,9 +5,12 @@ import at.fhv.blueroute.ship.client.dto.*;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.core.ParameterizedTypeReference;
 import org.springframework.stereotype.Component;
+import org.springframework.web.client.HttpClientErrorException;
 import org.springframework.web.client.RestTemplate;
 
 import java.util.List;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 @Component
 public class ShipServiceClient {
@@ -44,29 +47,27 @@ public class ShipServiceClient {
     public ShipResponse buyShip(
             BuyShipRequest request
     ) {
-
-        String url =
-                shipServiceUrl + "/ships/buy";
-
-        return restTemplate.postForObject(
-                url,
-                request,
-                ShipResponse.class
-        );
+        try {
+            return restTemplate.postForObject(shipServiceUrl + "/ships/buy", request, ShipResponse.class);
+        } catch (HttpClientErrorException ex) {
+            throw new RuntimeException(extractMessage(ex), ex);
+        }
     }
 
     public ShipResponse sellShip(
             SellShipRequest request
     ) {
+        try {
+            return restTemplate.postForObject(shipServiceUrl + "/ships/sell", request, ShipResponse.class);
+        } catch (HttpClientErrorException ex) {
+            throw new RuntimeException(extractMessage(ex), ex);
+        }
+    }
 
-        String url =
-                shipServiceUrl + "/ships/sell";
-
-        return restTemplate.postForObject(
-                url,
-                request,
-                ShipResponse.class
-        );
+    private String extractMessage(HttpClientErrorException ex) {
+        String body = ex.getResponseBodyAsString();
+        Matcher m = Pattern.compile("\"message\"\\s*:\\s*\"([^\"]+)\"").matcher(body);
+        return m.find() ? m.group(1) : ex.getMessage();
     }
 
     public List<UsedShipOfferResponse> getUsedShips() {

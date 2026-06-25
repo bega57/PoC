@@ -18,8 +18,9 @@ function AppLayout() {
     const [session, setSession] = useState(null);
     const [player, setPlayer] = useState(null);
     const voyageMusicRef = useRef(null);
+    const musicShipIdRef = useRef(null);
 
-    const playVoyageMusic = (audioSrc) => {
+    const playVoyageMusic = (audioSrc, shipId) => {
         if (voyageMusicRef.current) {
             voyageMusicRef.current.pause();
             voyageMusicRef.current = null;
@@ -28,6 +29,7 @@ function AppLayout() {
         audio.loop = true;
         audio.play().catch(() => {});
         voyageMusicRef.current = audio;
+        musicShipIdRef.current = shipId ?? null;
     };
 
     const stopVoyageMusic = () => {
@@ -35,6 +37,7 @@ function AppLayout() {
             voyageMusicRef.current.pause();
             voyageMusicRef.current = null;
         }
+        musicShipIdRef.current = null;
     };
 
     useEffect(() => {
@@ -82,7 +85,9 @@ function AppLayout() {
                 }
 
                 if (data.type === "VOYAGE_FINISHED") {
-                    stopVoyageMusic();
+                    if (musicShipIdRef.current === null || musicShipIdRef.current === data.shipId) {
+                        stopVoyageMusic();
+                    }
                 }
 
                 if (

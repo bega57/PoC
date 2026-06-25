@@ -164,7 +164,7 @@ export default function VoyagePage() {
                 api.get(`/shop/inventory/${player.id}`).then(res => setInventory(res.data || [])).catch(() => {});
             }
             if (selectedPowerUp === "MUSIC_PLAYER" && voyageMusic) {
-                playVoyageMusic(voyageMusic);
+                playVoyageMusic(voyageMusic, selectedShip?.id);
             }
             await fetchVoyages();
             setStartedVoyageInfo({ shipName: selectedShip.name, origin: selectedShip.currentPort, destination: selectedCargo?.destinationPort?.name, cargoName: selectedCargo?.name, cargoType: selectedCargo?.type, duration: selectedCargo.requiredTicks, price: selectedCargo?.price, reward: selectedCargo?.reward, smuggling, activePowerUp: selectedPowerUp });
@@ -203,8 +203,10 @@ export default function VoyagePage() {
         if (availableDestinations.length === 0) { setErrorMessage("No cargo available from this port"); return; }
         if (!selectedShip) { alert("Select a ship"); return; }
         if (isShipBusy(selectedShip.id)) { alert("This ship is already traveling"); return; }
-        if (!selectedDestination) { alert("Select a destination"); return; }
-        if (!selectedCargoId) { alert("Select a cargo order"); return; }
+        if (!selectedDestination && !selectedCargoId) { setErrorMessage("Please select a destination and cargo first."); return; }
+        if (!selectedDestination) { setErrorMessage("Please select a destination first."); return; }
+        if (!selectedCargoId) { setErrorMessage("Please select a cargo order first."); return; }
+        if (selectedCargo && selectedShip && selectedShip.fuelLevel < selectedCargo.fuelConsumption) { setErrorMessage("Not enough fuel for this voyage. Refuel your ship first."); return; }
         const offerSmuggling = Math.random() < 0.3;
         if (offerSmuggling) { setShowSmugglingOffer(true); return; }
         await startVoyageWithSmuggling(false);
