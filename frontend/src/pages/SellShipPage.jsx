@@ -77,7 +77,7 @@ function SellShipPage() {
                 prev.filter(ship => ship.id !== selectedShip.id)
             );
 
-            showToast(`Sold ${selectedShip.name} for $${selectedShip.sellPrice}`);
+            showToast(`Sold ${selectedShip.name} for ${selectedShip.sellPrice} Coins`);
         } catch (error) {
             console.error(error);
             setMessage(error.response?.data?.message || "Failed to sell ship.");
@@ -142,7 +142,7 @@ function SellShipPage() {
                                         <div className="ship-title-row">
                                             <h2>{ship.name}</h2>
                                             <span className="ship-price">
-                                                ${ship.sellPrice}
+                                                {ship.sellPrice} Coins
                                             </span>
                                         </div>
 
@@ -173,7 +173,7 @@ function SellShipPage() {
                         <div className="buy-panel-text">
                             <h3>Selected Ship</h3>
                             <p>
-                                {selectedShip.name} — ${selectedShip.sellPrice}
+                                {selectedShip.name} — {selectedShip.sellPrice} Coins
                             </p>
                         </div>
 
@@ -193,7 +193,7 @@ function SellShipPage() {
                         <h2>Sell {selectedShip.name}</h2>
 
                         <p className="modal-price">
-                            You will receive: ${selectedShip.sellPrice}
+                            You will receive: {selectedShip.sellPrice} Coins
                         </p>
 
                         {message && <p className="modal-message">{message}</p>}

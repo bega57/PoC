@@ -71,13 +71,15 @@ public class FinishVoyageService {
         );
 
         // ==================== CUSTOMS CHECK ====================
+        boolean luckyCloverActive = "LUCKY_CLOVER".equals(voyage.getActivePowerUp());
+
         // Random customs check (~40% chance), regardless of smuggling
-        boolean customsCheck = random.nextInt(100) < 40; //für immer custom checks 40 auf 100 ändern zum testen
+        boolean customsCheck = !luckyCloverActive && random.nextInt(100) < 40;
         voyage.setCustomsChecked(customsCheck);
 
         if (customsCheck && voyage.isSmuggling()) {
             // Smuggling detected? (~60% chance if checked)
-            boolean detected = random.nextInt(100) < 60; //für immer custom checks 60 auf 100 ändern zum testen
+            boolean detected = random.nextInt(100) < 60;
             voyage.setSmugglingDetected(detected);
 
             if (detected) {
@@ -143,6 +145,13 @@ public class FinishVoyageService {
 
             boolean hasDelay = voyage.getExtraDelayTicks() != null && voyage.getExtraDelayTicks() > 0;
             boolean hasEvent = voyage.isEventTriggered();
+            boolean turboCableActive = "TURBO_CABLE".equals(voyage.getActivePowerUp());
+
+            // TURBO_CABLE: ignore delay penalty
+            if (turboCableActive && hasDelay) {
+                breakdown.append(" | ⚡ Turbo Cable: delay ignored");
+                hasDelay = false;
+            }
 
             if (!hasEvent) {
                 bonus += (int) (riskedPoints * 0.2);
@@ -164,6 +173,13 @@ public class FinishVoyageService {
 
             int totalPoints = riskedPoints + bonus - penalty;
             if (totalPoints < 0) totalPoints = 0;
+
+            // CHOCOLATE_CAKE: +50% points multiplier
+            if ("CHOCOLATE_CAKE".equals(voyage.getActivePowerUp())) {
+                int cakeBonus = (int) (totalPoints * 0.5);
+                breakdown.append(" | 🍰 Chocolate Cake: +").append(cakeBonus).append(" pts");
+                totalPoints += cakeBonus;
+            }
 
             voyage.setEarnedPoints(totalPoints);
             voyage.setPointsBreakdown(breakdown.toString());

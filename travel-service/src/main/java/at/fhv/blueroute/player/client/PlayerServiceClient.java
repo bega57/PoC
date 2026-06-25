@@ -46,7 +46,10 @@ public class PlayerServiceClient {
                     Void.class
             );
         } catch (org.springframework.web.client.HttpClientErrorException.BadRequest ex) {
-            throw new RuntimeException("Player service rejected balance update: " + ex.getResponseBodyAsString());
+            String body = ex.getResponseBodyAsString();
+            java.util.regex.Matcher m = java.util.regex.Pattern.compile("\"message\"\\s*:\\s*\"([^\"]+)\"").matcher(body);
+            String detail = m.find() ? m.group(1) : "Insufficient balance to start this voyage";
+            throw new RuntimeException(detail);
         } catch (org.springframework.web.client.HttpClientErrorException.NotFound ex) {
             throw new RuntimeException("Player not found in player service: " + playerId);
         } catch (org.springframework.web.client.ResourceAccessException ex) {
@@ -83,6 +86,20 @@ public class PlayerServiceClient {
                 new UpdateCompanyNameRequest(companyName),
                 Void.class
         );
+    }
+
+    public void usePowerUp(Long playerId, String powerUpType) {
+        String url = playerServiceUrl + "/shop/use/" + playerId;
+        HttpHeaders headers = new HttpHeaders();
+        headers.setContentType(MediaType.APPLICATION_JSON);
+        HttpEntity<java.util.Map<String, String>> entity = new HttpEntity<>(
+                java.util.Map.of("powerUpType", powerUpType), headers);
+        try {
+            restTemplate.postForObject(url, entity, Void.class);
+        } catch (Exception ex) {
+            System.err.println("Failed to consume power-up " + powerUpType + " for player " + playerId + ": " + ex.getMessage());
+            throw new RuntimeException("Could not use power-up: " + ex.getMessage());
+        }
     }
 
     public List<PlayerResponse> getAllPlayers() {

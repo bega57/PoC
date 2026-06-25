@@ -1,9 +1,25 @@
 import { useParams, useNavigate } from "react-router-dom";
 import api from "../api/api";
 import "./VoyagePage.css";
-import { useContext } from "react";
+import { useContext, useRef } from "react";
 import { GameContext } from "../layouts/AppLayout";
-import { useEffect, useMemo, useState, useRef } from "react";
+import { useEffect, useMemo, useState } from "react";
+import voyageMusic from "../assets/music/voyage.mp3";
+import imgEnergyDrink from "../assets/powerups/EnergyDrink.png";
+import imgChocolateCake from "../assets/powerups/ChocolateCake.png";
+import imgLuckyClover from "../assets/powerups/LuckyClover.png";
+import imgTurboCable from "../assets/powerups/TurboCable.png";
+import imgVipPass from "../assets/powerups/VipPass.png";
+import imgCD from "../assets/powerups/CD.png";
+
+const POWERUP_IMAGES = {
+    RED_BULL:       imgEnergyDrink,
+    CHOCOLATE_CAKE: imgChocolateCake,
+    LUCKY_CLOVER:   imgLuckyClover,
+    TURBO_CABLE:    imgTurboCable,
+    VIP_PASS:       imgVipPass,
+    MUSIC_PLAYER:   imgCD,
+};
 import RetroModal from "../components/ui/RetroModal";
 
 export default function VoyagePage() {
@@ -19,12 +35,38 @@ export default function VoyagePage() {
     const [voyages, setVoyages] = useState([]);
     const [showVoyageStartedPopup, setShowVoyageStartedPopup] = useState(false);
     const [startedVoyageInfo, setStartedVoyageInfo] = useState(null);
-    const { session, player } = useContext(GameContext);
+    const { session, player, playVoyageMusic, stopVoyageMusic } = useContext(GameContext);
     const [errorMessage, setErrorMessage] = useState(null);
     const previousPortRef = useRef(null);
     const [allPorts, setAllPorts] = useState([]);
     const [selectedEmptyDestination, setSelectedEmptyDestination] = useState("");
     const [showSmugglingOffer, setShowSmugglingOffer] = useState(false);
+    const [inventory, setInventory] = useState([]);
+    const [selectedPowerUp, setSelectedPowerUp] = useState(null);
+
+    const getPowerUpStartMessage = (type) => {
+        switch (type) {
+            case "RED_BULL":       return "🐂 Red Bull activated — this voyage arrives 1 day early!";
+            case "CHOCOLATE_CAKE": return "🍰 Chocolate Cake activated — you'll earn 50% bonus points on arrival!";
+            case "LUCKY_CLOVER":   return "🍀 Lucky Clover activated — customs won't check your ship this voyage!";
+            case "TURBO_CABLE":    return "⚡ Turbo Cable activated — event delays will be completely ignored!";
+            case "VIP_PASS":       return "💎 VIP Pass activated — you'll earn 20% extra reward on arrival!";
+            case "MUSIC_PLAYER":   return "🎵 Music Player activated — enjoy the tunes on your voyage!";
+            default: return null;
+        }
+    };
+
+    const getPowerUpEffect = (type) => {
+        switch (type) {
+            case "RED_BULL":       return "voyage arrives 1 day early";
+            case "CHOCOLATE_CAKE": return "+50% bonus points on arrival";
+            case "LUCKY_CLOVER":   return "customs won't check your ship";
+            case "TURBO_CABLE":    return "event delays completely ignored";
+            case "VIP_PASS":       return "+20% extra reward on arrival";
+            case "MUSIC_PLAYER":   return "enjoy some music on the way";
+            default: return null;
+        }
+    };
 
     const fetchVoyages = async () => {
         if (!session) return;
@@ -76,6 +118,12 @@ export default function VoyagePage() {
         api.get("/ports").then(res => setAllPorts(res.data || [])).catch(err => console.error(err));
     }, []);
 
+    useEffect(() => {
+        if (player?.id) {
+            api.get(`/shop/inventory/${player.id}`).then(res => setInventory(res.data || [])).catch(() => {});
+        }
+    }, [player?.id]);
+
     const isShipBusy = (shipId) => voyages.some(v => v.shipId === shipId && v.status === "RUNNING");
 
     const availableDestinations = useMemo(() => {
@@ -103,9 +151,23 @@ export default function VoyagePage() {
 
     const startVoyageWithSmuggling = async (smuggling) => {
         try {
-            await api.post("/voyages/start", { shipId: selectedShip.id, cargoId: Number(selectedCargoId), sessionId: session.id, currentTick: session.currentTick, smuggling });
+            await api.post("/voyages/start", {
+                shipId: selectedShip.id,
+                cargoId: Number(selectedCargoId),
+                sessionId: session.id,
+                currentTick: session.currentTick,
+                smuggling,
+                activePowerUp: selectedPowerUp || null
+            });
+            setSelectedPowerUp(null);
+            if (player?.id) {
+                api.get(`/shop/inventory/${player.id}`).then(res => setInventory(res.data || [])).catch(() => {});
+            }
+            if (selectedPowerUp === "MUSIC_PLAYER" && voyageMusic) {
+                playVoyageMusic(voyageMusic);
+            }
             await fetchVoyages();
-            setStartedVoyageInfo({ shipName: selectedShip.name, origin: selectedShip.currentPort, destination: selectedCargo?.destinationPort?.name, cargoName: selectedCargo?.name, cargoType: selectedCargo?.type, duration: selectedCargo.requiredTicks, price: selectedCargo?.price, reward: selectedCargo?.reward, smuggling });
+            setStartedVoyageInfo({ shipName: selectedShip.name, origin: selectedShip.currentPort, destination: selectedCargo?.destinationPort?.name, cargoName: selectedCargo?.name, cargoType: selectedCargo?.type, duration: selectedCargo.requiredTicks, price: selectedCargo?.price, reward: selectedCargo?.reward, smuggling, activePowerUp: selectedPowerUp });
             setShowVoyageStartedPopup(true);
         } catch (err) {
             console.error(err);
@@ -279,8 +341,8 @@ export default function VoyagePage() {
                                     <div className="summary-grid">
                                         <div className="summary-item"><span>🚢 Ship</span><strong>{selectedShip.name}</strong></div>
                                         <div className="summary-item"><span>📦 Cargo</span><strong>None (Empty)</strong></div>
-                                        <div className="summary-item"><span>💰 Price</span><strong>0 Talers</strong></div>
-                                        <div className="summary-item"><span>🏆 Reward</span><strong>0 Talers</strong></div>
+                                        <div className="summary-item"><span>💰 Price</span><strong>0 Coins</strong></div>
+                                        <div className="summary-item"><span>🏆 Reward</span><strong>0 Coins</strong></div>
                                         <div className="summary-item"><span>⏱ Duration</span><strong>{emptyVoyageEstimate?.ticks ?? "—"} days</strong></div>
                                         <div className="summary-item"><span>⛽ Fuel Consumption</span><strong>{emptyVoyageEstimate?.fuel ?? "—"}%</strong></div>
                                         <div className="summary-item"><span>🔧 Ship Deterioration</span><strong>{emptyVoyageEstimate?.condition ?? "—"}%</strong></div>
@@ -412,9 +474,9 @@ export default function VoyagePage() {
                                         <div className="summary-item"><span>🚢 Ship</span><strong>{selectedShip.name}</strong></div>
                                         <div className="summary-item"><span>📦 Cargo</span><strong>{selectedCargo.name}</strong></div>
                                         <div className="summary-item"><span>📂 Type</span><strong>{selectedCargo.type?.replaceAll("_", " ")}</strong></div>
-                                        <div className="summary-item"><span>💰 Price</span><strong>{formatNumber(grossPrice)} Talers</strong></div>
-                                        <div className="summary-item"><span>🏆 Reward</span><strong>{formatNumber(selectedCargo.reward)} Talers</strong></div>
-                                        <div className="summary-item"><span>📈 Profit</span><strong>{formatNumber(selectedCargo.reward - grossPrice)} Talers</strong></div>
+                                        <div className="summary-item"><span>💰 Price</span><strong>{formatNumber(grossPrice)} Coins</strong></div>
+                                        <div className="summary-item"><span>🏆 Reward</span><strong>{formatNumber(selectedCargo.reward)} Coins</strong></div>
+                                        <div className="summary-item"><span>📈 Profit</span><strong>{formatNumber(selectedCargo.reward - grossPrice)} Coins</strong></div>
                                         <div className="summary-item"><span>⭐ Est. Points</span><strong style={{ color: "#facc15" }}>{calcEstimatedPoints(selectedCargo.reward, selectedCargo.riskLevel)} pts</strong></div>
                                         <div className="summary-item"><span>📦 Capacity</span><strong>{selectedCargo.requiredCapacity}</strong></div>
                                         <div className="summary-item"><span>⏱ Duration</span><strong>{selectedCargo.requiredTicks} days</strong></div>
@@ -431,6 +493,35 @@ export default function VoyagePage() {
                             )}
                         </div>
                     </div>
+
+                    {inventory.length > 0 && (
+                        <div className="powerup-panel">
+                            <h3 className="powerup-title">⚡ Activate a Power-Up</h3>
+                            <div className="powerup-list">
+                                {inventory.map(item => (
+                                    <button
+                                        key={item.type}
+                                        className={`powerup-chip ${selectedPowerUp === item.type ? "selected" : ""}`}
+                                        onClick={() => setSelectedPowerUp(prev => prev === item.type ? null : item.type)}
+                                    >
+                                        {POWERUP_IMAGES[item.type]
+                                            ? <img src={POWERUP_IMAGES[item.type]} alt={item.displayName} style={{ width: "20px", height: "20px", objectFit: "contain", verticalAlign: "middle", marginRight: "6px" }} />
+                                            : item.emoji + " "}
+                                        {item.displayName} ×{item.quantity}
+                                    </button>
+                                ))}
+                            </div>
+                            {selectedPowerUp && (
+                                <p className="powerup-active-hint">
+                                    {POWERUP_IMAGES[selectedPowerUp]
+                                        ? <img src={POWERUP_IMAGES[selectedPowerUp]} alt="" style={{ width: "18px", height: "18px", objectFit: "contain", verticalAlign: "middle", marginRight: "6px" }} />
+                                        : inventory.find(i => i.type === selectedPowerUp)?.emoji + " "}
+                                    <strong>{inventory.find(i => i.type === selectedPowerUp)?.displayName}</strong> will be used on this voyage
+                                    {getPowerUpEffect(selectedPowerUp) && <> — {getPowerUpEffect(selectedPowerUp)}</>}.
+                                </p>
+                            )}
+                        </div>
+                    )}
 
                     <div style={{ marginTop: "30px", textAlign: "center" }}>
                         <button
@@ -450,7 +541,7 @@ export default function VoyagePage() {
                     <p>A shady figure approaches you at the dock...</p>
                     <p>
                         "Psst... Want to smuggle some 'special cargo' to {selectedCargo?.destinationPort?.name}?
-                        I'll pay you an extra {formatNumber(Math.round((selectedCargo?.reward || 0) * 0.3))} Talers if you don't get caught..."
+                        I'll pay you an extra {formatNumber(Math.round((selectedCargo?.reward || 0) * 0.3))} Coins if you don't get caught..."
                     </p>
                     <div style={{ background: "rgba(250,204,21,0.08)", border: "1px solid #facc15", borderRadius: "8px", padding: "10px 14px", margin: "10px 0", fontSize: "13px" }}>
                         <p style={{ margin: 0 }}>⭐ Base points: <strong>{calcEstimatedPoints(selectedCargo?.reward || 0, selectedCargo?.riskLevel)} pts</strong></p>
@@ -470,14 +561,19 @@ export default function VoyagePage() {
                         <p>Route: {startedVoyageInfo.origin} → {startedVoyageInfo.destination}</p>
                         {startedVoyageInfo.duration && <p>Duration: {startedVoyageInfo.duration} days</p>}
                         {startedVoyageInfo.cargoName ? (<>
-                            <p>Paid: {startedVoyageInfo.price} Talers</p>
-                            <p>Potential Reward: {startedVoyageInfo.reward} Talers</p>
+                            <p>Paid: {startedVoyageInfo.price} Coins</p>
+                            <p>Potential Reward: {startedVoyageInfo.reward} Coins</p>
                         </>) : (
                             <p style={{ color: "#fde68a" }}>⚓ Empty voyage — no reward.</p>
                         )}
                         {startedVoyageInfo.smuggling && <p style={{ color: "#f59e0b" }}>🤫 Smuggling cargo on board!</p>}
+                        {startedVoyageInfo.activePowerUp && (
+                            <div style={{ marginTop: "12px", padding: "10px 14px", borderRadius: "10px", background: "rgba(168,85,247,0.12)", border: "1px solid rgba(168,85,247,0.35)", color: "#d8b4fe", fontSize: "14px" }}>
+                                {getPowerUpStartMessage(startedVoyageInfo.activePowerUp)}
+                            </div>
+                        )}
                     </>)}
-                    <button className="retro-button" onClick={() => navigate(`/session/${sessionCode}/game`)}>Back to Game</button>
+                    <button className="retro-button" onClick={() => { setShowVoyageStartedPopup(false); navigate(`/session/${sessionCode}/game`); }}>Back to Game</button>
                 </RetroModal>
             )}
 

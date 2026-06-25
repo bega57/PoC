@@ -51,6 +51,7 @@ public class VoyageResponse {
 
     public int earnedPoints;
     public String pointsBreakdown;
+    public String activePowerUp;
 
     public static VoyageResponse from(Voyage voyage, int currentTick) {
 
@@ -99,6 +100,7 @@ public class VoyageResponse {
 
         response.earnedPoints = voyage.getEarnedPoints();
         response.pointsBreakdown = voyage.getPointsBreakdown();
+        response.activePowerUp = voyage.getActivePowerUp();
 
         int duration =
                 Math.max(1, voyage.getDurationInTicks());

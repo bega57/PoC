@@ -193,7 +193,7 @@ function CompanyPage() {
                                                 <div className="voyage-progress">
                                                     <span>Voyage Progress</span>
                                                     <div className="bar">
-                                                        <div style={{ width: `${percent}%` }} />
+                                                        <div style={{ width: `${percent}%`, background: "linear-gradient(90deg, #22c55e, #4ade80)" }} />
                                                         <span className="bar-text">
                                                             {progress.current} / {progress.total}
                                                         </span>

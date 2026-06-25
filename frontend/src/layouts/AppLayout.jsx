@@ -1,5 +1,5 @@
 import { Outlet, useParams } from "react-router-dom";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import TopBar from "../pages/TopBar";
 import api, { API_BASE_URL } from "../api/api";
 import { createContext } from "react";
@@ -17,6 +17,25 @@ function AppLayout() {
 
     const [session, setSession] = useState(null);
     const [player, setPlayer] = useState(null);
+    const voyageMusicRef = useRef(null);
+
+    const playVoyageMusic = (audioSrc) => {
+        if (voyageMusicRef.current) {
+            voyageMusicRef.current.pause();
+            voyageMusicRef.current = null;
+        }
+        const audio = new Audio(audioSrc);
+        audio.loop = true;
+        audio.play().catch(() => {});
+        voyageMusicRef.current = audio;
+    };
+
+    const stopVoyageMusic = () => {
+        if (voyageMusicRef.current) {
+            voyageMusicRef.current.pause();
+            voyageMusicRef.current = null;
+        }
+    };
 
     useEffect(() => {
         if (!sessionCode || !activePlayerId) return;
@@ -62,6 +81,10 @@ function AppLayout() {
                     return;
                 }
 
+                if (data.type === "VOYAGE_FINISHED") {
+                    stopVoyageMusic();
+                }
+
                 if (
                     data.type === "SHIP_BOUGHT" ||
                     data.type === "SHIP_SOLD" ||
@@ -97,7 +120,7 @@ function AppLayout() {
     }, [sessionCode,activePlayerId]);
 
     return (
-        <GameContext.Provider value={{ session, setSession, player, setPlayer }}>
+        <GameContext.Provider value={{ session, setSession, player, setPlayer, playVoyageMusic, stopVoyageMusic }}>
             {session && player && (
                 <TopBar session={session} player={player} />
             )}

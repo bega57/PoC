@@ -350,7 +350,7 @@ function ShipMarketPage() {
                                             </div>
 
                                             <span className="ship-price">
-                                                ${getGrossPrice(ship.price)}
+                                                {getGrossPrice(ship.price)} Coins
                                                 <span style={{ fontSize: "12px", opacity: 0.7 }}> incl. VAT</span>
                                             </span>
 
@@ -442,7 +442,7 @@ function ShipMarketPage() {
                             <h3>Selected Ship</h3>
                             <p>
                                 {activeTab === "NEW" ? selectedShip.name : getShipDisplayName(selectedShip.type)}
-                                {" "}— ${getGrossPrice(selectedShip.price)}
+                                {" "}— {getGrossPrice(selectedShip.price)} Coins
                             </p>
                         </div>
 
@@ -472,7 +472,7 @@ function ShipMarketPage() {
                         </h2>
 
                         <p className="modal-price">
-                            Price: ${getGrossPrice(selectedShip.price)} (incl. VAT)
+                            Price: {getGrossPrice(selectedShip.price)} Coins (incl. VAT)
                         </p>
 
                         <form onSubmit={handleBuyShip}>

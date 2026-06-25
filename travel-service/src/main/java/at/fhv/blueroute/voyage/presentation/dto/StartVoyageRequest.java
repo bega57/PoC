@@ -12,6 +12,7 @@ public class StartVoyageRequest {
 
     private boolean smuggling;
 
+    private String activePowerUp;
 
     public int getCurrentTick() {
         return currentTick;
@@ -60,4 +61,7 @@ public class StartVoyageRequest {
     public void setSmuggling(boolean smuggling) {
         this.smuggling = smuggling;
     }
+
+    public String getActivePowerUp() { return activePowerUp; }
+    public void setActivePowerUp(String activePowerUp) { this.activePowerUp = activePowerUp; }
 }

@@ -73,6 +73,10 @@ public class Voyage {
     private int earnedPoints = 0;
     private String pointsBreakdown;
 
+    // ==================== POWER-UP FIELDS ====================
+    private String activePowerUp;
+    // =========================================================
+
     @Transient
     public int getDurationInTicks() {
         return arrivalTick - startTick;
@@ -352,4 +356,7 @@ public class Voyage {
     public void setPointsBreakdown(String pointsBreakdown) {
         this.pointsBreakdown = pointsBreakdown;
     }
+
+    public String getActivePowerUp() { return activePowerUp; }
+    public void setActivePowerUp(String activePowerUp) { this.activePowerUp = activePowerUp; }
 }
