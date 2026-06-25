@@ -280,6 +280,30 @@ function GameModals({
                         </div>
                     )}
 
+                    {finishedVoyageInfo?.activePowerUp && (() => {
+                        const pu = finishedVoyageInfo.activePowerUp;
+                        let msg = null;
+                        if (pu === "LUCKY_CLOVER" && !finishedVoyageInfo.customsChecked)
+                            msg = { icon: "🍀", text: "Lucky Clover was active — customs didn't inspect your ship!" };
+                        else if (pu === "TURBO_CABLE" && finishedVoyageInfo.extraDelayTicks > 0)
+                            msg = { icon: "⚡", text: "Turbo Cable absorbed the delay — no extra days added!" };
+                        else if (pu === "TURBO_CABLE")
+                            msg = { icon: "⚡", text: "Turbo Cable was ready — no delays occurred anyway." };
+                        else if (pu === "CHOCOLATE_CAKE")
+                            msg = { icon: "🍰", text: "Chocolate Cake gave your crew a boost — 50% bonus points earned!" };
+                        else if (pu === "RED_BULL")
+                            msg = { icon: "🐂", text: "Red Bull shortened your voyage by 1 day!" };
+                        else if (pu === "VIP_PASS")
+                            msg = { icon: "💎", text: "VIP Pass granted priority docking — 20% extra reward!" };
+                        if (!msg) return null;
+                        return (
+                            <div className="voyage-finish-event-box" style={{ borderColor: "#a855f7" }}>
+                                <h3>{msg.icon} Power-Up Effect</h3>
+                                <p>{msg.text}</p>
+                            </div>
+                        );
+                    })()}
+
                     {!needsCustomsDialog && (
                         <button
                             className="retro-button"

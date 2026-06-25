@@ -41,20 +41,20 @@ function GameSidebar({
                 <>
                     <h2 className="sidebar-title">Actions</h2>
 
+                    <button className="action-btn" onClick={() => navigate(`/session/${sessionCode}/voyage`)}>
+                        Voyage
+                    </button>
                     <button className="action-btn" onClick={() => navigate(`/session/${sessionCode}/market`)}>
                         Ship Market
                     </button>
-                    <button className="action-btn" onClick={() => navigate(`/session/${sessionCode}/shop`)} style={{ background: "linear-gradient(135deg, rgba(124,58,237,0.25), rgba(168,85,247,0.15))", borderColor: "rgba(168,85,247,0.4)" }}>
-                        🛒 Mini Market
-                    </button>
-                    <button className="action-btn" onClick={() => navigate(`/session/${sessionCode}/cargo-offers`)}>
-                        Cargo Offers
+                    <button className="action-btn" onClick={() => navigate(`/session/${sessionCode}/shop`)}>
+                        Mini Market
                     </button>
                     <button className="action-btn" onClick={() => navigate(`/session/${sessionCode}/company`)}>
                         Company
                     </button>
-                    <button className="action-btn" onClick={() => navigate(`/session/${sessionCode}/voyage`)}>
-                        Voyage
+                    <button className="action-btn" onClick={() => navigate(`/session/${sessionCode}/cargo-offers`)}>
+                        Cargo Offers
                     </button>
 
                     <div className="divider" />

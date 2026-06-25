@@ -149,17 +149,17 @@ function ShipRepairPage() {
                                                     </div>
 
                                                     <div>Net</div>
-                                                    <div>${Math.round(netCost)}</div>
+                                                    <div>{Math.round(netCost)} Coins</div>
 
                                                     <div>VAT (20%)</div>
-                                                    <div>${Math.round(vatAmount)}</div>
+                                                    <div>{Math.round(vatAmount)} Coins</div>
 
                                                     <div className="repair-divider"></div>
 
                                                     <div className="repair-total-row">
                                                         <span>Total</span>
                                                         <span className="repair-total-value">
-                                                            ${Math.round(repairCost)}
+                                                            {Math.round(repairCost)} Coins
                                                         </span>
                                                     </div>
 
@@ -228,7 +228,7 @@ function ShipRepairPage() {
                                                     }}
                                                     disabled={!repairAmount || currentPlayer?.balance < repairCost}
                                                 >
-                                                    🔧 Repair – ${Math.round(repairCost)}
+                                                    🔧 Repair – {Math.round(repairCost)} Coins
                                                 </button>
 
                                             </div>

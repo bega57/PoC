@@ -162,17 +162,17 @@ function ShipRefuelPage() {
                                                     <div>{Math.min(100, (ship.fuelLevel ?? 0) + fuelAmount)}%</div>
 
                                                     <div>Net</div>
-                                                    <div>${Math.round(netCost)}</div>
+                                                    <div>{Math.round(netCost)} Coins</div>
 
                                                     <div>VAT (20%)</div>
-                                                    <div>${Math.round(vatAmount)}</div>
+                                                    <div>{Math.round(vatAmount)} Coins</div>
 
                                                     <div className="refuel-divider"></div>
 
                                                     <div className="refuel-total-row">
                                                         <span>Total</span>
                                                         <span className="refuel-total-value">
-                                                            ${Math.round(refuelCost)}
+                                                            {Math.round(refuelCost)} Coins
                                                         </span>
                                                     </div>
 
@@ -242,7 +242,7 @@ function ShipRefuelPage() {
                                                     }}
                                                     disabled={!fuelAmount || currentPlayer?.balance < refuelCost}
                                                 >
-                                                    ⛽ Buy Fuel – ${Math.round(refuelCost)}
+                                                    ⛽ Buy Fuel – {Math.round(refuelCost)} Coins
                                                 </button>
 
                                             </div>

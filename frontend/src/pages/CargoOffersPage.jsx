@@ -137,7 +137,7 @@ function CargoOffersPage() {
                                 <div className="cargo-title-row">
                                     <h2>{offer.name}</h2>
                                     <div className="cargo-reward">
-                                        Profit: {offer.reward - Math.round(offer.price * 1.2)} $
+                                        Profit: {offer.reward - Math.round(offer.price * 1.2)} Coins
                                     </div>
                                     <div className="cargo-reward" style={{ color: "#facc15" }}>
                                         ⭐ {calcEstimatedPoints(offer.reward, offer.riskLevel)} pts

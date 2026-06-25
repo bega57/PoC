@@ -102,16 +102,16 @@ public class StartVoyageService {
 
         Long playerId = ship.getOwnerId();
 
-        // Consume power-up from player inventory before starting voyage
-        if (activePowerUp != null && !activePowerUp.isBlank()) {
-            playerServiceClient.usePowerUp(playerId, activePowerUp);
-        }
-
         playerServiceClient.updateBalance(
                 playerId,
                 -cargo.getPrice(),
                 "VOYAGE_START"
         );
+
+        // Consume power-up after balance check succeeds
+        if (activePowerUp != null && !activePowerUp.isBlank()) {
+            playerServiceClient.usePowerUp(playerId, activePowerUp);
+        }
         LocalDateTime now = LocalDateTime.now();
 
         Voyage voyage = new Voyage();

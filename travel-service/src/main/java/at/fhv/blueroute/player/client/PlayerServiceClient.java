@@ -46,7 +46,10 @@ public class PlayerServiceClient {
                     Void.class
             );
         } catch (org.springframework.web.client.HttpClientErrorException.BadRequest ex) {
-            throw new RuntimeException("Player service rejected balance update: " + ex.getResponseBodyAsString());
+            String body = ex.getResponseBodyAsString();
+            java.util.regex.Matcher m = java.util.regex.Pattern.compile("\"message\"\\s*:\\s*\"([^\"]+)\"").matcher(body);
+            String detail = m.find() ? m.group(1) : "Insufficient balance to start this voyage";
+            throw new RuntimeException(detail);
         } catch (org.springframework.web.client.HttpClientErrorException.NotFound ex) {
             throw new RuntimeException("Player not found in player service: " + playerId);
         } catch (org.springframework.web.client.ResourceAccessException ex) {

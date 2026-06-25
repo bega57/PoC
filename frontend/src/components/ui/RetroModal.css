@@ -8,13 +8,15 @@
     justify-content: center;
     align-items: center;
 
+    padding: 30px 20px;
+
     z-index: 9999;
 }
 
 .retro-modal {
     position: relative;
 
-    width: 820px;
+    width: 560px;
     max-width: 90%;
 
     background: #10284d;
@@ -23,7 +25,7 @@
 
     box-shadow: 14px 14px 0px black;
 
-    padding: 55px 45px;
+    padding: 40px 32px;
 
     font-family: 'Press Start 2P', cursive;
 
@@ -74,7 +76,7 @@
     flex-direction: column;
     align-items: center;
 
-    gap:8px;
+    gap: 8px;
     text-align: center;
 
     line-height: 1.8;
@@ -105,27 +107,26 @@
 }
 
 .retro-button {
-    margin-top: 26px;
-    margin-inline: 12px;
+    margin-top: 14px;
+    margin-inline: 8px;
 
     background: #f3ea57;
 
     border: none;
 
-    padding: 14px 28px;
+    padding: 10px 22px;
 
     font-family: 'Press Start 2P', cursive;
 
-    font-size: 12px;
+    font-size: 11px;
 
     cursor: pointer;
 
-    box-shadow:
-            8px 8px 0px black;
+    box-shadow: 6px 6px 0px black;
 
     transition: 0.08s;
 
-    min-width: 220px;
+    min-width: 160px;
 
     color: black !important;
 }
@@ -148,25 +149,17 @@
     color: black !important;
 }
 
-.retro-modal h1 {
-    font-size: 30px;
-    font-family: 'Press Start 2P', cursive;
-
-    margin: 28px 0;
-}
-
 .retro-modal h2 {
-    font-size: 16px;
-    margin-bottom: 30px;
+    font-size: 14px;
+    margin-bottom: 14px;
     font-family: 'Press Start 2P', cursive;
-
     line-height: 1.8;
 }
 
 .retro-modal h3 {
-    font-size: 13px;
+    font-size: 11px;
     font-family: 'Press Start 2P', cursive;
-    margin-bottom: 20px;
+    margin-bottom: 10px;
 }
 
 .retro-modal p {
@@ -178,9 +171,14 @@
 
 .reward-amount {
     font-family: Arial, sans-serif;
-    font-size: 54px;
+    font-size: 38px;
 
     font-weight: bold;
 
     color: #ffffff;
+}
+
+.retro-modal h1 {
+    font-size: 22px;
+    margin: 16px 0;
 }

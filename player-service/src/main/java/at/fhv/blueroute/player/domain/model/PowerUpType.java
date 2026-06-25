@@ -36,6 +36,13 @@ public enum PowerUpType {
             "Priority docking — earn 20% extra reward on next voyage.",
             2000,
             "REWARD_BOOST"
+    ),
+    MUSIC_PLAYER(
+            "Music Player",
+            "🎵",
+            "Keep the crew entertained — enjoy some fun music on your next voyage.",
+            200,
+            "MUSIC"
     );
 
     private final String displayName;
