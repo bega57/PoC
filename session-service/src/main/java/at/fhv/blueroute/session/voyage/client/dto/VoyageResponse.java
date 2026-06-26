@@ -46,6 +46,7 @@ public class VoyageResponse {
 
     private int earnedPoints;
     private String pointsBreakdown;
+    private String activePowerUp;
 
     public VoyageResponse() {
     }
@@ -139,4 +140,5 @@ public class VoyageResponse {
 
     public int getEarnedPoints() { return earnedPoints; }
     public String getPointsBreakdown() { return pointsBreakdown; }
+    public String getActivePowerUp() { return activePowerUp; }
 }

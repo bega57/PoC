@@ -94,18 +94,14 @@ public class ShipServiceClient {
             Long offerId,
             BuyUsedShipRequest request
     ) {
-
-        String url =
-                shipServiceUrl
-                        + "/ships/used/"
-                        + offerId
-                        + "/buy";
-
-        return restTemplate.postForObject(
-                url,
-                request,
-                ShipResponse.class
-        );
+        String url = shipServiceUrl + "/ships/used/" + offerId + "/buy";
+        try {
+            return restTemplate.postForObject(url, request, ShipResponse.class);
+        } catch (HttpClientErrorException ex) {
+            throw new RuntimeException(extractMessage(ex.getResponseBodyAsString(), "Purchase failed."), ex);
+        } catch (RestClientException ex) {
+            throw new RuntimeException("Something went wrong. Please try again.", ex);
+        }
     }
 
     public ShipResponse repairShip(
