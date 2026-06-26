@@ -6,6 +6,7 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.core.ParameterizedTypeReference;
 import org.springframework.stereotype.Component;
 import org.springframework.web.client.HttpClientErrorException;
+import org.springframework.web.client.RestClientException;
 import org.springframework.web.client.RestTemplate;
 
 import java.util.List;
@@ -50,7 +51,9 @@ public class ShipServiceClient {
         try {
             return restTemplate.postForObject(shipServiceUrl + "/ships/buy", request, ShipResponse.class);
         } catch (HttpClientErrorException ex) {
-            throw new RuntimeException(extractMessage(ex), ex);
+            throw new RuntimeException(extractMessage(ex.getResponseBodyAsString(), "Purchase failed."), ex);
+        } catch (RestClientException ex) {
+            throw new RuntimeException("Something went wrong. Please try again.", ex);
         }
     }
 
@@ -60,14 +63,15 @@ public class ShipServiceClient {
         try {
             return restTemplate.postForObject(shipServiceUrl + "/ships/sell", request, ShipResponse.class);
         } catch (HttpClientErrorException ex) {
-            throw new RuntimeException(extractMessage(ex), ex);
+            throw new RuntimeException(extractMessage(ex.getResponseBodyAsString(), "Sale failed."), ex);
+        } catch (RestClientException ex) {
+            throw new RuntimeException("Something went wrong. Please try again.", ex);
         }
     }
 
-    private String extractMessage(HttpClientErrorException ex) {
-        String body = ex.getResponseBodyAsString();
+    private String extractMessage(String body, String fallback) {
         Matcher m = Pattern.compile("\"message\"\\s*:\\s*\"([^\"]+)\"").matcher(body);
-        return m.find() ? m.group(1) : ex.getMessage();
+        return m.find() ? m.group(1) : fallback;
     }
 
     public List<UsedShipOfferResponse> getUsedShips() {

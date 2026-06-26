@@ -203,9 +203,9 @@ export default function VoyagePage() {
         if (availableDestinations.length === 0) { setErrorMessage("No cargo available from this port"); return; }
         if (!selectedShip) { alert("Select a ship"); return; }
         if (isShipBusy(selectedShip.id)) { alert("This ship is already traveling"); return; }
-        if (!selectedDestination && !selectedCargoId) { setErrorMessage("Please select a destination and cargo first."); return; }
-        if (!selectedDestination) { setErrorMessage("Please select a destination first."); return; }
-        if (!selectedCargoId) { setErrorMessage("Please select a cargo order first."); return; }
+        if (!selectedDestination && !selectedCargoId) return;
+        if (!selectedDestination) return;
+        if (!selectedCargoId) return;
         if (selectedCargo && selectedShip && selectedShip.fuelLevel < selectedCargo.fuelConsumption) { setErrorMessage("Not enough fuel for this voyage. Refuel your ship first."); return; }
         const offerSmuggling = Math.random() < 0.3;
         if (offerSmuggling) { setShowSmugglingOffer(true); return; }
@@ -533,6 +533,12 @@ export default function VoyagePage() {
                         >
                             Start Voyage
                         </button>
+                        {selectedShip && !isShipBusy(selectedShip?.id) && (() => {
+                            if (!selectedDestination && !selectedCargoId) return <p style={{ color: "#f87171", fontSize: "12px", marginTop: "8px" }}>Please select a destination and cargo first.</p>;
+                            if (!selectedDestination) return <p style={{ color: "#f87171", fontSize: "12px", marginTop: "8px" }}>Please select a destination first.</p>;
+                            if (!selectedCargoId) return <p style={{ color: "#f87171", fontSize: "12px", marginTop: "8px" }}>Please select a cargo order first.</p>;
+                            return null;
+                        })()}
                     </div>
                 </>)}
 

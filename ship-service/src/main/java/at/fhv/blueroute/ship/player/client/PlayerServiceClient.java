@@ -1,5 +1,6 @@
 package at.fhv.blueroute.ship.player.client;
 
+import at.fhv.blueroute.ship.application.exception.InsufficientBalanceException;
 import at.fhv.blueroute.ship.player.client.dto.BalanceUpdateRequest;
 import at.fhv.blueroute.ship.player.client.dto.PlayerResponse;
 import at.fhv.blueroute.ship.player.client.dto.UpdateCompanyNameRequest;
@@ -10,6 +11,9 @@ import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
 import org.springframework.stereotype.Component;
 import org.springframework.web.client.RestTemplate;
+
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 @Component
 public class PlayerServiceClient {
@@ -84,11 +88,10 @@ public class PlayerServiceClient {
                 org.springframework.web.client
                         .HttpClientErrorException.BadRequest ex
         ) {
-
-            throw new RuntimeException(
-                    "Player service rejected balance update: "
-                            + ex.getResponseBodyAsString()
-            );
+            String body = ex.getResponseBodyAsString();
+            Matcher m = Pattern.compile("\"message\"\\s*:\\s*\"([^\"]+)\"").matcher(body);
+            String msg = m.find() ? m.group(1) : "Insufficient balance for this purchase.";
+            throw new InsufficientBalanceException(msg);
 
         } catch (
                 org.springframework.web.client
